@@ -1,0 +1,36 @@
+[build-system]
+requires = ["hatchling >= 1.26"]
+build-backend = "hatchling.build"
+
+[project]
+name = "easy_vitessce"
+version = "0.0.1"
+authors = [
+  {name=HIDIVE Lab},
+  {name="Selena Luo"}
+]
+description = "A package to easily use Vitessce to create interactive plots for single-cell data"
+readme = "README.md"
+requires-python = ">=3.10"
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "Operating System :: OS Independent",
+]
+dependencies = [
+  'scipy>=1.2.1',
+  'pandas>=1.1.2',
+  'black>=21.11b1',
+  'numpy>=1.21.2',
+  'zarr>=2.5.0,<3',
+  'numcodecs>=0.5.7,<0.16.0',
+  'vitessce[all] >=3.6.4',
+  'scanpy >= 1.11.3',
+  'anndata >= 0.11.4'
+]
+
+license = "MIT"
+license-files = ["LICEN[CS]E*"]
+
+[project.urls]
+Homepage = "https://github.com/pypa/sampleproject"
+Issues = "https://github.com/pypa/sampleproject/issues"
