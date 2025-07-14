@@ -291,6 +291,9 @@ def configure_plots(enable_plots=[], disable_plots=[]):
             
                 if "markers" in kwargs.keys():
                     markers = kwargs["markers"]
+                
+                if "groupby" in kwargs.keys():
+                    groupby = kwargs["groupby"]
             
                 vc = VitessceConfig(schema_version="1.0.17", name='dotplot data')
             
@@ -305,7 +308,7 @@ def configure_plots(enable_plots=[], disable_plots=[]):
             
                 dataset = vc.add_dataset('dotplot data').add_object(AnnDataWrapper(
                         adata_path = zarr_filepath,
-                        obs_set_paths=["obs/bulk_labels"],
+                        obs_set_paths=[f"obs/{groupby}"],
                         obs_set_names=["cell type"],
                         #obs_embedding_paths=["obsm/X_umap"],
                         #obs_embedding_names=[""],
