@@ -6,7 +6,7 @@ build-backend = "hatchling.build"
 name = "easy_vitessce"
 version = "0.0.1"
 authors = [
-  {name=HIDIVE Lab},
+  {name="HIDIVE Lab"},
   {name="Selena Luo"}
 ]
 description = "A package to easily use Vitessce to create interactive plots for single-cell data"
