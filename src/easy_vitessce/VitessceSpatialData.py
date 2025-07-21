@@ -19,10 +19,18 @@ from vitessce import (
 )
 
 class VitessceSpatialData:
-    def __init__(self, spatialdata_filepath, zip_filepath):
+    """
+    A class for configuring spatial plot with similar syntax to spatialdata from scverse.
+    """
+    def __init__(self, spatialdata_filepath):
+        """
+        Initializes filepaths, Vitessce configuration, SpatialDataWrapper arguments, color map.
+
+        :param str spatialdata_filepath: filepath of spatialdata zarr file containing image data.
+        :returns: Self, allows for chaining.
+        """
         self.sdata_filepath = spatialdata_filepath
-        self.zip_filepath = zip_filepath
-        self.vc = VitessceConfig(schema_version="1.0.16", name='Mouse Brain')
+        self.vc = VitessceConfig(schema_version="1.0.16", name='spatial data')
         self.kwargs = {"sdata_path": self.sdata_filepath,
                 # The following paths are relative to the root of the SpatialData zarr store on-disk.
                 "table_path":"tables/table",
@@ -38,12 +46,26 @@ class VitessceSpatialData:
         
         
     def render_images(self, element=""):
+        """
+        Renders image.
+
+        :param str element: location of image data inside "images" folder.
+        :returns: Self, allows for chaining.
+        """
         image_path = {"image_path":f"images/{element}"}
         self.kwargs.update(image_path)
 
         return self
         
     def render_shapes(self, element="", **kwargs):
+        """
+        Renders shapes, e.g. "cells".
+
+        :param str element: location of shape data inside "shapes" folder.
+        :param str color: gene.
+        :param str color_map: color map (viridis, plasma, jet).
+        :returns: Self, allows for chaining.
+        """
         obs_spots_path = {"obs_spots_path": f"shapes/{element}"}
         self.kwargs.update(obs_spots_path)
 
@@ -60,12 +82,23 @@ class VitessceSpatialData:
         return self
 
     def render_labels(self, element=""):
+        """
+        Renders label data.
+
+        :param str element: location of label data in "labels" folder.
+        :returns: Self, allows for chaining.
+        """
         labels_path = {"labels_path":f"labels/{element}"}
         self.kwargs.update(labels_path)
 
         return self
     
     def show(self):
+        """
+        Displays spatial plot.
+        
+        :returns: Vitessce widget.
+        """
         self.wrapper = SpatialDataWrapper(**self.kwargs)
         
         dataset = self.vc.add_dataset(name='Mouse Brain Merfish').add_object(self.wrapper)

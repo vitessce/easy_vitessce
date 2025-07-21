@@ -5,6 +5,8 @@ from vitessce import (
     ImageOmeZarrWrapper,
     CoordinationLevel as CL,
     Component as cm,
+    vconcat,
+    hconcat
 )
 
 import os
@@ -29,22 +31,25 @@ def configure_plots(enable_plots=[], disable_plots=[]):
     """
     Enables and disables interactive plots.
 
-    :param list disable_plots: List of interactive plots to be deactivated into their non-interactive versions.
-    :param list enable_plots: List of plots to be activated into their interactive Vitessce versions.
+    :param list[str] disable_plots: List of interactive plots to be deactivated into their non-interactive versions. 
+    :param list[str] enable_plots: List of plots to be activated into their interactive Vitessce versions.
 
     """
     
     def monkeypatch(cls):
         """
-        Modifies behavior of the class without changing its code.
+        Modifies behavior of the class without changing its code. 
 
-        :param any cls: Class to be modified.
+        :param any cls: Class to be modified. Expected to be sc.pl class.
+        :returns: decorator.
+            rtype: function.
         """
         def decorator(func):
             """
-            Creates decorator for the function that's to replace the original.
+            Creates decorator for the function that's to replace the original. 
 
-            :param any func: function to be replaced.
+            :param any func: function to be replaced. Expected to be plotting function from sc.pl class.
+            :returns: new function.
             """
             func_name = func.__name__
             orig_func_name = f"_orig_{func_name}"
@@ -96,7 +101,7 @@ def configure_plots(enable_plots=[], disable_plots=[]):
     elif "heatmap" in enable_plots:
         enable_heatmap = True
 
-    if "violinl" in disable_plots:
+    if "violin" in disable_plots:
         enable_violin = False
     elif "violin" in enable_plots:
         enable_violin = True
@@ -118,7 +123,9 @@ def configure_plots(enable_plots=[], disable_plots=[]):
             :param str basis: Name of plot (umap, pca, or tsne).
             :param str color: Gene.
             :param str color_map: Color map (viridis, plasma, jet). Defaults to viridis.
-            :param float or int size: Size of dots.
+            :param size: Size of dots.
+                :type: float or int
+            :returns: Vitessce widget.
 
             """
             basis = basis
@@ -255,11 +262,12 @@ def configure_plots(enable_plots=[], disable_plots=[]):
             @monkeypatch(sc.pl)
             def spatial(adata, **kwargs):
                 """
-                Creates interactive spatial plot. Same syntax as Scanpy's spatial plot.
+                Creates interactive spatial plot. Similar syntax to Scanpy's spatial plot.
 
                 :param AnnData adata: AnnData object.
                 :param str color: Gene.
                 :param str color_map: Color map (viridis, plasma, jet). Defaults to viridis.
+                :returns: Vitessce widget.
                 """
                 sc.pp.calculate_qc_metrics(adata, inplace=True)
                 sample_id = (list(adata.uns["spatial"].keys()))[0]
@@ -358,8 +366,9 @@ def configure_plots(enable_plots=[], disable_plots=[]):
                 Creates interactive dotplot.
 
                 :param AnnData adata: AnnData object.
-                :param list markers: List of genes.
+                :param list[str] markers: List of genes.
                 :param str groupby: Category group.
+                :returns: Vitessce widget.
                 """
                 adata = adata
             
@@ -428,8 +437,9 @@ def configure_plots(enable_plots=[], disable_plots=[]):
 
             :param AnnData adata: AnnData object.
             :param str color_map: Color map (viridis, plasma, jet). Defaults to viridis.
-            :param list markers: List of genes.
+            :param list[str] markers: List of genes.
             :param str groupby: Category group.
+            :returns: Vitessce widget.
             """
             vc =  VitessceConfig(schema_version="1.0.15", name='heatmap')
             adata = adata
@@ -492,8 +502,9 @@ def configure_plots(enable_plots=[], disable_plots=[]):
             Creates interactive violin plot.
 
             :param Anndata adata: AnnData object.
-            :param list markers: Genes.
+            :param list[str] markers: Genes.
             :param str groupby: Category group.
+            :returns: Vitessce widget.
             """
             vc =  VitessceConfig(schema_version="1.0.15", name='heatmap')
             adata = adata
@@ -519,19 +530,32 @@ def configure_plots(enable_plots=[], disable_plots=[]):
                     obs_set_names=["cell type"],
                     obs_feature_matrix_path="X"
                 ))
-
-            genes = vc.add_view(cm.FEATURE_LIST, dataset=dataset).set_props(enableMultiSelect=True)
-            cells = vc.add_view(cm.OBS_SETS, dataset=dataset)
-            violin = vc.add_view('obsSetFeatureValueDistribution', dataset=dataset, uid='violin-plot')
-
-            if "markers" in kwargs:
-                vc.link_views(
-                [violin, genes, cells], 
-                ["featureSelection"],
-                [markers]
-                )
             
-            vc.layout(violin | genes / cells);
+            if len(markers) > 1:
+                for gene in markers:
+                    genes = vc.add_view(cm.FEATURE_LIST, dataset=dataset).set_props(enableMultiSelect=True)
+                    cells = vc.add_view(cm.OBS_SETS, dataset=dataset)
+                    violin = vc.add_view('obsSetFeatureValueDistribution', dataset=dataset, uid=f'violin-plot-{gene}')
+                    vc.link_views(
+                    [violin, genes, cells], 
+                    ["featureSelection", "obsSetSelection"],
+                    [[gene], None]
+                    )
+                    vc.layout(hconcat(violin, genes, cells, split = [2,1,1]))
+            else:
+
+                genes = vc.add_view(cm.FEATURE_LIST, dataset=dataset).set_props(enableMultiSelect=True)
+                cells = vc.add_view(cm.OBS_SETS, dataset=dataset)
+                violin = vc.add_view('obsSetFeatureValueDistribution', dataset=dataset, uid='violin-plot')
+
+                if "markers" in kwargs:
+                    vc.link_views(
+                    [violin, genes, cells], 
+                    ["featureSelection"],
+                    [markers]
+                    )
+                
+                vc.layout(violin | genes / cells);
 
             vw = vc.widget()
             return vw
