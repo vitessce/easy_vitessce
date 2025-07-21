@@ -8,6 +8,7 @@ A package to easily use Vitessce to create interactive plots for single-cell dat
 - PCA
 - t-SNE
 - Spatial (Scanpy ver.)
+- Spatial (SpatialData ver.)
 - Violin
 - Dotplot
 - Heatmap
@@ -37,16 +38,37 @@ All interactive plots are **enabled by default.**
 
 `color:` gene, e.g. "CD79A". 
 
-`color_map:` colormap. "viridis", "plasma", or "jet".
+`color_map:` color map. "viridis", "plasma", or "jet".
 
-<ins> **spatial**: </ins>
+<ins> **spatial (Scanpy ver.)**: </ins>
 
 `color:` annotations of observations, e.g. "log1p_n_genes_by_counts". 
 
-`color_map:` colormap. "viridis", "plasma", or "jet".
+`color_map:` color map. "viridis", "plasma", or "jet".
+
+<ins> **Spatial (SpatialData ver.)** </ins>
+
+`spatialdata_filepath:` filepath of spatialdata zarr file containing image data.
+
+`zip_filepath:` filepath of zip folder.
+
+`render_images:` renders image.
+* `element:` image data location.
+
+`render_shapes:` renders shapes, e.g. spots.
+* `element:` element to be rendered, e.g. "cells".
+* `color:` gene.
+* `color_map:` color map. "viridis", "plasma", or "jet".
+
+`render_labels:` renders labels.
+* `element:` label data location.
+
+`show:` displays interactive plot.
 
 <ins> **violin**: </ins>
 
+`markers:` list of genes.
+`groupby:` observation grouping, e.g. "bulk_labels"
 
 <ins> **dotplot**: </ins>
 
