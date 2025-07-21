@@ -7,7 +7,7 @@ A package to easily use Vitessce to create interactive plots for single-cell dat
 - UMAP
 - PCA
 - t-SNE
-- Spatial
+- Spatial (Scanpy ver.)
 - Violin
 - Dotplot
 - Heatmap
