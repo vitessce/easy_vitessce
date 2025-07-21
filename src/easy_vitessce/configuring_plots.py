@@ -26,9 +26,26 @@ from mySpatialData import mySpatialData
 
 
 def configure_plots(enable_plots=[], disable_plots=[]):
+    """
+    Enables and disables interactive plots.
+
+    :param list disable_plots: List of interactive plots to be deactivated into their non-interactive versions.
+    :param list enable_plots: List of plots to be activated into their interactive Vitessce versions.
+
+    """
     
     def monkeypatch(cls):
+        """
+        Modifies behavior of the class without changing its code.
+
+        :param any cls: Class to be modified.
+        """
         def decorator(func):
+            """
+            Creates decorator for the function that's to replace the original.
+
+            :param any func: function to be replaced.
+            """
             func_name = func.__name__
             orig_func_name = f"_orig_{func_name}"
             if not hasattr(cls, orig_func_name):
@@ -39,6 +56,12 @@ def configure_plots(enable_plots=[], disable_plots=[]):
         return decorator
 
     def undo_monkeypatch(cls, func_name):
+        """
+        Restores the monkeypatched function's behavior to the original.
+
+        :param any cls: Original class.
+        :param str func_name: Function name to be restored.
+        """
         orig_func_name = f"_orig_{func_name}"
         if hasattr(cls, orig_func_name):
             orig_func = getattr(cls, orig_func_name)
@@ -88,6 +111,16 @@ def configure_plots(enable_plots=[], disable_plots=[]):
         # print("doesn't run?")
         @monkeypatch(sc.pl)
         def embedding(adata, basis, **kwargs):
+            """
+            Creates interactive versions of UMAP, PCA, t-SNE plots.
+
+            :param AnnData adata: AnnData object.
+            :param str basis: Name of plot (umap, pca, or tsne).
+            :param str color: Gene.
+            :param str color_map: Color map (viridis, plasma, jet). Defaults to viridis.
+            :param float or int size: Size of dots.
+
+            """
             basis = basis
             adata = adata
 
@@ -105,7 +138,12 @@ def configure_plots(enable_plots=[], disable_plots=[]):
                     print("Invalid color_map. Supported color_maps: plasma, viridis, jet. Default set to plasma.")
                     color_map = "plasma"
             
-            def create_zarr_filepath(adata): 
+            def create_zarr_filepath(adata):
+                    """
+                    Creates zarr filepath for the AnnData object.
+
+                    :param AnnData adata: AnnData object.
+                    """ 
                     zarr_filepath = join("data", "embedding_file.zarr")
                     if os.path.exists(zarr_filepath) and os.path.isdir(zarr_filepath):
                         shutil.rmtree(zarr_filepath)   
@@ -216,6 +254,13 @@ def configure_plots(enable_plots=[], disable_plots=[]):
     elif enable_spatial:
             @monkeypatch(sc.pl)
             def spatial(adata, **kwargs):
+                """
+                Creates interactive spatial plot. Same syntax as Scanpy's spatial plot.
+
+                :param AnnData adata: AnnData object.
+                :param str color: Gene.
+                :param str color_map: Color map (viridis, plasma, jet). Defaults to viridis.
+                """
                 sc.pp.calculate_qc_metrics(adata, inplace=True)
                 sample_id = (list(adata.uns["spatial"].keys()))[0]
                 
@@ -309,6 +354,13 @@ def configure_plots(enable_plots=[], disable_plots=[]):
     elif enable_dotplot:
             @monkeypatch(sc.pl)
             def dotplot(adata, **kwargs):
+                """
+                Creates interactive dotplot.
+
+                :param AnnData adata: AnnData object.
+                :param list markers: List of genes.
+                :param str groupby: Category group.
+                """
                 adata = adata
             
                 if "markers" in kwargs.keys():
@@ -352,7 +404,7 @@ def configure_plots(enable_plots=[], disable_plots=[]):
                 #violinPlots = vc.add_view('obsSetFeatureValueDistribution', dataset=dataset, uid='violin-plot')
                 dotPlot = vc.add_view('dotPlot', dataset=dataset, uid='dot-plot')
                 
-                if "markers" in kwargs:
+                if "markers" in kwargs.keys():
                     vc.link_views(
                     [dotPlot, featureList], 
                     ["featureSelection"],
@@ -371,6 +423,14 @@ def configure_plots(enable_plots=[], disable_plots=[]):
     elif enable_heatmap:
         @monkeypatch(sc.pl)
         def heatmap(adata, **kwargs):
+            """
+            Creates interactive heatmap.
+
+            :param AnnData adata: AnnData object.
+            :param str color_map: Color map (viridis, plasma, jet). Defaults to viridis.
+            :param list markers: List of genes.
+            :param str groupby: Category group.
+            """
             vc =  VitessceConfig(schema_version="1.0.15", name='heatmap')
             adata = adata
             color_map = kwargs.get("color_map", "viridis")
@@ -383,7 +443,12 @@ def configure_plots(enable_plots=[], disable_plots=[]):
                 adata.var["genes"] = list(adata.var.index)
                 adata.var["in_markers"] = adata.var["genes"].apply(lambda gene: True if gene in markers else False)
                 
-            def create_zarr_filepath(adata): 
+            def create_zarr_filepath(adata):
+                    """
+                    Creates zarr filepath.
+                    
+                    :param AnnData adata: AnnData object.
+                    """ 
                     zarr_filepath = join("data", "heatmap_file.zarr")
                     if os.path.exists(zarr_filepath) and os.path.isdir(zarr_filepath):
                         shutil.rmtree(zarr_filepath)   
@@ -423,11 +488,21 @@ def configure_plots(enable_plots=[], disable_plots=[]):
     elif enable_violin:
         @monkeypatch(sc.pl)
         def violin(adata, **kwargs):
+            """
+            Creates interactive violin plot.
+
+            :param Anndata adata: AnnData object.
+            :param list markers: Genes.
+            :param str groupby: Category group.
+            """
             vc =  VitessceConfig(schema_version="1.0.15", name='heatmap')
             adata = adata
 
-            if "markers" in kwargs:
+            if "markers" in kwargs.keys():
                 markers = kwargs["markers"]
+            
+            if "groupby" in kwargs.keys():
+                groupby = kwargs["groupby"]
                 
             def create_zarr_filepath(adata): 
                     zarr_filepath = join("data", "violin_file.zarr")
@@ -440,7 +515,7 @@ def configure_plots(enable_plots=[], disable_plots=[]):
 
             dataset = vc.add_dataset(name='data').add_object(AnnDataWrapper(
                     adata_path=zarr_filepath,
-                    obs_set_paths=["obs/bulk_labels"],
+                    obs_set_paths=[f"obs/{groupby}"],
                     obs_set_names=["cell type"],
                     obs_feature_matrix_path="X"
                 ))
