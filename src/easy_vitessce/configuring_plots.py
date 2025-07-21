@@ -22,6 +22,8 @@ import numpy as np
 
 from anndata import (AnnData, read_h5ad)
 
+from easy_vitessce.src.easy_vitessce.mySpatialData import mySpatialData
+
 
 def configure_plots(enable_plots=[], disable_plots=[]):
     
@@ -88,7 +90,12 @@ def configure_plots(enable_plots=[], disable_plots=[]):
         def embedding(adata, basis, **kwargs):
             basis = basis
             adata = adata
-        
+
+            if type(kwargs.get("color")) == str:
+                color = kwargs.get("color", "")
+            elif type(kwargs.get("color")) == list: 
+                color = kwargs.get("color", [])
+
             color = kwargs.get("color", "")
             color_map = kwargs.get("color_map", "viridis")
             size  = kwargs.get("size", 2.5)
@@ -116,20 +123,35 @@ def configure_plots(enable_plots=[], disable_plots=[]):
                     obs_embedding_names=["UMAP" if basis == "umap" else "PCA"],
                     obs_feature_matrix_path="X"
                 ))
-           
-                mapping = vc.add_view(cm.SCATTERPLOT, dataset=dataset, mapping="UMAP" if basis=="umap" else "PCA") # mapping value corresponds to one of the obs_embedding_names values.
-                genes = vc.add_view(cm.FEATURE_LIST, dataset=dataset)
-                    
-                if ("heatmap" in kwargs) and (kwargs["heatmap"] == True):
-                    heatmap = vc.add_view(cm.HEATMAP, dataset=dataset)
-                    vc.link_views(
-                        [mapping, genes, heatmap], 
-                        ["featureSelection", "obsColorEncoding", "embeddingObsRadiusMode", "embeddingObsRadius", "featureValueColormap"], # https://vitessce.io/docs/coordination-types/
-                        [[color], "geneSelection", "manual", size , color_map]
-                    )
-                    vc.layout(mapping | genes / heatmap);
-                
+
+                if type(color) == list and len(color) > 1:
+                    for gene in color:
+                        mapping = vc.add_view(cm.SCATTERPLOT, dataset=dataset, mapping="UMAP" if basis=="umap" else "PCA") # mapping value corresponds to one of the obs_embedding_names values.
+                        genes = vc.add_view(cm.FEATURE_LIST, dataset=dataset)
+    
+                        vc.link_views(
+                            [mapping, genes], 
+                            ["featureSelection", "obsColorEncoding", "embeddingObsRadiusMode", "embeddingObsRadius", "featureValueColormap"], # https://vitessce.io/docs/coordination-types/
+                            [[gene], "geneSelection", "manual", size , color_map]
+                        )
+                        vc.layout(mapping | genes)
+    
                 else:
+         
+                    mapping = vc.add_view(cm.SCATTERPLOT, dataset=dataset, mapping="UMAP" if basis=="umap" else "PCA") # mapping value corresponds to one of the obs_embedding_names values.
+                    genes = vc.add_view(cm.FEATURE_LIST, dataset=dataset)
+           
+                    
+                # if ("heatmap" in kwargs) and (kwargs["heatmap"] == True):
+                #     heatmap = vc.add_view(cm.HEATMAP, dataset=dataset)
+                #     vc.link_views(
+                #         [mapping, genes, heatmap], 
+                #         ["featureSelection", "obsColorEncoding", "embeddingObsRadiusMode", "embeddingObsRadius", "featureValueColormap"], # https://vitessce.io/docs/coordination-types/
+                #         [[color], "geneSelection", "manual", size , color_map]
+                #     )
+                #     vc.layout(mapping | genes / heatmap);
+                
+
                     vc.link_views(
                         [mapping, genes], 
                         ["featureSelection", "obsColorEncoding", "embeddingObsRadiusMode", "embeddingObsRadius", "featureValueColormap"], # https://vitessce.io/docs/coordination-types/
