@@ -22,7 +22,7 @@ import numpy as np
 
 from anndata import (AnnData, read_h5ad)
 
-from mySpatialData import mySpatialData
+from VitessceSpatialData import VitessceSpatialData
 
 
 def configure_plots(enable_plots=[], disable_plots=[]):
