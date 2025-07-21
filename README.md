@@ -52,18 +52,18 @@ All interactive plots are **enabled by default.**
 
 `zip_filepath:` filepath of zip folder.
 
-`render_images:` renders image.
+`render_images():` renders image.
 * `element:` image data location.
 
-`render_shapes:` renders shapes, e.g. spots.
+`render_shapes():` renders shapes, e.g. spots.
 * `element:` element to be rendered, e.g. "cells".
 * `color:` gene.
 * `color_map:` color map. "viridis", "plasma", or "jet".
 
-`render_labels:` renders labels.
+`render_labels():` renders labels.
 * `element:` label data location.
 
-`show:` displays interactive plot.
+`show():` displays interactive plot.
 
 <ins> **violin**: </ins>
 
