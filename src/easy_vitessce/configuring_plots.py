@@ -35,6 +35,8 @@ def configure_plots(enable_plots=[], disable_plots=[]):
     :param list[str] enable_plots: List of plots to be activated into their interactive Vitessce versions.
 
     """
+    if any(plot in enable_plots for plot in disable_plots):
+            raise RuntimeError("Plots cannot be in enable_plots and disable_plots simultaneously.")
     
     def monkeypatch(cls):
         """
