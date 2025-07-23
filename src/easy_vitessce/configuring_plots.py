@@ -179,7 +179,7 @@ def configure_plots(enable_plots=[], disable_plots=[]):
                             ["featureSelection", "obsColorEncoding", "embeddingObsRadiusMode", "embeddingObsRadius", "featureValueColormap"], # https://vitessce.io/docs/coordination-types/
                             [[gene], "geneSelection", "manual", size , color_map]
                         )
-                        vc.layout(mapping | genes)
+                        vc.layout(hconcat(mapping, genes, split=[1.5, 0.5]))
     
                 else:
          
