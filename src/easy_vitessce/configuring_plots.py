@@ -76,6 +76,20 @@ def configure_plots(enable_plots=[], disable_plots=[]):
             #print(f"orig_func: {orig_func}")
             setattr(cls, func_name, orig_func)
             #print("hasattr check")
+
+    def create_zarr_filepath(adata, plot_type): 
+        """
+        Creates Zarr filepath for AnnData object. Prevents creating multiple files with the same name.
+
+        :param AnnData adata: AnnData object.
+        :param str plot_type: plot type.
+        :returns: Zarr filepath.
+        """
+        zarr_filepath = join("data", f"{plot_type}_file.zarr")
+        if os.path.exists(zarr_filepath) and os.path.isdir(zarr_filepath):
+                shutil.rmtree(zarr_filepath)   
+        adata.write_zarr(zarr_filepath, chunks=[adata.shape[0], VAR_CHUNK_SIZE])
+        return zarr_filepath
             
     enable_embedding = True
     enable_spatial = True
@@ -147,19 +161,8 @@ def configure_plots(enable_plots=[], disable_plots=[]):
                     print("Invalid color_map. Supported color_maps: plasma, viridis, jet. Default set to plasma.")
                     color_map = "plasma"
             
-            def create_zarr_filepath(adata):
-                    """
-                    Creates zarr filepath for the AnnData object.
-
-                    :param AnnData adata: AnnData object.
-                    """ 
-                    zarr_filepath = join("data", "embedding_file.zarr")
-                    if os.path.exists(zarr_filepath) and os.path.isdir(zarr_filepath):
-                        shutil.rmtree(zarr_filepath)   
-                    adata.write_zarr(zarr_filepath, chunks=[adata.shape[0], VAR_CHUNK_SIZE])
-                    return zarr_filepath
         
-            zarr_filepath = create_zarr_filepath(adata)
+            zarr_filepath = create_zarr_filepath(adata, "embedding")
         
             if basis == "umap" or basis == "pca":
                 vc =  VitessceConfig(schema_version="1.0.15", name='UMAP' if basis=="umap" else "PCA")
@@ -201,10 +204,10 @@ def configure_plots(enable_plots=[], disable_plots=[]):
 
                     vc.link_views(
                         [mapping, genes], 
-                        ["featureSelection", "obsColorEncoding", "embeddingObsRadiusMode", "embeddingObsRadius", "featureValueColormap"], # https://vitessce.io/docs/coordination-types/
+                        ["featureSelection", "obsColorEncoding", "embeddingObsRadiusMode", "embeddingObsRadius", "featureValueColormap"],
                         [[color], "geneSelection", "manual", size , color_map]
                     )
-                    vc.layout(mapping | genes);
+                    vc.layout(mapping | genes)
                    
                 vw = vc.widget()
                 return vw
@@ -217,7 +220,6 @@ def configure_plots(enable_plots=[], disable_plots=[]):
                 vc =  VitessceConfig(schema_version="1.0.15", name='t-SNE')
                 
                 if "color" in kwargs and kwargs["color"] in adata.obs.columns:
-                # if "color" in kwargs and kwargs["color"] in adata.obs.columns:
                     dataset = vc.add_dataset(name='tsne data').add_object(AnnDataWrapper(
                             adata_store=zarr_filepath,
                             obs_set_paths=[f"obs/{kwargs['color']}"],
@@ -244,14 +246,14 @@ def configure_plots(enable_plots=[], disable_plots=[]):
                 tsne = vc.add_view(cm.SCATTERPLOT, dataset=dataset, mapping="t-SNE") # mapping value corresponds to one of the obs_embedding_names values.
                 # genes = vc.add_view(cm.OBS_SETS, dataset=dataset)
                 
-                # https://python-docs.vitessce.io/api_config.html?highlight=link_views#vitessce.config.VitessceConfig.link_views 
+                
                 vc.link_views(
                     [tsne, cells], 
                     ["obsColorEncoding", "embeddingObsRadiusMode", "embeddingObsRadius", "embeddingObsOpacityMode", "embeddingObsOpacity"], # https://vitessce.io/docs/coordination-types/
                     ["cellSetSelection", "manual", size, "manual", 0.6]
                 )
                 
-                vc.layout(tsne | cells);
+                vc.layout(tsne | cells)
                 
                 vw = vc.widget(port=9000)
                 return vw
@@ -382,14 +384,7 @@ def configure_plots(enable_plots=[], disable_plots=[]):
             
                 vc = VitessceConfig(schema_version="1.0.17", name='dotplot data')
             
-                def create_zarr_filepath(adata): 
-                        zarr_filepath = join("data", "dotplot_file.zarr")
-                        if os.path.exists(zarr_filepath) and os.path.isdir(zarr_filepath):
-                            shutil.rmtree(zarr_filepath)   
-                        adata.write_zarr(zarr_filepath, chunks=[adata.shape[0], VAR_CHUNK_SIZE])
-                        return zarr_filepath
-            
-                zarr_filepath = create_zarr_filepath(adata)
+                zarr_filepath = create_zarr_filepath(adata, "dotplot")
             
                 dataset = vc.add_dataset('dotplot data').add_object(AnnDataWrapper(
                         adata_path = zarr_filepath,
@@ -454,20 +449,8 @@ def configure_plots(enable_plots=[], disable_plots=[]):
                 markers = kwargs["markers"]
                 adata.var["genes"] = list(adata.var.index)
                 adata.var["in_markers"] = adata.var["genes"].apply(lambda gene: True if gene in markers else False)
-                
-            def create_zarr_filepath(adata):
-                    """
-                    Creates zarr filepath.
-                    
-                    :param AnnData adata: AnnData object.
-                    """ 
-                    zarr_filepath = join("data", "heatmap_file.zarr")
-                    if os.path.exists(zarr_filepath) and os.path.isdir(zarr_filepath):
-                        shutil.rmtree(zarr_filepath)   
-                    adata.write_zarr(zarr_filepath, chunks=[adata.shape[0], VAR_CHUNK_SIZE])
-                    return zarr_filepath
 
-            zarr_filepath = create_zarr_filepath(adata)
+            zarr_filepath = create_zarr_filepath(adata, "heatmap")
 
             dataset = vc.add_dataset(name='data').add_object(AnnDataWrapper(
                     adata_path=zarr_filepath,
@@ -517,14 +500,7 @@ def configure_plots(enable_plots=[], disable_plots=[]):
             if "groupby" in kwargs.keys():
                 groupby = kwargs["groupby"]
                 
-            def create_zarr_filepath(adata): 
-                    zarr_filepath = join("data", "violin_file.zarr")
-                    if os.path.exists(zarr_filepath) and os.path.isdir(zarr_filepath):
-                        shutil.rmtree(zarr_filepath)   
-                    adata.write_zarr(zarr_filepath, chunks=[adata.shape[0], VAR_CHUNK_SIZE])
-                    return zarr_filepath
-
-            zarr_filepath = create_zarr_filepath(adata)
+            zarr_filepath = create_zarr_filepath(adata, "violin")
 
             dataset = vc.add_dataset(name='data').add_object(AnnDataWrapper(
                     adata_path=zarr_filepath,
@@ -557,7 +533,7 @@ def configure_plots(enable_plots=[], disable_plots=[]):
                     [markers]
                     )
                 
-                vc.layout(violin | genes / cells);
+                vc.layout(violin | genes / cells)
 
             vw = vc.widget()
             return vw
