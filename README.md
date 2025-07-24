@@ -1,36 +1,38 @@
 # Easy Vitessce
 
-A package to easily use Vitessce to create interactive plots for single-cell data.
+ 🪄 *Magic in a single line of code!* 
+ 
+Turn your static [Scanpy](https://github.com/scverse/scanpy) and [SpatialData](https://github.com/scverse/spatialdata) plots into interactive [Vitessce](https://github.com/vitessce/vitessce) visualizations with _Easy Vitessce_ for spatial and single-cell data just by adding the `easy_vitessce` package!
 
-**Supported plots:**
+**Supported Plots**
 
 - UMAP
 - PCA
 - t-SNE
-- Spatial (Scanpy ver.)
-- Spatial (SpatialData ver.)
+- Spatial (Scanpy version)
+- Spatial (SpatialData version)
 - Violin
 - Dotplot
 - Heatmap
 
 
-# Installation
+## Installation
 
 Install package using pip: 
 
 `pip install 'easy_vitessce @ git+https://github.com/luoselena/easy_vitessce@main'`
 
-# How to Use
+## How to Use
 
-### Importing Easy Vitessce: 
+#### Importing Easy Vitessce
 
 `from easy_vitessce import configure_plots`
 
-Scanpy is also required to run the package: `import scanpy as sc`
+🪄 All interactive plots are **enabled magically**.
 
-All interactive plots are **enabled by default.**
+_Note that Scanpy is also required to run the package: `import scanpy as sc`_
 
-### Supported Functions and Parameters
+#### Supported Functions and Parameters
 
 <ins> **embedding:** </ins>
 
@@ -84,10 +86,10 @@ All interactive plots are **enabled by default.**
 
 `groupby:` observation grouping.
 
-### Deactivating Interactive Plots:
+#### Deactivating Interactive Plots:
 
 `configure_plots(disable_plots = ["spatial", "violin"]`
 
-### Reactivating Interactive Plots:
+#### Reactivating Interactive Plots:
 `configure_plots(enable_plots = ["spatial", "violin"]`
 
