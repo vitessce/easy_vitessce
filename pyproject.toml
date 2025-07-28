@@ -42,4 +42,4 @@ Issues = "https://github.com/pypa/sampleproject/issues"
 
 
 [project.optional-dependencies]
-docs = ['sphinx']
+docs = ['sphinx', 'sphinx-book-theme']
