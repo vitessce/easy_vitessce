@@ -30,12 +30,13 @@ jobs:
       - name: Build a binary wheel and a source tarball
         run: uv build --sdist --wheel
       - name: Build docs
+        working-directory: src/easy_vitessce/docs
         run: |
           uv run make html
-          touch docs/build/html/.nojekyll
+          touch build/html/.nojekyll
       - uses: actions/upload-pages-artifact@v3
         with:
-          path: ./docs/build/html
+          path: src/easy_vitessce/docs/build/html
       - name: Deploy package to PyPI
         continue-on-error: true
         uses: pypa/gh-action-pypi-publish@v1.4.1
