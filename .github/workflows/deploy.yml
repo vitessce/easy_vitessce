@@ -33,10 +33,10 @@ jobs:
         working-directory: src/easy_vitessce/docs
         run: |
           uv run make html
-          touch build/html/.nojekyll
+          touch _build/html/.nojekyll
       - uses: actions/upload-pages-artifact@v3
         with:
-          path: src/easy_vitessce/docs/build/html
+          path: src/easy_vitessce/docs/_build/html
       - name: Deploy package to PyPI
         continue-on-error: true
         uses: pypa/gh-action-pypi-publish@v1.4.1
