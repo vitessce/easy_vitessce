@@ -28,9 +28,18 @@ dependencies = [
   'anndata >= 0.11.4'
 ]
 
+
 license = "MIT"
 license-files = ["LICEN[CS]E*"]
+
+[tool.setuptools]
+packages = ["easy_vitessce"]
+package-dir = {"" = "src"}
 
 [project.urls]
 Homepage = "https://github.com/pypa/sampleproject"
 Issues = "https://github.com/pypa/sampleproject/issues"
+
+
+[project.optional-dependencies]
+docs = ['sphinx']
