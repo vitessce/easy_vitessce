@@ -18,7 +18,7 @@ from easy_vitessce import configure_plots, VitessceSpatialData
 project = 'Easy Vitessce'
 copyright = '2025, Selena Luo'
 author = 'Selena Luo'
-release = '1.0.0'
+release = '0.0.1'
 
 # -- General configuration ---------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#general-configuration

@@ -7,7 +7,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>easy_vitessce.configuring_plots &#8212; Easy Vitessce 1.0.0 documentation</title>
+    <title>easy_vitessce.configuring_plots &#8212; Easy Vitessce 0.0.1 documentation</title>
   
   
   
@@ -35,7 +35,7 @@
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=dfe6caa3a7d634c4db9b" />
   <script src="../../_static/vendor/fontawesome/6.5.2/js/all.min.js?digest=dfe6caa3a7d634c4db9b"></script>
 
-    <script src="../../_static/documentation_options.js?v=f9c1cefe"></script>
+    <script src="../../_static/documentation_options.js?v=e645c8fa"></script>
     <script src="../../_static/doctools.js?v=9bcbadda"></script>
     <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../../_static/scripts/sphinx-book-theme.js?v=887ef09a"></script>
@@ -131,7 +131,7 @@
   
   
   
-    <p class="title logo__title">Easy Vitessce 1.0.0 documentation</p>
+    <p class="title logo__title">Easy Vitessce 0.0.1 documentation</p>
   
 </a></div>
         <div class="sidebar-primary-item">
@@ -312,6 +312,7 @@ document.write(`
 <span class="sd">    :param str color_map: Color map (viridis, plasma, jet). Defaults to viridis.</span>
 <span class="sd">    :param size: Size of dots.</span>
 <span class="sd">        :type: float or int</span>
+<span class="sd">    :param bool include_gene_list: If a list of genes is passed in, True will add a gene list for the last plot. False by default.</span>
 <span class="sd">    :returns: Vitessce widget.</span>
 
 <span class="sd">    &quot;&quot;&quot;</span>
@@ -462,7 +463,7 @@ document.write(`
                     <span class="n">adata_path</span><span class="o">=</span><span class="n">zarr_filepath</span><span class="p">,</span>
                     <span class="n">obs_set_paths</span><span class="o">=</span><span class="p">[</span><span class="sa">f</span><span class="s2">&quot;obs/</span><span class="si">{</span><span class="n">color</span><span class="si">}</span><span class="s2">&quot;</span> <span class="k">if</span> <span class="nb">type</span><span class="p">(</span><span class="n">color</span><span class="p">)</span> <span class="o">==</span> <span class="nb">str</span> <span class="k">else</span> <span class="sa">f</span><span class="s2">&quot;obs/</span><span class="si">{</span><span class="n">color</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">],</span>
                     <span class="n">obs_set_names</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;color&quot;</span><span class="p">],</span>
-                    <span class="n">obs_embedding_paths</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;obsm/X_pca&quot;</span><span class="p">],</span>
+                    <span class="n">obs_embedding_paths</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;obsm/X_tsne&quot;</span><span class="p">],</span>
                     <span class="n">obs_embedding_names</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;t-SNE&quot;</span><span class="p">],</span>
                     <span class="n">obs_feature_matrix_path</span><span class="o">=</span><span class="s2">&quot;X&quot;</span>
                 <span class="p">))</span>
@@ -476,7 +477,7 @@ document.write(`
             <span class="p">[</span><span class="s2">&quot;cellSetSelection&quot;</span><span class="p">,</span> <span class="s2">&quot;manual&quot;</span><span class="p">,</span> <span class="n">size</span><span class="p">,</span> <span class="s2">&quot;manual&quot;</span><span class="p">,</span> <span class="mf">0.6</span><span class="p">]</span>
         <span class="p">)</span>
         
-            <span class="n">vc</span><span class="o">.</span><span class="n">layout</span><span class="p">(</span><span class="n">tsne</span> <span class="o">|</span> <span class="n">cells</span><span class="p">);</span>
+            <span class="n">vc</span><span class="o">.</span><span class="n">layout</span><span class="p">(</span><span class="n">tsne</span> <span class="o">|</span> <span class="n">cells</span><span class="p">)</span>
             
 
         <span class="k">else</span><span class="p">:</span>
@@ -500,7 +501,7 @@ document.write(`
                 <span class="p">[</span><span class="s2">&quot;cellSetSelection&quot;</span><span class="p">,</span> <span class="s2">&quot;manual&quot;</span><span class="p">,</span> <span class="n">size</span><span class="p">,</span> <span class="s2">&quot;manual&quot;</span><span class="p">,</span> <span class="mf">0.6</span><span class="p">]</span>
             <span class="p">)</span>
             
-                <span class="n">vc</span><span class="o">.</span><span class="n">layout</span><span class="p">(</span><span class="n">tsne</span> <span class="o">|</span> <span class="n">obs</span><span class="p">);</span>
+                <span class="n">vc</span><span class="o">.</span><span class="n">layout</span><span class="p">(</span><span class="n">tsne</span> <span class="o">|</span> <span class="n">obs</span><span class="p">)</span>
                 
             
         <span class="n">vw</span> <span class="o">=</span> <span class="n">vc</span><span class="o">.</span><span class="n">widget</span><span class="p">()</span>

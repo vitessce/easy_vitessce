@@ -20,7 +20,6 @@ easy\_vitessce.configuring\_plots module
    :show-inheritance:
    :undoc-members:
 
-Module contents
 ---------------
 
 .. automodule:: easy_vitessce

@@ -7,7 +7,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>easy_vitessce.VitessceSpatialData &#8212; Easy Vitessce Documentation 1.0.0 documentation</title>
+    <title>easy_vitessce.VitessceSpatialData &#8212; Easy Vitessce 0.0.1 documentation</title>
   
   
   
@@ -35,7 +35,7 @@
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=dfe6caa3a7d634c4db9b" />
   <script src="../../_static/vendor/fontawesome/6.5.2/js/all.min.js?digest=dfe6caa3a7d634c4db9b"></script>
 
-    <script src="../../_static/documentation_options.js?v=f9c1cefe"></script>
+    <script src="../../_static/documentation_options.js?v=e645c8fa"></script>
     <script src="../../_static/doctools.js?v=9bcbadda"></script>
     <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../../_static/scripts/sphinx-book-theme.js?v=887ef09a"></script>
@@ -131,7 +131,7 @@
   
   
   
-    <p class="title logo__title">Easy Vitessce Documentation 1.0.0 documentation</p>
+    <p class="title logo__title">Easy Vitessce 0.0.1 documentation</p>
   
 </a></div>
         <div class="sidebar-primary-item">
@@ -290,7 +290,7 @@ document.write(`
 <span class="sd">        :returns: Self, allows for chaining.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">sdata_filepath</span> <span class="o">=</span> <span class="n">spatialdata_filepath</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">vc</span> <span class="o">=</span> <span class="n">VitessceConfig</span><span class="p">(</span><span class="n">schema_version</span><span class="o">=</span><span class="s2">&quot;1.0.16&quot;</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s1">&#39;spatial data&#39;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">vc</span> <span class="o">=</span> <span class="n">VitessceConfig</span><span class="p">(</span><span class="n">schema_version</span><span class="o">=</span><span class="s2">&quot;1.0.18&quot;</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s1">&#39;spatial data&#39;</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">kwargs</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;sdata_path&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">sdata_filepath</span><span class="p">,</span>
                 <span class="c1"># The following paths are relative to the root of the SpatialData zarr store on-disk.</span>
                 <span class="s2">&quot;table_path&quot;</span><span class="p">:</span><span class="s2">&quot;tables/table&quot;</span><span class="p">,</span>
@@ -356,7 +356,7 @@ document.write(`
 <span class="sd">        :param str element: location of label data in &quot;labels&quot; folder.</span>
 <span class="sd">        :returns: Self, allows for chaining.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="n">labels_path</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;labels_path&quot;</span><span class="p">:</span><span class="sa">f</span><span class="s2">&quot;labels/</span><span class="si">{</span><span class="n">element</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">}</span>
+        <span class="n">labels_path</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;obs_segmentations_path&quot;</span><span class="p">:</span><span class="sa">f</span><span class="s2">&quot;labels/</span><span class="si">{</span><span class="n">element</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">}</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">kwargs</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">labels_path</span><span class="p">)</span>
 
         <span class="k">return</span> <span class="bp">self</span></div>
