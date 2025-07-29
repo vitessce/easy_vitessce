@@ -39,6 +39,7 @@ Passing ``enable_plots`` into ``configure_plots`` will reactivate Vitessce plots
 .. code-block:: 
 
    configure_plots(disable_plots = ["spatial", "violin"])
+   
    configure_plots(enable_plots = ["spatial", "violin"])
   
 Spatial Plot (SpatialData version)
@@ -49,7 +50,7 @@ Spatial Plot (SpatialData version)
    spatial_plot = VitessceSpatialData(spatialdata_filepath)
    spatial_plot.pl.render_images(element="rasterized").pl.render_shapes(element="cells", color="Acta2").pl.show()
 
-``spatialdata_filepath`` should contain spatial data with an images folder. The file structure of the example above is as follows. Since it does not have a ``Labels`` folder, calling ``pl.render_labels()`` will not display any data.
+``spatialdata_filepath`` should contain spatial data with an ``Images`` folder. The file structure of the example above is as follows. Since it does not have a ``Labels`` folder, calling ``pl.render_labels()`` will not display any data.
 
 .. code-block:: 
 
@@ -110,6 +111,7 @@ Heatmap
 .. code-block:: 
 
    adata = sc.datasets.pbmc68k_reduced()
+
    sc.pl.heatmap(adata, groupby = "bulk_labels", markers = ['C1QA', 'PSAP', 'CD79A', 'CD79B', 'CST3', 'LYZ'])
 
 

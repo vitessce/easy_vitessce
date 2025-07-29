@@ -616,9 +616,9 @@ document.write(`
 <span class="sd">    Creates interactive heatmap.</span>
 
 <span class="sd">    :param AnnData adata: AnnData object.</span>
-<span class="sd">    :param str color_map: Color map (viridis, plasma, jet). Defaults to viridis.</span>
-<span class="sd">    :param list[str] markers: List of genes.</span>
 <span class="sd">    :param str groupby: Category group.</span>
+<span class="sd">    :param list[str] markers: List of genes.</span>
+<span class="sd">    :param str color_map: Color map (viridis, plasma, jet). Defaults to viridis.</span>
 <span class="sd">    :returns: Vitessce widget.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="n">vc</span> <span class="o">=</span>  <span class="n">VitessceConfig</span><span class="p">(</span><span class="n">schema_version</span><span class="o">=</span><span class="s2">&quot;1.0.15&quot;</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s1">&#39;heatmap&#39;</span><span class="p">)</span>
@@ -667,8 +667,8 @@ document.write(`
 <span class="sd">    Creates interactive violin plot.</span>
 
 <span class="sd">    :param Anndata adata: AnnData object.</span>
-<span class="sd">    :param list[str] markers: Genes.</span>
 <span class="sd">    :param str groupby: Category group.</span>
+<span class="sd">    :param list[str] markers: Genes.</span>
 <span class="sd">    :returns: Vitessce widget.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="n">vc</span> <span class="o">=</span>  <span class="n">VitessceConfig</span><span class="p">(</span><span class="n">schema_version</span><span class="o">=</span><span class="s2">&quot;1.0.15&quot;</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s1">&#39;heatmap&#39;</span><span class="p">)</span>
@@ -724,8 +724,8 @@ document.write(`
 <span class="sd">        Creates interactive dotplot.</span>
 
 <span class="sd">        :param AnnData adata: AnnData object.</span>
-<span class="sd">        :param list[str] markers: List of genes.</span>
 <span class="sd">        :param str groupby: Category group.</span>
+<span class="sd">        :param list[str] markers: List of genes.</span>
 <span class="sd">        :returns: Vitessce widget.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">adata</span> <span class="o">=</span> <span class="n">adata</span>
