@@ -503,6 +503,12 @@ def dotplot(adata, groupby, **kwargs):
         return vw
 
 def configure_plots(disable_plots=[], enable_plots=[]): 
+    """
+    Deactivates and reactivates interactive Vitessce plots.
+
+    :param list disable_plots: List of plots.
+    :param list enable_plots: List of plots.
+    """
     if any(plot in enable_plots for plot in disable_plots):
             raise RuntimeError("Plots cannot be in enable_plots and disable_plots simultaneously.")
         
