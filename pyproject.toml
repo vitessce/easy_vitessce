@@ -23,7 +23,7 @@ dependencies = [
   'numpy>=1.21.2',
   'zarr>=2.5.0,<3',
   'numcodecs>=0.5.7,<0.16.0',
-  'vitessce[all] >=3.6.4',
+  'vitessce[all] >=3.6.9',
   'scanpy >= 1.11.3',
   'anndata >= 0.11.4'
 ]
