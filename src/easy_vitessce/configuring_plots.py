@@ -202,7 +202,7 @@ def embedding(adata, basis, **kwargs):
                     adata_path=zarr_filepath,
                     obs_set_paths=[f"obs/{color}" if type(color) == str else f"obs/{color[0]}"],
                     obs_set_names=["color"],
-                    obs_embedding_paths=["obsm/X_pca"],
+                    obs_embedding_paths=["obsm/X_tsne"],
                     obs_embedding_names=["t-SNE"],
                     obs_feature_matrix_path="X"
                 ))
@@ -216,7 +216,7 @@ def embedding(adata, basis, **kwargs):
             ["cellSetSelection", "manual", size, "manual", 0.6]
         )
         
-            vc.layout(tsne | cells);
+            vc.layout(tsne | cells)
             
 
         else:
@@ -240,7 +240,7 @@ def embedding(adata, basis, **kwargs):
                 ["cellSetSelection", "manual", size, "manual", 0.6]
             )
             
-                vc.layout(tsne | obs);
+                vc.layout(tsne | obs)
                 
             
         vw = vc.widget()
