@@ -325,6 +325,9 @@ document.write(`
 
     <span class="n">include_genes</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;include_gene_list&quot;</span><span class="p">,</span> <span class="kc">False</span><span class="p">)</span>
     
+    <span class="k">if</span> <span class="s2">&quot;color&quot;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
+        <span class="n">color</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span>
+
     <span class="k">if</span> <span class="nb">type</span><span class="p">(</span><span class="n">kwargs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;color&quot;</span><span class="p">))</span> <span class="o">==</span> <span class="nb">str</span><span class="p">:</span>
         <span class="n">color</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;color&quot;</span><span class="p">,</span> <span class="s2">&quot;&quot;</span><span class="p">)</span>
     <span class="k">elif</span> <span class="nb">type</span><span class="p">(</span><span class="n">kwargs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;color&quot;</span><span class="p">))</span> <span class="o">==</span> <span class="nb">list</span><span class="p">:</span> 
@@ -659,7 +662,7 @@ document.write(`
 
 <div class="viewcode-block" id="violin">
 <a class="viewcode-back" href="../../easy_vitessce.html#easy_vitessce.configuring_plots.violin">[docs]</a>
-<span class="k">def</span><span class="w"> </span><span class="nf">violin</span><span class="p">(</span><span class="n">adata</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">violin</span><span class="p">(</span><span class="n">adata</span><span class="p">,</span> <span class="n">groupby</span><span class="p">,</span><span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Creates interactive violin plot.</span>
 
@@ -670,6 +673,7 @@ document.write(`
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="n">vc</span> <span class="o">=</span>  <span class="n">VitessceConfig</span><span class="p">(</span><span class="n">schema_version</span><span class="o">=</span><span class="s2">&quot;1.0.15&quot;</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s1">&#39;heatmap&#39;</span><span class="p">)</span>
     <span class="n">adata</span> <span class="o">=</span> <span class="n">adata</span>
+    <span class="n">groupby</span> <span class="o">=</span> <span class="n">groupby</span>
 
     <span class="k">if</span> <span class="s2">&quot;markers&quot;</span> <span class="ow">in</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
         <span class="n">markers</span> <span class="o">=</span> <span class="n">kwargs</span><span class="p">[</span><span class="s2">&quot;markers&quot;</span><span class="p">]</span>
@@ -678,7 +682,7 @@ document.write(`
 
     <span class="n">dataset</span> <span class="o">=</span> <span class="n">vc</span><span class="o">.</span><span class="n">add_dataset</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s1">&#39;data&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">add_object</span><span class="p">(</span><span class="n">AnnDataWrapper</span><span class="p">(</span>
             <span class="n">adata_path</span><span class="o">=</span><span class="n">zarr_filepath</span><span class="p">,</span>
-            <span class="n">obs_set_paths</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;obs/bulk_labels&quot;</span><span class="p">],</span>
+            <span class="n">obs_set_paths</span><span class="o">=</span><span class="p">[</span><span class="sa">f</span><span class="s2">&quot;obs/</span><span class="si">{</span><span class="n">groupby</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">],</span>
             <span class="n">obs_set_names</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;cell type&quot;</span><span class="p">],</span>
             <span class="n">obs_feature_matrix_path</span><span class="o">=</span><span class="s2">&quot;X&quot;</span>
         <span class="p">))</span>
@@ -693,7 +697,7 @@ document.write(`
             <span class="p">[</span><span class="s2">&quot;featureSelection&quot;</span><span class="p">,</span> <span class="s2">&quot;obsSetSelection&quot;</span><span class="p">],</span>
             <span class="p">[[</span><span class="n">gene</span><span class="p">],</span> <span class="kc">None</span><span class="p">]</span>
             <span class="p">)</span>
-            <span class="n">vc</span><span class="o">.</span><span class="n">layout</span><span class="p">(</span><span class="n">hconcat</span><span class="p">(</span><span class="n">violin</span><span class="p">,</span> <span class="n">genes</span><span class="p">,</span> <span class="n">cells</span><span class="p">,</span> <span class="n">split</span> <span class="o">=</span> <span class="p">[</span><span class="mi">2</span><span class="p">,</span><span class="mi">1</span><span class="p">,</span><span class="mi">1</span><span class="p">]));</span>
+            <span class="n">vc</span><span class="o">.</span><span class="n">layout</span><span class="p">(</span><span class="n">hconcat</span><span class="p">(</span><span class="n">violin</span><span class="p">,</span> <span class="n">genes</span><span class="p">,</span> <span class="n">cells</span><span class="p">,</span> <span class="n">split</span> <span class="o">=</span> <span class="p">[</span><span class="mi">2</span><span class="p">,</span><span class="mi">1</span><span class="p">,</span><span class="mi">1</span><span class="p">]))</span>
     <span class="k">else</span><span class="p">:</span>
         <span class="n">genes</span> <span class="o">=</span> <span class="n">vc</span><span class="o">.</span><span class="n">add_view</span><span class="p">(</span><span class="n">cm</span><span class="o">.</span><span class="n">FEATURE_LIST</span><span class="p">,</span> <span class="n">dataset</span><span class="o">=</span><span class="n">dataset</span><span class="p">)</span><span class="o">.</span><span class="n">set_props</span><span class="p">(</span><span class="n">enableMultiSelect</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
         <span class="n">cells</span> <span class="o">=</span> <span class="n">vc</span><span class="o">.</span><span class="n">add_view</span><span class="p">(</span><span class="n">cm</span><span class="o">.</span><span class="n">OBS_SETS</span><span class="p">,</span> <span class="n">dataset</span><span class="o">=</span><span class="n">dataset</span><span class="p">)</span>
@@ -715,7 +719,7 @@ document.write(`
 
 <div class="viewcode-block" id="dotplot">
 <a class="viewcode-back" href="../../easy_vitessce.html#easy_vitessce.configuring_plots.dotplot">[docs]</a>
-<span class="k">def</span><span class="w"> </span><span class="nf">dotplot</span><span class="p">(</span><span class="n">adata</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">dotplot</span><span class="p">(</span><span class="n">adata</span><span class="p">,</span> <span class="n">groupby</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Creates interactive dotplot.</span>
 
@@ -725,12 +729,10 @@ document.write(`
 <span class="sd">        :returns: Vitessce widget.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">adata</span> <span class="o">=</span> <span class="n">adata</span>
+        <span class="n">groupby</span> <span class="o">=</span> <span class="n">groupby</span>
     
         <span class="k">if</span> <span class="s2">&quot;markers&quot;</span> <span class="ow">in</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
             <span class="n">markers</span> <span class="o">=</span> <span class="n">kwargs</span><span class="p">[</span><span class="s2">&quot;markers&quot;</span><span class="p">]</span>
-        
-        <span class="k">if</span> <span class="s2">&quot;groupby&quot;</span> <span class="ow">in</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
-            <span class="n">groupby</span> <span class="o">=</span> <span class="n">kwargs</span><span class="p">[</span><span class="s2">&quot;groupby&quot;</span><span class="p">]</span>
     
         <span class="n">vc</span> <span class="o">=</span> <span class="n">VitessceConfig</span><span class="p">(</span><span class="n">schema_version</span><span class="o">=</span><span class="s2">&quot;1.0.17&quot;</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s1">&#39;dotplot data&#39;</span><span class="p">)</span>
     
@@ -742,7 +744,7 @@ document.write(`
                 <span class="n">obs_set_names</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;cell type&quot;</span><span class="p">],</span>
                 <span class="c1">#obs_embedding_paths=[&quot;obsm/X_umap&quot;],</span>
                 <span class="c1">#obs_embedding_names=[&quot;&quot;],</span>
-                <span class="n">obs_feature_matrix_path</span><span class="o">=</span><span class="s2">&quot;X&quot;</span> <span class="c1"># &quot;layers/logcounts&quot; doesn&#39;t exist</span>
+                <span class="n">obs_feature_matrix_path</span><span class="o">=</span><span class="s2">&quot;X&quot;</span> 
     <span class="p">))</span><span class="o">.</span><span class="n">add_object</span><span class="p">(</span><span class="n">AnnDataWrapper</span><span class="p">(</span>
         <span class="n">adata_path</span><span class="o">=</span><span class="n">zarr_filepath</span><span class="p">,</span>
         <span class="n">coordination_values</span><span class="o">=</span><span class="p">{</span>
@@ -776,6 +778,12 @@ document.write(`
 <div class="viewcode-block" id="configure_plots">
 <a class="viewcode-back" href="../../easy_vitessce.html#easy_vitessce.configuring_plots.configure_plots">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">configure_plots</span><span class="p">(</span><span class="n">disable_plots</span><span class="o">=</span><span class="p">[],</span> <span class="n">enable_plots</span><span class="o">=</span><span class="p">[]):</span> 
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Deactivates and reactivates interactive Vitessce plots.</span>
+
+<span class="sd">    :param list disable_plots: List of plots.</span>
+<span class="sd">    :param list enable_plots: List of plots.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
     <span class="k">if</span> <span class="nb">any</span><span class="p">(</span><span class="n">plot</span> <span class="ow">in</span> <span class="n">enable_plots</span> <span class="k">for</span> <span class="n">plot</span> <span class="ow">in</span> <span class="n">disable_plots</span><span class="p">):</span>
             <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="s2">&quot;Plots cannot be in enable_plots and disable_plots simultaneously.&quot;</span><span class="p">)</span>
         

@@ -350,9 +350,9 @@ def heatmap(adata, **kwargs):
     Creates interactive heatmap.
 
     :param AnnData adata: AnnData object.
-    :param str color_map: Color map (viridis, plasma, jet). Defaults to viridis.
-    :param list[str] markers: List of genes.
     :param str groupby: Category group.
+    :param list[str] markers: List of genes.
+    :param str color_map: Color map (viridis, plasma, jet). Defaults to viridis.
     :returns: Vitessce widget.
     """
     vc =  VitessceConfig(schema_version="1.0.15", name='heatmap')
@@ -398,8 +398,8 @@ def violin(adata, groupby,**kwargs):
     Creates interactive violin plot.
 
     :param Anndata adata: AnnData object.
-    :param list[str] markers: Genes.
     :param str groupby: Category group.
+    :param list[str] markers: Genes.
     :returns: Vitessce widget.
     """
     vc =  VitessceConfig(schema_version="1.0.15", name='heatmap')
@@ -452,8 +452,8 @@ def dotplot(adata, groupby, **kwargs):
         Creates interactive dotplot.
 
         :param AnnData adata: AnnData object.
-        :param list[str] markers: List of genes.
         :param str groupby: Category group.
+        :param list[str] markers: List of genes.
         :returns: Vitessce widget.
         """
         adata = adata
