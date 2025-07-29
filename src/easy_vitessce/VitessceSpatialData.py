@@ -30,7 +30,7 @@ class VitessceSpatialData:
         :returns: Self, allows for chaining.
         """
         self.sdata_filepath = spatialdata_filepath
-        self.vc = VitessceConfig(schema_version="1.0.16", name='spatial data')
+        self.vc = VitessceConfig(schema_version="1.0.18", name='spatial data')
         self.kwargs = {"sdata_path": self.sdata_filepath,
                 # The following paths are relative to the root of the SpatialData zarr store on-disk.
                 "table_path":"tables/table",
@@ -88,7 +88,7 @@ class VitessceSpatialData:
         :param str element: location of label data in "labels" folder.
         :returns: Self, allows for chaining.
         """
-        labels_path = {"labels_path":f"labels/{element}"}
+        labels_path = {"obs_segmentations_path":f"labels/{element}"}
         self.kwargs.update(labels_path)
 
         return self
