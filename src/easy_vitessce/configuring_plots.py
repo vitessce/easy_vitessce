@@ -52,6 +52,7 @@ def embedding(adata, basis, **kwargs):
     :param str color_map: Color map (viridis, plasma, jet). Defaults to viridis.
     :param size: Size of dots.
         :type: float or int
+    :param bool include_gene_list: If a list of genes is passed in, True will add a gene list for the last plot. False by default.
     :returns: Vitessce widget.
 
     """
@@ -64,6 +65,9 @@ def embedding(adata, basis, **kwargs):
 
     include_genes = kwargs.get("include_gene_list", False)
     
+    if "color" not in kwargs.keys():
+        color = ""
+
     if type(kwargs.get("color")) == str:
         color = kwargs.get("color", "")
     elif type(kwargs.get("color")) == list: 
@@ -389,7 +393,7 @@ def heatmap(adata, **kwargs):
     vw = vc.widget()
     return vw
 
-def violin(adata, **kwargs):
+def violin(adata, groupby,**kwargs):
     """
     Creates interactive violin plot.
 
@@ -400,6 +404,7 @@ def violin(adata, **kwargs):
     """
     vc =  VitessceConfig(schema_version="1.0.15", name='heatmap')
     adata = adata
+    groupby = groupby
 
     if "markers" in kwargs.keys():
         markers = kwargs["markers"]
@@ -408,7 +413,7 @@ def violin(adata, **kwargs):
 
     dataset = vc.add_dataset(name='data').add_object(AnnDataWrapper(
             adata_path=zarr_filepath,
-            obs_set_paths=["obs/bulk_labels"],
+            obs_set_paths=[f"obs/{groupby}"],
             obs_set_names=["cell type"],
             obs_feature_matrix_path="X"
         ))
@@ -423,7 +428,7 @@ def violin(adata, **kwargs):
             ["featureSelection", "obsSetSelection"],
             [[gene], None]
             )
-            vc.layout(hconcat(violin, genes, cells, split = [2,1,1]));
+            vc.layout(hconcat(violin, genes, cells, split = [2,1,1]))
     else:
         genes = vc.add_view(cm.FEATURE_LIST, dataset=dataset).set_props(enableMultiSelect=True)
         cells = vc.add_view(cm.OBS_SETS, dataset=dataset)
@@ -442,7 +447,7 @@ def violin(adata, **kwargs):
     vw = vc.widget()
     return vw
 
-def dotplot(adata, **kwargs):
+def dotplot(adata, groupby, **kwargs):
         """
         Creates interactive dotplot.
 
@@ -452,12 +457,10 @@ def dotplot(adata, **kwargs):
         :returns: Vitessce widget.
         """
         adata = adata
+        groupby = groupby
     
         if "markers" in kwargs.keys():
             markers = kwargs["markers"]
-        
-        if "groupby" in kwargs.keys():
-            groupby = kwargs["groupby"]
     
         vc = VitessceConfig(schema_version="1.0.17", name='dotplot data')
     
@@ -469,7 +472,7 @@ def dotplot(adata, **kwargs):
                 obs_set_names=["cell type"],
                 #obs_embedding_paths=["obsm/X_umap"],
                 #obs_embedding_names=[""],
-                obs_feature_matrix_path="X" # "layers/logcounts" doesn't exist
+                obs_feature_matrix_path="X" 
     )).add_object(AnnDataWrapper(
         adata_path=zarr_filepath,
         coordination_values={
