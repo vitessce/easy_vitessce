@@ -485,7 +485,7 @@ document.write(`
 
         <span class="k">else</span><span class="p">:</span>
             <span class="k">for</span> <span class="n">obs</span> <span class="ow">in</span> <span class="n">color</span><span class="p">:</span>
-                <span class="nb">print</span><span class="p">(</span><span class="n">obs</span><span class="p">)</span>
+                <span class="c1"># print(obs)</span>
                 <span class="n">dataset</span> <span class="o">=</span> <span class="n">vc</span><span class="o">.</span><span class="n">add_dataset</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s1">&#39;tsne data&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">add_object</span><span class="p">(</span><span class="n">AnnDataWrapper</span><span class="p">(</span>
                     <span class="n">adata_store</span><span class="o">=</span><span class="n">zarr_filepath</span><span class="p">,</span>
                     <span class="n">obs_set_paths</span><span class="o">=</span><span class="p">[</span><span class="sa">f</span><span class="s2">&quot;obs/</span><span class="si">{</span><span class="n">obs</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">],</span>
@@ -675,8 +675,13 @@ document.write(`
     <span class="n">adata</span> <span class="o">=</span> <span class="n">adata</span>
     <span class="n">groupby</span> <span class="o">=</span> <span class="n">groupby</span>
 
-    <span class="k">if</span> <span class="s2">&quot;markers&quot;</span> <span class="ow">in</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
-        <span class="n">markers</span> <span class="o">=</span> <span class="n">kwargs</span><span class="p">[</span><span class="s2">&quot;markers&quot;</span><span class="p">]</span>
+    <span class="k">if</span> <span class="s2">&quot;markers&quot;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
+        <span class="n">markers</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span>
+    
+    <span class="k">if</span> <span class="nb">type</span><span class="p">(</span><span class="n">kwargs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;markers&quot;</span><span class="p">))</span> <span class="o">==</span> <span class="nb">str</span><span class="p">:</span>
+        <span class="n">markers</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;markers&quot;</span><span class="p">,</span> <span class="s2">&quot;&quot;</span><span class="p">)</span>
+    <span class="k">elif</span> <span class="nb">type</span><span class="p">(</span><span class="n">kwargs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;markers&quot;</span><span class="p">))</span> <span class="o">==</span> <span class="nb">list</span><span class="p">:</span> 
+        <span class="n">markers</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;markers&quot;</span><span class="p">,</span> <span class="p">[])</span>
         
     <span class="n">zarr_filepath</span> <span class="o">=</span> <span class="n">_create_zarr_filepath</span><span class="p">(</span><span class="n">adata</span><span class="p">,</span> <span class="s2">&quot;violin&quot;</span><span class="p">)</span>
 
@@ -687,9 +692,9 @@ document.write(`
             <span class="n">obs_feature_matrix_path</span><span class="o">=</span><span class="s2">&quot;X&quot;</span>
         <span class="p">))</span>
 
-    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">markers</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>
+    <span class="k">if</span> <span class="nb">type</span><span class="p">(</span><span class="n">markers</span><span class="p">)</span> <span class="o">==</span> <span class="nb">list</span> <span class="ow">and</span> <span class="nb">len</span><span class="p">(</span><span class="n">markers</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>
         <span class="k">for</span> <span class="n">gene</span> <span class="ow">in</span> <span class="n">markers</span><span class="p">:</span>
-            <span class="n">genes</span> <span class="o">=</span> <span class="n">vc</span><span class="o">.</span><span class="n">add_view</span><span class="p">(</span><span class="n">cm</span><span class="o">.</span><span class="n">FEATURE_LIST</span><span class="p">,</span> <span class="n">dataset</span><span class="o">=</span><span class="n">dataset</span><span class="p">)</span><span class="o">.</span><span class="n">set_props</span><span class="p">(</span><span class="n">enableMultiSelect</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+            <span class="n">genes</span> <span class="o">=</span> <span class="n">vc</span><span class="o">.</span><span class="n">add_view</span><span class="p">(</span><span class="n">cm</span><span class="o">.</span><span class="n">FEATURE_LIST</span><span class="p">,</span> <span class="n">dataset</span><span class="o">=</span><span class="n">dataset</span><span class="p">)</span>
             <span class="n">cells</span> <span class="o">=</span> <span class="n">vc</span><span class="o">.</span><span class="n">add_view</span><span class="p">(</span><span class="n">cm</span><span class="o">.</span><span class="n">OBS_SETS</span><span class="p">,</span> <span class="n">dataset</span><span class="o">=</span><span class="n">dataset</span><span class="p">)</span>
             <span class="n">violin</span> <span class="o">=</span> <span class="n">vc</span><span class="o">.</span><span class="n">add_view</span><span class="p">(</span><span class="s1">&#39;obsSetFeatureValueDistribution&#39;</span><span class="p">,</span> <span class="n">dataset</span><span class="o">=</span><span class="n">dataset</span><span class="p">,</span> <span class="n">uid</span><span class="o">=</span><span class="sa">f</span><span class="s1">&#39;violin-plot-</span><span class="si">{</span><span class="n">gene</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
             <span class="n">vc</span><span class="o">.</span><span class="n">link_views</span><span class="p">(</span>
@@ -699,12 +704,12 @@ document.write(`
             <span class="p">)</span>
             <span class="n">vc</span><span class="o">.</span><span class="n">layout</span><span class="p">(</span><span class="n">hconcat</span><span class="p">(</span><span class="n">violin</span><span class="p">,</span> <span class="n">genes</span><span class="p">,</span> <span class="n">cells</span><span class="p">,</span> <span class="n">split</span> <span class="o">=</span> <span class="p">[</span><span class="mi">2</span><span class="p">,</span><span class="mi">1</span><span class="p">,</span><span class="mi">1</span><span class="p">]))</span>
     <span class="k">else</span><span class="p">:</span>
-        <span class="n">genes</span> <span class="o">=</span> <span class="n">vc</span><span class="o">.</span><span class="n">add_view</span><span class="p">(</span><span class="n">cm</span><span class="o">.</span><span class="n">FEATURE_LIST</span><span class="p">,</span> <span class="n">dataset</span><span class="o">=</span><span class="n">dataset</span><span class="p">)</span><span class="o">.</span><span class="n">set_props</span><span class="p">(</span><span class="n">enableMultiSelect</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+        <span class="n">genes</span> <span class="o">=</span> <span class="n">vc</span><span class="o">.</span><span class="n">add_view</span><span class="p">(</span><span class="n">cm</span><span class="o">.</span><span class="n">FEATURE_LIST</span><span class="p">,</span> <span class="n">dataset</span><span class="o">=</span><span class="n">dataset</span><span class="p">)</span>
         <span class="n">cells</span> <span class="o">=</span> <span class="n">vc</span><span class="o">.</span><span class="n">add_view</span><span class="p">(</span><span class="n">cm</span><span class="o">.</span><span class="n">OBS_SETS</span><span class="p">,</span> <span class="n">dataset</span><span class="o">=</span><span class="n">dataset</span><span class="p">)</span>
         <span class="n">violin</span> <span class="o">=</span> <span class="n">vc</span><span class="o">.</span><span class="n">add_view</span><span class="p">(</span><span class="s1">&#39;obsSetFeatureValueDistribution&#39;</span><span class="p">,</span> <span class="n">dataset</span><span class="o">=</span><span class="n">dataset</span><span class="p">,</span> <span class="n">uid</span><span class="o">=</span><span class="s1">&#39;violin-plot&#39;</span><span class="p">)</span>
 
         <span class="k">if</span> <span class="s2">&quot;markers&quot;</span> <span class="ow">in</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
-            <span class="nb">print</span><span class="p">(</span><span class="n">markers</span><span class="p">)</span>
+            <span class="c1"># print(markers)</span>
             <span class="n">vc</span><span class="o">.</span><span class="n">link_views</span><span class="p">(</span>
             <span class="p">[</span><span class="n">violin</span><span class="p">,</span> <span class="n">genes</span><span class="p">,</span> <span class="n">cells</span><span class="p">],</span> 
             <span class="p">[</span><span class="s2">&quot;featureSelection&quot;</span><span class="p">],</span>

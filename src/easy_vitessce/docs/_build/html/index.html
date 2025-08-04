@@ -303,7 +303,7 @@ document.write(`
             </div>
             <nav aria-label="Page">
                 <ul class="visible nav section-nav flex-column">
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#installation-and-use">Installation and Use</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#installation">Installation</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#how-to-use-and-examples">How to Use and Examples</a><ul class="nav section-nav flex-column">
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#deactivating-reactivating-interactive-plots">Deactivating/Reactivating Interactive Plots</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#spatial-plot-spatialdata-version">Spatial Plot (SpatialData version)</a></li>
@@ -328,8 +328,8 @@ document.write(`
   <section id="easy-vitessce-documentation">
 <h1>Easy Vitessce Documentation<a class="headerlink" href="#easy-vitessce-documentation" title="Link to this heading">#</a></h1>
 <p>Easy Vitessce is a Python package for turning Scanpy and SpatialData plots into interactive <a class="reference external" href="https://vitessce.io/">Vitessce</a> visualizations with minimal code changes.</p>
-<section id="installation-and-use">
-<h2>Installation and Use<a class="headerlink" href="#installation-and-use" title="Link to this heading">#</a></h2>
+<section id="installation">
+<h2>Installation<a class="headerlink" href="#installation" title="Link to this heading">#</a></h2>
 <p>Requires Python 3.9 or greater.</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">pip</span> <span class="n">install</span> <span class="s1">&#39;easy_vitessce @ git+https://github.com/luoselena/easy_vitessce@main&#39;</span>
 </pre></div>
@@ -342,24 +342,30 @@ document.write(`
 <span class="kn">from</span><span class="w"> </span><span class="nn">easy_vitessce</span><span class="w"> </span><span class="kn">import</span> <span class="n">configure_plots</span>
 </pre></div>
 </div>
-<p><strong>Note:</strong> All example datasets are from Scanpy.</p>
+<p><strong>Scanpy is also required for this package.</strong></p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">scanpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">sc</span>
+</pre></div>
+</div>
+<p><strong>Note:</strong> All example datasets are from Scanpy unless otherwise noted.</p>
 <section id="deactivating-reactivating-interactive-plots">
 <h3>Deactivating/Reactivating Interactive Plots<a class="headerlink" href="#deactivating-reactivating-interactive-plots" title="Link to this heading">#</a></h3>
 <p>Passing <code class="docutils literal notranslate"><span class="pre">disable_plots</span></code> into <code class="docutils literal notranslate"><span class="pre">configure_plots</span></code> will deactivate Vitessce plots.</p>
 <p>Passing <code class="docutils literal notranslate"><span class="pre">enable_plots</span></code> into <code class="docutils literal notranslate"><span class="pre">configure_plots</span></code> will reactivate Vitessce plots.</p>
 <p><strong>Note:</strong> While <code class="docutils literal notranslate"><span class="pre">diable_plots</span></code> and <code class="docutils literal notranslate"><span class="pre">enable_plots</span></code> can be passed in at the same time, listing the same plot in both will result in an error.</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">configure_plots</span><span class="p">(</span><span class="n">disable_plots</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;spatial&quot;</span><span class="p">,</span> <span class="s2">&quot;violin&quot;</span><span class="p">])</span>
+
 <span class="n">configure_plots</span><span class="p">(</span><span class="n">enable_plots</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;spatial&quot;</span><span class="p">,</span> <span class="s2">&quot;violin&quot;</span><span class="p">])</span>
 </pre></div>
 </div>
 </section>
 <section id="spatial-plot-spatialdata-version">
 <h3>Spatial Plot (SpatialData version)<a class="headerlink" href="#spatial-plot-spatialdata-version" title="Link to this heading">#</a></h3>
+<p><strong>Note:</strong> This example uses SpatialData’s <a class="reference external" href="https://spatialdata.scverse.org/en/latest/tutorials/notebooks/datasets/README.html">mouse brain MERFISH dataset.</a></p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">spatial_plot</span> <span class="o">=</span> <span class="n">VitessceSpatialData</span><span class="p">(</span><span class="n">spatialdata_filepath</span><span class="p">)</span>
 <span class="n">spatial_plot</span><span class="o">.</span><span class="n">pl</span><span class="o">.</span><span class="n">render_images</span><span class="p">(</span><span class="n">element</span><span class="o">=</span><span class="s2">&quot;rasterized&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">pl</span><span class="o">.</span><span class="n">render_shapes</span><span class="p">(</span><span class="n">element</span><span class="o">=</span><span class="s2">&quot;cells&quot;</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="s2">&quot;Acta2&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">pl</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
 </pre></div>
 </div>
-<p><code class="docutils literal notranslate"><span class="pre">spatialdata_filepath</span></code> should contain spatial data with an images folder. The file structure of the example above is as follows. Since it does not have a <code class="docutils literal notranslate"><span class="pre">Labels</span></code> folder, calling <code class="docutils literal notranslate"><span class="pre">pl.render_labels()</span></code> will not display any data.</p>
+<p><code class="docutils literal notranslate"><span class="pre">spatialdata_filepath</span></code> should be lead to a <code class="docutils literal notranslate"><span class="pre">.zarr</span></code> file containing spatial data with an <code class="docutils literal notranslate"><span class="pre">Images</span></code> folder. The file structure of the example above is as follows. Since it does not have a <code class="docutils literal notranslate"><span class="pre">Labels</span></code> folder, calling <code class="docutils literal notranslate"><span class="pre">pl.render_labels()</span></code> will not display any data.</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span>   SpatialData object, with associated Zarr store:
 ├── Images
 │     └── &#39;rasterized&#39;: DataArray[cyx] (1, 522, 575)
@@ -372,15 +378,17 @@ document.write(`
       └── &#39;table&#39;: AnnData (2389, 268)
 </pre></div>
 </div>
+<p><img alt="easy_vitessce_example" src="_images/spatial_documentation.gif" /></p>
 </section>
 <section id="spatial-plot-scanpy-version">
 <h3>Spatial Plot (Scanpy version)<a class="headerlink" href="#spatial-plot-scanpy-version" title="Link to this heading">#</a></h3>
-<p>Easy Vitessce’s <code class="docutils literal notranslate"><span class="pre">spatial</span></code> function also displays a spatial plot, but with Scanpy’s syntax.</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">adata</span> <span class="o">=</span> <span class="n">sc</span><span class="o">.</span><span class="n">datasets</span><span class="o">.</span><span class="n">visium_sge</span><span class="p">(</span><span class="n">sample_id</span><span class="o">=</span><span class="s2">&quot;V1_Human_Heart&quot;</span><span class="p">,</span> <span class="n">include_hires_tiff</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<p>Easy Vitessce’s <code class="docutils literal notranslate"><span class="pre">spatial</span></code> function also displays a spatial plot, but with Scanpy’s syntax. This example uses Scanpy’s <a class="reference external" href="https://scanpy.readthedocs.io/en/stable/generated/scanpy.datasets.visium_sge.html">Visium dataset.</a></p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">adata</span> <span class="o">=</span> <span class="n">sc</span><span class="o">.</span><span class="n">datasets</span><span class="o">.</span><span class="n">visium_sge</span><span class="p">(</span><span class="n">sample_id</span><span class="o">=</span><span class="s2">&quot;Targeted_Visium_Human_Glioblastoma_Pan_Cancer&quot;</span><span class="p">,</span> <span class="n">include_hires_tiff</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
 
 <span class="n">sc</span><span class="o">.</span><span class="n">pl</span><span class="o">.</span><span class="n">spatial</span><span class="p">(</span><span class="n">adata</span><span class="p">,</span> <span class="n">color</span> <span class="o">=</span> <span class="s2">&quot;log1p_n_genes_by_counts&quot;</span><span class="p">)</span>
 </pre></div>
 </div>
+<img alt="_images/sc_spatial_documentation.gif" src="_images/sc_spatial_documentation.gif" />
 </section>
 <section id="scatterplots">
 <h3>Scatterplots<a class="headerlink" href="#scatterplots" title="Link to this heading">#</a></h3>
@@ -392,29 +400,36 @@ document.write(`
 <span class="n">sc</span><span class="o">.</span><span class="n">pl</span><span class="o">.</span><span class="n">embedding</span><span class="p">(</span><span class="n">adata</span><span class="p">,</span> <span class="n">basis</span><span class="o">=</span><span class="s2">&quot;tsne&quot;</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;bulk_labels&quot;</span><span class="p">,</span> <span class="s2">&quot;louvain&quot;</span><span class="p">,</span> <span class="s2">&quot;phase&quot;</span><span class="p">])</span>
 </pre></div>
 </div>
+<img alt="_images/updated_umap.gif" src="_images/updated_umap.gif" />
+<p><em>Example of UMAP using Easy Vitessce</em></p>
 </section>
 <section id="dotplot">
 <h3>Dotplot<a class="headerlink" href="#dotplot" title="Link to this heading">#</a></h3>
+<p><strong>Note:</strong> To select/deselect multiple genes, hold SHIFT while clicking on genes in the Gene List.</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">adata</span> <span class="o">=</span> <span class="n">sc</span><span class="o">.</span><span class="n">datasets</span><span class="o">.</span><span class="n">pbmc68k_reduced</span><span class="p">()</span>
 
 <span class="n">sc</span><span class="o">.</span><span class="n">pl</span><span class="o">.</span><span class="n">dotplot</span><span class="p">(</span><span class="n">adata</span><span class="p">,</span> <span class="n">markers</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;C1QA&quot;</span><span class="p">,</span> <span class="s2">&quot;PSAP&quot;</span><span class="p">,</span> <span class="s2">&quot;CD79A&quot;</span><span class="p">,</span> <span class="s2">&quot;CD79B&quot;</span><span class="p">,</span> <span class="s2">&quot;CST3&quot;</span><span class="p">,</span> <span class="s2">&quot;LYZ&quot;</span><span class="p">],</span> <span class="n">groupby</span><span class="o">=</span><span class="s2">&quot;bulk_labels&quot;</span><span class="p">)</span>
 </pre></div>
 </div>
+<img alt="_images/dotplot_example.gif" src="_images/dotplot_example.gif" />
 </section>
 <section id="violin-plot">
 <h3>Violin Plot<a class="headerlink" href="#violin-plot" title="Link to this heading">#</a></h3>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">adata</span> <span class="o">=</span> <span class="n">sc</span><span class="o">.</span><span class="n">datasets</span><span class="o">.</span><span class="n">pbmc68k_reduced</span><span class="p">()</span>
 
-<span class="n">sc</span><span class="o">.</span><span class="n">pl</span><span class="o">.</span><span class="n">violin</span><span class="p">(</span><span class="n">adata</span><span class="p">,</span> <span class="n">markers</span> <span class="o">=</span> <span class="s2">&quot;ABI1&quot;</span><span class="p">)</span>
+<span class="n">sc</span><span class="o">.</span><span class="n">pl</span><span class="o">.</span><span class="n">violin</span><span class="p">(</span><span class="n">adata</span><span class="p">,</span> <span class="n">markers</span> <span class="o">=</span> <span class="s2">&quot;AP2S1&quot;</span><span class="p">,</span> <span class="n">groupby</span> <span class="o">=</span> <span class="s2">&quot;bulk_labels&quot;</span><span class="p">)</span>
 </pre></div>
 </div>
+<img alt="_images/updated_violin.gif" src="_images/updated_violin.gif" />
 </section>
 <section id="heatmap">
 <h3>Heatmap<a class="headerlink" href="#heatmap" title="Link to this heading">#</a></h3>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">adata</span> <span class="o">=</span> <span class="n">sc</span><span class="o">.</span><span class="n">datasets</span><span class="o">.</span><span class="n">pbmc68k_reduced</span><span class="p">()</span>
+
 <span class="n">sc</span><span class="o">.</span><span class="n">pl</span><span class="o">.</span><span class="n">heatmap</span><span class="p">(</span><span class="n">adata</span><span class="p">,</span> <span class="n">groupby</span> <span class="o">=</span> <span class="s2">&quot;bulk_labels&quot;</span><span class="p">,</span> <span class="n">markers</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;C1QA&#39;</span><span class="p">,</span> <span class="s1">&#39;PSAP&#39;</span><span class="p">,</span> <span class="s1">&#39;CD79A&#39;</span><span class="p">,</span> <span class="s1">&#39;CD79B&#39;</span><span class="p">,</span> <span class="s1">&#39;CST3&#39;</span><span class="p">,</span> <span class="s1">&#39;LYZ&#39;</span><span class="p">])</span>
 </pre></div>
 </div>
+<img alt="_images/heatmap.gif" src="_images/heatmap.gif" />
 <div class="toctree-wrapper compound">
 <p aria-level="2" class="caption" role="heading"><span class="caption-text">Contents:</span></p>
 <ul>
@@ -464,7 +479,7 @@ document.write(`
   </div>
   <nav class="bd-toc-nav page-toc">
     <ul class="visible nav section-nav flex-column">
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#installation-and-use">Installation and Use</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#installation">Installation</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#how-to-use-and-examples">How to Use and Examples</a><ul class="nav section-nav flex-column">
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#deactivating-reactivating-interactive-plots">Deactivating/Reactivating Interactive Plots</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#spatial-plot-spatialdata-version">Spatial Plot (SpatialData version)</a></li>

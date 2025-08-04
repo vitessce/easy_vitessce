@@ -225,7 +225,7 @@ def embedding(adata, basis, **kwargs):
 
         else:
             for obs in color:
-                print(obs)
+                # print(obs)
                 dataset = vc.add_dataset(name='tsne data').add_object(AnnDataWrapper(
                     adata_store=zarr_filepath,
                     obs_set_paths=[f"obs/{obs}"],
@@ -406,8 +406,13 @@ def violin(adata, groupby,**kwargs):
     adata = adata
     groupby = groupby
 
-    if "markers" in kwargs.keys():
-        markers = kwargs["markers"]
+    if "markers" not in kwargs.keys():
+        markers = ""
+    
+    if type(kwargs.get("markers")) == str:
+        markers = kwargs.get("markers", "")
+    elif type(kwargs.get("markers")) == list: 
+        markers = kwargs.get("markers", [])
         
     zarr_filepath = _create_zarr_filepath(adata, "violin")
 
@@ -418,9 +423,9 @@ def violin(adata, groupby,**kwargs):
             obs_feature_matrix_path="X"
         ))
 
-    if len(markers) > 1:
+    if type(markers) == list and len(markers) > 1:
         for gene in markers:
-            genes = vc.add_view(cm.FEATURE_LIST, dataset=dataset).set_props(enableMultiSelect=True)
+            genes = vc.add_view(cm.FEATURE_LIST, dataset=dataset)
             cells = vc.add_view(cm.OBS_SETS, dataset=dataset)
             violin = vc.add_view('obsSetFeatureValueDistribution', dataset=dataset, uid=f'violin-plot-{gene}')
             vc.link_views(
@@ -430,12 +435,12 @@ def violin(adata, groupby,**kwargs):
             )
             vc.layout(hconcat(violin, genes, cells, split = [2,1,1]))
     else:
-        genes = vc.add_view(cm.FEATURE_LIST, dataset=dataset).set_props(enableMultiSelect=True)
+        genes = vc.add_view(cm.FEATURE_LIST, dataset=dataset)
         cells = vc.add_view(cm.OBS_SETS, dataset=dataset)
         violin = vc.add_view('obsSetFeatureValueDistribution', dataset=dataset, uid='violin-plot')
 
         if "markers" in kwargs.keys():
-            print(markers)
+            # print(markers)
             vc.link_views(
             [violin, genes, cells], 
             ["featureSelection"],
