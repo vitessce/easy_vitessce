@@ -407,10 +407,10 @@ def violin(adata, groupby,**kwargs):
     groupby = groupby
 
     if "markers" not in kwargs.keys():
-        markers = ""
+        markers = []
     
     if type(kwargs.get("markers")) == str:
-        markers = kwargs.get("markers", "")
+        markers = [kwargs.get("markers", [])]
     elif type(kwargs.get("markers")) == list: 
         markers = kwargs.get("markers", [])
         
