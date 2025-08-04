@@ -25,7 +25,7 @@ dependencies = [
   'numcodecs>=0.5.7,<0.16.0',
   'vitessce[all] >=3.6.9',
   'scanpy >= 1.11.3',
-  'anndata >= 0.11.4'
+  'anndata >= 0.11.4',
   'spatialdata >= 0.4.0'
 ]
 
