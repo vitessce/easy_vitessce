@@ -28,7 +28,7 @@ dependencies = [
   'anndata >= 0.11.4',
   'spatialdata >= 0.2.5',
   'spatialdata-plot >= 0.2.7',
-  'xarray >= 2024.9.0'
+  'xarray >= 2025.7.1'
 ]
 
 

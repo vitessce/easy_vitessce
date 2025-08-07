@@ -27,8 +27,8 @@ from anndata import (AnnData, read_h5ad)
 
 import spatialdata as sd
 from spatialdata import SpatialData
+import spatialdata_plot
 from xarray.core.extensions import _CachedAccessor
-from spatialdata_plot.pl.basic import PlotAccessor
 
 from easy_vitessce.VitessceSpatialData import VitessceSpatialData
 
