@@ -18,7 +18,7 @@ from vitessce import (
     #get_initial_coordination_scope_prefix
 )
 
-from os import join
+from os.path import join
 
 class VitessceSpatialData:
     """
