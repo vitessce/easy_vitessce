@@ -552,6 +552,7 @@ def configure_plots(disable_plots=[], enable_plots=[]):
         orig_pl_name = "_orig_pl"
         if hasattr(SpatialData, '_orig_pl'):
             setattr(SpatialData, 'pl', _CachedAccessor('pl', SpatialData.pl))
+            print("undo_monkeypatch_spatialdata ran")
 
     enable_embedding = True
     enable_spatial = True
