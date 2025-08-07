@@ -20,17 +20,24 @@ Turn your static [Scanpy](https://github.com/scverse/scanpy) and [SpatialData](h
 
 Install package using pip: 
 
-`pip install 'easy_vitessce @ git+https://github.com/luoselena/easy_vitessce@main'`
+```
+pip install 'easy_vitessce @ git+https://github.com/vitessce/easy_vitessce@main'
+```
 
 ## How to Use
 
 #### Importing Easy Vitessce
 
-`from easy_vitessce import configure_plots`
+```
+from easy_vitessce import configure_plots
+```
 
 🪄 All interactive plots are **enabled magically**.
 
-_Note that Scanpy is also required to run the package: `import scanpy as sc`_
+_Note that Scanpy is also required to run the package:_ 
+```
+import scanpy as sc
+```
 
 #### Supported Functions and Parameters
 
