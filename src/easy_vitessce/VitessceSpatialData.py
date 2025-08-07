@@ -18,18 +18,21 @@ from vitessce import (
     #get_initial_coordination_scope_prefix
 )
 
+from os import join
+
 class VitessceSpatialData:
     """
     A class for configuring spatial plot with similar syntax to spatialdata from scverse.
     """
-    def __init__(self, spatialdata_filepath):
+    def __init__(self, sdata):
         """
         Initializes filepaths, Vitessce configuration, SpatialDataWrapper arguments, color map.
 
         :param str spatialdata_filepath: filepath of spatialdata zarr file containing image data.
         :returns: Self, allows for chaining.
         """
-        self.sdata_filepath = spatialdata_filepath
+        self.sdata_filepath = join("data", "sdata.zarr")
+        sdata.write(self.sdata_filepath, overwrite=True)
         self.vc = VitessceConfig(schema_version="1.0.18", name='spatial data')
         self.kwargs = {"sdata_path": self.sdata_filepath,
                 # The following paths are relative to the root of the SpatialData zarr store on-disk.

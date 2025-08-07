@@ -25,7 +25,7 @@ import warnings
 
 from anndata import (AnnData, read_h5ad)
 
-import spatialdata 
+import spatialdata as sd
 from spatialdata import SpatialData
 from xarray.core.extensions import _CachedAccessor
 from spatialdata_plot.pl.basic import PlotAccessor
