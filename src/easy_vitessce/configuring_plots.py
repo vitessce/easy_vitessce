@@ -25,6 +25,11 @@ import warnings
 
 from anndata import (AnnData, read_h5ad)
 
+import spatialdata 
+from spatialdata import SpatialData
+from xarray.core.extensions import _CachedAccessor
+from spatialdata_plot.pl.basic import PlotAccessor
+
 from easy_vitessce.VitessceSpatialData import VitessceSpatialData
 
 def _create_zarr_filepath(adata, plot_type):
@@ -50,10 +55,9 @@ def embedding(adata, basis, **kwargs):
     :param str basis: Name of plot (umap, pca, or tsne).
     :param str color: Gene.
     :param str color_map: Color map (viridis, plasma, jet). Defaults to viridis.
-    :param size: Size of dots.
-        :type: float or int
+    :param (float or int) size: Size of dots.
     :param bool include_gene_list: If a list of genes is passed in, True will add a gene list for the last plot. False by default.
-    :returns: Vitessce widget.
+    :returns: Vitessce widget. Documentation can be found `here. <https://python-docs.vitessce.io/api_config.html#vitessce-widget>`_ 
 
     """
     basis = basis
@@ -257,7 +261,7 @@ def spatial(adata, **kwargs):
     :param AnnData adata: AnnData object.
     :param str color: Gene.
     :param str color_map: Color map (viridis, plasma, jet). Defaults to viridis.
-    :returns: Vitessce widget.
+    :returns: Vitessce widget. Documentation can be found `here. <https://python-docs.vitessce.io/api_config.html#vitessce-widget>`_ 
     """
     sc.pp.calculate_qc_metrics(adata, inplace=True)
     sample_id = (list(adata.uns["spatial"].keys()))[0]
@@ -353,7 +357,7 @@ def heatmap(adata, **kwargs):
     :param str groupby: Category group.
     :param list[str] markers: List of genes.
     :param str color_map: Color map (viridis, plasma, jet). Defaults to viridis.
-    :returns: Vitessce widget.
+    :returns: Vitessce widget. Documentation can be found `here. <https://python-docs.vitessce.io/api_config.html#vitessce-widget>`_ 
     """
     vc =  VitessceConfig(schema_version="1.0.15", name='heatmap')
     adata = adata
@@ -400,7 +404,7 @@ def violin(adata, groupby,**kwargs):
     :param Anndata adata: AnnData object.
     :param str groupby: Category group.
     :param list[str] markers: Genes.
-    :returns: Vitessce widget.
+    :returns: Vitessce widget. Documentation can be found `here. <https://python-docs.vitessce.io/api_config.html#vitessce-widget>`_ 
     """
     vc =  VitessceConfig(schema_version="1.0.15", name='heatmap')
     adata = adata
@@ -459,7 +463,7 @@ def dotplot(adata, groupby, **kwargs):
         :param AnnData adata: AnnData object.
         :param str groupby: Category group.
         :param list[str] markers: List of genes.
-        :returns: Vitessce widget.
+        :returns: Vitessce widget. Documentation can be found `here. <https://python-docs.vitessce.io/api_config.html#vitessce-widget>`_ 
         """
         adata = adata
         groupby = groupby
@@ -537,7 +541,18 @@ def configure_plots(disable_plots=[], enable_plots=[]):
         if hasattr(cls, orig_func_name):
             orig_func = getattr(cls, orig_func_name)
             setattr(cls, func_name, orig_func)
-        
+
+    def monkeypatch_spatialdata():
+        orig_pl_name = "_orig_pl" # for storing pl
+        if not hasattr(SpatialData, orig_pl_name):
+            setattr(SpatialData, orig_pl_name, _CachedAccessor('pl', SpatialData.pl))
+        setattr(SpatialData, 'pl', _CachedAccessor('pl', VitessceSpatialData))
+    
+    def undo_monkeypatch_spatialdata():
+        orig_pl_name = "_orig_pl"
+        if hasattr(SpatialData, '_orig_pl'):
+            setattr(SpatialData, 'pl', _CachedAccessor('pl', SpatialData.pl))
+
     enable_embedding = True
     enable_spatial = True
     enable_dotplot = True
@@ -559,8 +574,10 @@ def configure_plots(disable_plots=[], enable_plots=[]):
         
     if enable_spatial:
         monkeypatch(sc.pl, spatial)
+        monkeypatch_spatialdata()
     else:
         undo_monkeypatch(sc.pl, "spatial")
+        undo_monkeypatch_spatialdata()
         print("deactivated Vitessce spatial")
         
     if enable_dotplot:

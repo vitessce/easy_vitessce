@@ -14,7 +14,7 @@ Requires Python 3.9 or greater.
 
 .. code-block:: 
 
-    pip install 'easy_vitessce @ git+https://github.com/luoselena/easy_vitessce@main'
+    pip install 'easy_vitessce @ git+https://github.com/vitessce/easy_vitessce@main'
 
 How to Use and Examples
 ############################

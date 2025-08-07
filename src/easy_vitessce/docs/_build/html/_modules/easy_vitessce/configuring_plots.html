@@ -310,10 +310,9 @@ document.write(`
 <span class="sd">    :param str basis: Name of plot (umap, pca, or tsne).</span>
 <span class="sd">    :param str color: Gene.</span>
 <span class="sd">    :param str color_map: Color map (viridis, plasma, jet). Defaults to viridis.</span>
-<span class="sd">    :param size: Size of dots.</span>
-<span class="sd">        :type: float or int</span>
+<span class="sd">    :param (float or int) size: Size of dots.</span>
 <span class="sd">    :param bool include_gene_list: If a list of genes is passed in, True will add a gene list for the last plot. False by default.</span>
-<span class="sd">    :returns: Vitessce widget.</span>
+<span class="sd">    :returns: Vitessce widget. Documentation can be found `here. &lt;https://python-docs.vitessce.io/api_config.html#vitessce-widget&gt;`_ </span>
 
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="n">basis</span> <span class="o">=</span> <span class="n">basis</span>
@@ -520,7 +519,7 @@ document.write(`
 <span class="sd">    :param AnnData adata: AnnData object.</span>
 <span class="sd">    :param str color: Gene.</span>
 <span class="sd">    :param str color_map: Color map (viridis, plasma, jet). Defaults to viridis.</span>
-<span class="sd">    :returns: Vitessce widget.</span>
+<span class="sd">    :returns: Vitessce widget. Documentation can be found `here. &lt;https://python-docs.vitessce.io/api_config.html#vitessce-widget&gt;`_ </span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="n">sc</span><span class="o">.</span><span class="n">pp</span><span class="o">.</span><span class="n">calculate_qc_metrics</span><span class="p">(</span><span class="n">adata</span><span class="p">,</span> <span class="n">inplace</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
     <span class="n">sample_id</span> <span class="o">=</span> <span class="p">(</span><span class="nb">list</span><span class="p">(</span><span class="n">adata</span><span class="o">.</span><span class="n">uns</span><span class="p">[</span><span class="s2">&quot;spatial&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">keys</span><span class="p">()))[</span><span class="mi">0</span><span class="p">]</span>
@@ -619,7 +618,7 @@ document.write(`
 <span class="sd">    :param str groupby: Category group.</span>
 <span class="sd">    :param list[str] markers: List of genes.</span>
 <span class="sd">    :param str color_map: Color map (viridis, plasma, jet). Defaults to viridis.</span>
-<span class="sd">    :returns: Vitessce widget.</span>
+<span class="sd">    :returns: Vitessce widget. Documentation can be found `here. &lt;https://python-docs.vitessce.io/api_config.html#vitessce-widget&gt;`_ </span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="n">vc</span> <span class="o">=</span>  <span class="n">VitessceConfig</span><span class="p">(</span><span class="n">schema_version</span><span class="o">=</span><span class="s2">&quot;1.0.15&quot;</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s1">&#39;heatmap&#39;</span><span class="p">)</span>
     <span class="n">adata</span> <span class="o">=</span> <span class="n">adata</span>
@@ -669,17 +668,17 @@ document.write(`
 <span class="sd">    :param Anndata adata: AnnData object.</span>
 <span class="sd">    :param str groupby: Category group.</span>
 <span class="sd">    :param list[str] markers: Genes.</span>
-<span class="sd">    :returns: Vitessce widget.</span>
+<span class="sd">    :returns: Vitessce widget. Documentation can be found `here. &lt;https://python-docs.vitessce.io/api_config.html#vitessce-widget&gt;`_ </span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="n">vc</span> <span class="o">=</span>  <span class="n">VitessceConfig</span><span class="p">(</span><span class="n">schema_version</span><span class="o">=</span><span class="s2">&quot;1.0.15&quot;</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s1">&#39;heatmap&#39;</span><span class="p">)</span>
     <span class="n">adata</span> <span class="o">=</span> <span class="n">adata</span>
     <span class="n">groupby</span> <span class="o">=</span> <span class="n">groupby</span>
 
     <span class="k">if</span> <span class="s2">&quot;markers&quot;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
-        <span class="n">markers</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span>
+        <span class="n">markers</span> <span class="o">=</span> <span class="p">[]</span>
     
     <span class="k">if</span> <span class="nb">type</span><span class="p">(</span><span class="n">kwargs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;markers&quot;</span><span class="p">))</span> <span class="o">==</span> <span class="nb">str</span><span class="p">:</span>
-        <span class="n">markers</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;markers&quot;</span><span class="p">,</span> <span class="s2">&quot;&quot;</span><span class="p">)</span>
+        <span class="n">markers</span> <span class="o">=</span> <span class="p">[</span><span class="n">kwargs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;markers&quot;</span><span class="p">,</span> <span class="p">[])]</span>
     <span class="k">elif</span> <span class="nb">type</span><span class="p">(</span><span class="n">kwargs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;markers&quot;</span><span class="p">))</span> <span class="o">==</span> <span class="nb">list</span><span class="p">:</span> 
         <span class="n">markers</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;markers&quot;</span><span class="p">,</span> <span class="p">[])</span>
         
@@ -731,7 +730,7 @@ document.write(`
 <span class="sd">        :param AnnData adata: AnnData object.</span>
 <span class="sd">        :param str groupby: Category group.</span>
 <span class="sd">        :param list[str] markers: List of genes.</span>
-<span class="sd">        :returns: Vitessce widget.</span>
+<span class="sd">        :returns: Vitessce widget. Documentation can be found `here. &lt;https://python-docs.vitessce.io/api_config.html#vitessce-widget&gt;`_ </span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">adata</span> <span class="o">=</span> <span class="n">adata</span>
         <span class="n">groupby</span> <span class="o">=</span> <span class="n">groupby</span>
