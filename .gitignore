@@ -26,6 +26,10 @@ share/python-wheels/
 *.egg
 MANIFEST
 
+data/
+.vscode/
+.DS_Store
+
 # PyInstaller
 #  Usually these files are written by a python script from a template
 #  before PyInstaller builds the exe, so as to inject date/other infos into it.
@@ -50,6 +54,7 @@ coverage.xml
 .hypothesis/
 .pytest_cache/
 cover/
+.vscode/
 
 # Translations
 *.mo
@@ -70,6 +75,7 @@ instance/
 
 # Sphinx documentation
 docs/_build/
+_build/
 
 # PyBuilder
 .pybuilder/

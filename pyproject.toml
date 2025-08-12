@@ -11,6 +11,7 @@ authors = [
 ]
 description = "A package to easily use Vitessce to create interactive plots for single-cell data"
 readme = "README.md"
+license = {file = "LICENSE"}
 requires-python = ">=3.10"
 classifiers = [
     "Programming Language :: Python :: 3",
@@ -26,26 +27,28 @@ dependencies = [
   'vitessce[all] >=3.6.9',
   'scanpy >= 1.11.3',
   'anndata >= 0.11.4',
-  'spatialdata >= 0.2.5',
+  'spatialdata >= 0.3.0',
+  "xarray>=2024.10.0,<=2025.3.0",
   'spatialdata-plot >= 0.2.7',
-  'xarray < 2024.10.0', 
-  'dask >=2024.4.1, <=2024.11.2',
-  'distributed <= 2024.11.2', 
-  'pytest >= 8.4.1'
+  'dask[dataframe]==2024.11.1',
+  'distributed <= 2024.11.2',
 ]
 
+[project.optional-dependencies]
+docs = ['sphinx', 'sphinx-book-theme']
+dev = ['pytest>= 8.4.1']
 
-license = "MIT"
-license-files = ["LICEN[CS]E*"]
 
 [tool.setuptools]
 packages = ["easy_vitessce"]
 package-dir = {"" = "src"}
 
 [project.urls]
-Homepage = "https://github.com/pypa/sampleproject"
-Issues = "https://github.com/pypa/sampleproject/issues"
+repository = "https://github.com/vitessce/easy_vitessce"
 
 
-[project.optional-dependencies]
-docs = ['sphinx', 'sphinx-book-theme']
+# Reference: https://stackoverflow.com/a/50156706
+[tool.pytest.ini_options]
+pythonpath = ["src"]
+testpaths = ["tests"]
+addopts = ["--doctest-modules", "--verbose", "--ignore=docs"]

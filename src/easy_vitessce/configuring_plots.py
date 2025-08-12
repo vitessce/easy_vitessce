@@ -27,9 +27,7 @@ from anndata import (AnnData, read_h5ad)
 
 import spatialdata as sd
 from spatialdata import SpatialData
-import spatialdata_plot
 from xarray.core.extensions import _CachedAccessor
-from spatialdata_plot.pl.basic import PlotAccessor
 
 from easy_vitessce.VitessceSpatialData import VitessceSpatialData
 
@@ -537,23 +535,35 @@ def _undo_monkeypatch(cls, func_name):
         setattr(cls, func_name, orig_func)
 
 def _monkeypatch_spatialdata():
-        """
-        Replaces behavior of SpatialData.pl class with VitessceSpatialData.
-        """
-        orig_pl_name = "_orig_pl" # for storing pl
-        if not hasattr(SpatialData, orig_pl_name):
-            setattr(SpatialData, orig_pl_name, _CachedAccessor('pl', SpatialData.pl))
+    """
+    Replaces behavior of SpatialData.pl class with VitessceSpatialData.
+    """
+    VitessceSpatialData._is_enabled = True
+
+    if not hasattr(SpatialData, "pl"):
+        raise ValueError("The accessor SpatialData.pl does not yet exist. Please import spatialdata_plot first.")
+    if not hasattr(SpatialData, '_orig_pl'):
+        # Not yet monkeypatched.
+        setattr(SpatialData, '_orig_pl', _CachedAccessor('_orig_pl', SpatialData.pl))
         setattr(SpatialData, 'pl', _CachedAccessor('pl', VitessceSpatialData))
+    else:
+        print("Warning: SpatialData.pl has already been monkeypatched.")
     
 def _undo_monkeypatch_spatialdata():
     """
     Restores the original behavior of SpatialData.pl.
     """
-    orig_pl_name = "_orig_pl"
-    # print(hasattr(SpatialData, '_orig_pl'))
+    VitessceSpatialData._is_enabled = False
+
+    if not hasattr(SpatialData, "pl"):
+        raise ValueError("The accessor SpatialData.pl does not yet exist. Please import spatialdata_plot first.")
+
     if hasattr(SpatialData, '_orig_pl'):
-        setattr(SpatialData, 'pl', _CachedAccessor('pl', SpatialData._orig_pl)) #SpatialData.pl
-        print(f"SpatialData._orig_pl == spatialdata_plot.pl.basic.PlotAccessor: {'spatialdata_plot.pl.basic.PlotAccessor' in str(SpatialData._orig_pl)}")
+        # Has already been monkeypatched. Undo.
+        setattr(SpatialData, 'pl', _CachedAccessor('pl', SpatialData._orig_pl))
+        delattr(SpatialData, '_orig_pl')
+    else:
+        print("Warning: SpatialData.pl has not been monkeypatched yet.")
 
 def configure_plots(disable_plots=[], enable_plots=[]): 
     """

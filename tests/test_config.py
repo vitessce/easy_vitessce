@@ -3,51 +3,82 @@ import scanpy as sc
 import spatialdata as sd
 import spatialdata_plot
 from spatialdata import SpatialData
-from os.path import join
+from os.path import join, abspath, dirname
 from spatialdata_plot.pl.basic import PlotAccessor
-from easy_vitessce.VitessceSpatialData import VitessceSpatialData
-from easy_vitessce.configuring_plots import configure_plots
 
-from easy_vitessce.configuring_plots import (_monkeypatch_spatialdata, _undo_monkeypatch_spatialdata)
+from vitessce import VitessceConfig
+from easy_vitessce.VitessceSpatialData import VitessceSpatialData
+from easy_vitessce.configuring_plots import (
+    configure_plots,
+    _monkeypatch_spatialdata,
+    _undo_monkeypatch_spatialdata
+)
+
+# We set the matplotlib backend to something non-interactive during tests.
+import matplotlib
+matplotlib.use('Agg')
+
+TEST_DIR = dirname(abspath(__file__))
 
 def test_monkeypatch_sd():
-    spatialdata_filepath = join("data", "merfish.spatialdata.zarr")
+    spatialdata_filepath = join(TEST_DIR, "data", "merfish.spatialdata.zarr")
     sdata = sd.read_zarr(spatialdata_filepath)
     _monkeypatch_spatialdata()
     assert isinstance(sdata.pl, VitessceSpatialData)
+    _undo_monkeypatch_spatialdata()
+
 
 def test_monkeypatch_sd_2():
-    spatialdata_filepath = join("data", "merfish.spatialdata.zarr")
+    spatialdata_filepath = join(TEST_DIR, "data", "merfish.spatialdata.zarr")
     sdata = sd.read_zarr(spatialdata_filepath)
     _undo_monkeypatch_spatialdata()
-    configure_plots(enable_plots="spatial")
-    assert isinstance(sdata.pl, VitessceSpatialData)    
+    configure_plots(enable_plots=["spatial"])
+    assert isinstance(sdata.pl, VitessceSpatialData)
+    assert sdata.pl is not PlotAccessor
+
 
 def test_undo_monkeypatch_sd():
-    spatialdata_filepath = join("data", "merfish.spatialdata.zarr")
+    spatialdata_filepath = join(TEST_DIR, "data", "merfish.spatialdata.zarr")
     sdata = sd.read_zarr(spatialdata_filepath)
     _monkeypatch_spatialdata()
-    print(sdata.pl)
+    assert isinstance(sdata.pl, VitessceSpatialData)
+    assert sdata.pl is not PlotAccessor
+
+
+    # Check that creating a plot after monkeypatching returns something interactive.
+    vw = sdata.pl.render_images(element="rasterized").pl.show()
+    assert isinstance(vw.config, VitessceConfig)
+
     _undo_monkeypatch_spatialdata()
-    print(sdata.pl)
-    assert isinstance(sdata.pl, PlotAccessor)
-    # assert 'spatialdata_plot.pl.basic.PlotAccessor' in str(sdata.pl)
+
+    # Undoing does not seem to affect the existing instances of the class,
+    # which we verify below.
+    assert isinstance(sdata.pl, VitessceSpatialData)
+    assert sdata.pl is not PlotAccessor
+    
+    # However, our ._is_enabled workaround should work as expected:
+    # Check that creating a plot after undoing the monkeypatch returns something static, rather than interactive.
+    ax = sdata.pl.render_images(element="rasterized").pl.show(return_ax=True)
+    assert isinstance(ax, matplotlib.axes.Axes)
+
+    # Undoing should affect a new instance of the class, however.
+    new_sdata = sd.read_zarr(spatialdata_filepath)
+    assert not isinstance(new_sdata.pl, VitessceSpatialData)
+    assert isinstance(new_sdata.pl, PlotAccessor)
+    
+    # Check that creating a plot after undoing the monkeypatch still works.
+    new_ax = new_sdata.pl.render_images(element="rasterized").pl.show(return_ax=True)
+    assert isinstance(new_ax, matplotlib.axes.Axes)
 
 def test_undo_monkeypatch_2():
-    spatialdata_filepath = join("data", "merfish.spatialdata.zarr")
-    sdata = sd.read_zarr(spatialdata_filepath)
+    # Test the class itself, rather than an sdata instance.
     _monkeypatch_spatialdata()
-    _undo_monkeypatch_spatialdata()
+    assert SpatialData.pl is VitessceSpatialData
     assert SpatialData._orig_pl is PlotAccessor
-    assert 'spatialdata_plot.pl.basic.PlotAccessor' in str(SpatialData._orig_pl)
-
-def test_undo_monkeypatch_3():
-    spatialdata_filepath = join("data", "merfish.spatialdata.zarr")
-    sdata = sd.read_zarr(spatialdata_filepath)
-    _monkeypatch_spatialdata()
     _undo_monkeypatch_spatialdata()
-    sdata = sd.read_zarr(spatialdata_filepath) # ????
-    assert isinstance(sdata.pl, PlotAccessor)
+    assert SpatialData.pl is PlotAccessor
+    assert not hasattr(SpatialData, "_orig_pl")
+
 
 def test_embedding_config_creation():
     adata = sc.datasets.pbmc68k_reduced()
@@ -175,4 +206,26 @@ def test_spatial_config_creation():
         'w': 6,
         'h': 6}],
         'initStrategy': 'auto'
+    }
+
+def test_spatialdata_config_creation():
+    spatialdata_filepath = join(TEST_DIR, "data", "merfish.spatialdata.zarr")
+    sdata = sd.read_zarr(spatialdata_filepath)
+    _monkeypatch_spatialdata()
+
+    # Check that .pl.render_something can be chained together.
+    vw = sdata.pl.render_images(element="rasterized").pl.render_shapes(element="cells").pl.show()
+    vc = vw.config
+    vc_dict = vc.to_dict(base_url='')
+
+    assert vc_dict["datasets"][0]["files"][0]["url"].endswith(".sdata.zarr")
+    del vc_dict["datasets"][0]["files"][0]["url"]
+    assert vc_dict["datasets"][0]["files"][0] == {
+        'fileType': 'spatialdata.zarr',
+        'options': {
+            'obsFeatureMatrix': {'path': 'tables/table/X'},
+            'obsSpots': {'path': 'shapes/cells', 'tablePath': 'tables/table'},
+            'image': {'path': 'images/rasterized'}
+        },
+        'coordinationValues': {'obsType': 'spot'}
     }
