@@ -24,19 +24,18 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y pandoc
       - name: Install vitessce
-        run: uv sync --extra docs
-      # - name: Run tests
-      #   run: uv run pytest
+        run: uv sync --extra docs --extra dev
+      - name: Run tests
+        run: uv run pytest
       - name: Build a binary wheel and a source tarball
         run: uv build --sdist --wheel
       - name: Build docs
-        working-directory: src/easy_vitessce/docs
         run: |
           uv run make html
           touch _build/html/.nojekyll
       - uses: actions/upload-pages-artifact@v3
         with:
-          path: src/easy_vitessce/docs/_build/html
+          path: _build/html
       - name: Deploy package to PyPI
         continue-on-error: true
         uses: pypa/gh-action-pypi-publish@v1.4.1
