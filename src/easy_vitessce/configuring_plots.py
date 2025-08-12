@@ -29,6 +29,7 @@ import spatialdata as sd
 from spatialdata import SpatialData
 import spatialdata_plot
 from xarray.core.extensions import _CachedAccessor
+from spatialdata_plot.pl.basic import PlotAccessor
 
 from easy_vitessce.VitessceSpatialData import VitessceSpatialData
 
@@ -511,6 +512,49 @@ def dotplot(adata, groupby, **kwargs):
         vw = vc.widget()
         return vw
 
+def _monkeypatch(cls, func):
+    """
+    Modifies behavior of the class to replace a function.
+
+    :param any cls: Class to be modified. Expected to be sc.pl class.
+    :param any func: function to be replaced. Expected to be plotting function from sc.pl class.
+    """
+
+    func_name = func.__name__
+    orig_func_name = f"_orig_{func_name}"
+    if not hasattr(cls, orig_func_name):
+        orig_func = getattr(cls, func_name)
+        setattr(cls, orig_func_name, orig_func)
+    setattr(cls, func_name, func)
+
+def _undo_monkeypatch(cls, func_name):
+    """
+    Restores the original behavior of the class.
+    """
+    orig_func_name = f"_orig_{func_name}"
+    if hasattr(cls, orig_func_name):
+        orig_func = getattr(cls, orig_func_name)
+        setattr(cls, func_name, orig_func)
+
+def _monkeypatch_spatialdata():
+        """
+        Replaces behavior of SpatialData.pl class with VitessceSpatialData.
+        """
+        orig_pl_name = "_orig_pl" # for storing pl
+        if not hasattr(SpatialData, orig_pl_name):
+            setattr(SpatialData, orig_pl_name, _CachedAccessor('pl', SpatialData.pl))
+        setattr(SpatialData, 'pl', _CachedAccessor('pl', VitessceSpatialData))
+    
+def _undo_monkeypatch_spatialdata():
+    """
+    Restores the original behavior of SpatialData.pl.
+    """
+    orig_pl_name = "_orig_pl"
+    # print(hasattr(SpatialData, '_orig_pl'))
+    if hasattr(SpatialData, '_orig_pl'):
+        setattr(SpatialData, 'pl', _CachedAccessor('pl', SpatialData._orig_pl)) #SpatialData.pl
+        print(f"SpatialData._orig_pl == spatialdata_plot.pl.basic.PlotAccessor: {'spatialdata_plot.pl.basic.PlotAccessor' in str(SpatialData._orig_pl)}")
+
 def configure_plots(disable_plots=[], enable_plots=[]): 
     """
     Deactivates and reactivates interactive Vitessce plots.
@@ -521,38 +565,6 @@ def configure_plots(disable_plots=[], enable_plots=[]):
     if any(plot in enable_plots for plot in disable_plots):
             raise RuntimeError("Plots cannot be in enable_plots and disable_plots simultaneously.")
         
-    def monkeypatch(cls, func):
-        """
-        Modifies behavior of the class to replace a function.
-    
-        :param any cls: Class to be modified. Expected to be sc.pl class.
-        :param any func: function to be replaced. Expected to be plotting function from sc.pl class.
-        """
-    
-        func_name = func.__name__
-        orig_func_name = f"_orig_{func_name}"
-        if not hasattr(cls, orig_func_name):
-          orig_func = getattr(cls, func_name)
-          setattr(cls, orig_func_name, orig_func)
-        setattr(cls, func_name, func)
-
-    def undo_monkeypatch(cls, func_name):
-        orig_func_name = f"_orig_{func_name}"
-        if hasattr(cls, orig_func_name):
-            orig_func = getattr(cls, orig_func_name)
-            setattr(cls, func_name, orig_func)
-
-    def monkeypatch_spatialdata():
-        orig_pl_name = "_orig_pl" # for storing pl
-        if not hasattr(SpatialData, orig_pl_name):
-            setattr(SpatialData, orig_pl_name, _CachedAccessor('pl', SpatialData.pl))
-        setattr(SpatialData, 'pl', _CachedAccessor('pl', VitessceSpatialData))
-    
-    def undo_monkeypatch_spatialdata():
-        orig_pl_name = "_orig_pl"
-        if hasattr(SpatialData, '_orig_pl'):
-            setattr(SpatialData, 'pl', _CachedAccessor('pl', SpatialData.pl))
-            print("undo_monkeypatch_spatialdata ran")
 
     enable_embedding = True
     enable_spatial = True
@@ -568,33 +580,33 @@ def configure_plots(disable_plots=[], enable_plots=[]):
     
         
     if enable_embedding:
-        monkeypatch(sc.pl, embedding)
+        _monkeypatch(sc.pl, embedding)
     else:
-        undo_monkeypatch(sc.pl, "embedding")
+        _undo_monkeypatch(sc.pl, "embedding")
         print("deactivated Vitessce embedding")
         
     if enable_spatial:
-        monkeypatch(sc.pl, spatial)
-        monkeypatch_spatialdata()
+        _monkeypatch(sc.pl, spatial)
+        _monkeypatch_spatialdata()
     else:
-        undo_monkeypatch(sc.pl, "spatial")
-        undo_monkeypatch_spatialdata()
+        _undo_monkeypatch(sc.pl, "spatial")
+        _undo_monkeypatch_spatialdata()
         print("deactivated Vitessce spatial")
         
     if enable_dotplot:
-        monkeypatch(sc.pl, dotplot)
+        _monkeypatch(sc.pl, dotplot)
     else:
-        undo_monkeypatch(sc.pl, "dotplot")
+        _undo_monkeypatch(sc.pl, "dotplot")
         print("deactivated Vitessce dotplot")
         
     if enable_heatmap:
-        monkeypatch(sc.pl, heatmap)
+        _monkeypatch(sc.pl, heatmap)
     else:
-        undo_monkeypatch(sc.pl, "heatmap")
+        _undo_monkeypatch(sc.pl, "heatmap")
         print("deactivated Vitessce heatmap")
         
     if enable_violin:
-        monkeypatch(sc.pl, violin)
+        _monkeypatch(sc.pl, violin)
     else:
-        undo_monkeypatch(sc.pl, "violin")
+        _undo_monkeypatch(sc.pl, "violin")
         print("deactivated Vitessce violin")

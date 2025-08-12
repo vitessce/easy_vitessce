@@ -1,0 +1,61 @@
+{
+    "chunks": [
+        100
+    ],
+    "compressor": {
+        "blocksize": 0,
+        "clevel": 5,
+        "cname": "lz4",
+        "id": "blosc",
+        "shuffle": 1
+    },
+    "dtype": [
+        [
+            "CD4+/CD25 T Reg",
+            "<f4"
+        ],
+        [
+            "CD4+/CD45RA+/CD25- Naive T",
+            "<f4"
+        ],
+        [
+            "CD4+/CD45RO+ Memory",
+            "<f4"
+        ],
+        [
+            "CD8+ Cytotoxic T",
+            "<f4"
+        ],
+        [
+            "CD8+/CD45RA+ Naive Cytotoxic",
+            "<f4"
+        ],
+        [
+            "CD14+ Monocyte",
+            "<f4"
+        ],
+        [
+            "CD19+ B",
+            "<f4"
+        ],
+        [
+            "CD34+",
+            "<f4"
+        ],
+        [
+            "CD56+ NK",
+            "<f4"
+        ],
+        [
+            "Dendritic",
+            "<f4"
+        ]
+    ],
+    "fill_value": "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==",
+    "filters": null,
+    "order": "C",
+    "shape": [
+        100
+    ],
+    "zarr_format": 2
+}

@@ -57,7 +57,7 @@ Spatial Plot (SpatialData version)
    sdata = sd.read_zarr(spatialdata_filepath)
    sdata.pl.render_images(element="rasterized").pl.render_shapes(element="cells", color="Acta2").pl.show()
 
-``spatialdata_filepath`` should be lead to a ``.zarr`` file containing spatial data with an ``Images`` folder. The file structure of the example above is as follows. Since it does not have a ``Labels`` folder, calling ``pl.render_labels()`` will not display any data.
+``spatialdata_filepath`` should lead to a ``.zarr`` file containing spatial data with an ``Images`` folder. The file structure of the example above is as follows. Since it does not have a ``Labels`` folder, calling ``pl.render_labels()`` will not display any data.
 
 .. code-block:: 
 
