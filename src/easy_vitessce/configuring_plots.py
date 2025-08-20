@@ -113,11 +113,11 @@ def embedding(adata, basis, **kwargs):
                           [None, None, None]
                         )
                                                                 
-            for key, value in mapping_dict.items():
+            for gene, view in mapping_dict.items():
                vc.link_views(
-                        [value], 
+                        [view], 
                         ["featureSelection", "obsColorEncoding", "embeddingObsRadiusMode", "embeddingObsRadius", "featureValueColormap"], # https://vitessce.io/docs/coordination-types/
-                        [[key], "geneSelection", "manual", size, color_map]
+                        [[gene], "geneSelection", "manual", size, color_map]
                     )
             
              
@@ -191,7 +191,7 @@ def embedding(adata, basis, **kwargs):
                 ["featureSelection", "obsColorEncoding", "embeddingObsRadiusMode", "embeddingObsRadius", "featureValueColormap"], # https://vitessce.io/docs/coordination-types/
                 [[color[0] if type(color) == list else color], "geneSelection", "manual", size , color_map]
             )
-            vc.layout(mapping | genes);
+            vc.layout(mapping | genes)
            
         vw = vc.widget()
         return vw

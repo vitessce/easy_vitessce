@@ -136,7 +136,7 @@ def test_sc_tl():
     sc.pl.embedding(adata, basis="tsne")
     assert "X_tsne" in adata.obsm
 
-@pytest.mark.skip(reason = "problem with sample_id?")
+@pytest.mark.skip(reason = "problem with V1_Human_Lymph_Node dataset")
 def test_spatial_config_creation():
     adata = sc.datasets.visium_sge(sample_id="V1_Human_Lymph_Node", include_hires_tiff=True)
     vw = sc.pl.spatial(adata, color = "log1p_n_genes_by_counts")

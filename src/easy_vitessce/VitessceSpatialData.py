@@ -49,12 +49,11 @@ class VitessceSpatialData:
             self.sdata_filepath = join("data", "sdata.zarr")
             sdata.write(self.sdata_filepath, overwrite=True)
         
-        self.vc = VitessceConfig(schema_version="1.0.18", name='spatial data')
         self.kwargs = {"sdata_path": self.sdata_filepath,
                 # The following paths are relative to the root of the SpatialData zarr store on-disk.
                 "table_path":"tables/table",
                 "obs_feature_matrix_path":"tables/table/X",
-                "coordinate_syste":"global",
+                "coordinate_system":"global",
                 "coordination_values":{
                     # The following tells Vitessce to consider each observation as a "spot"
                     "obsType": "spot",
@@ -86,24 +85,45 @@ class VitessceSpatialData:
 
         :param str element: location of shape data inside "shapes" folder.
         :param str color: gene.
-        :param str color_map: color map (viridis, plasma, jet).
+        :param str cmap: color map (viridis, plasma, jet).
         :returns: Self, allows for chaining.
         """
         if not VitessceSpatialData._is_enabled:
             return self._pl.render_shapes(element=element, **kwargs)
-        
-        obs_spots_path = {"obs_spots_path": f"shapes/{element}"}
-        self.kwargs.update(obs_spots_path)
+
+        if (self.sdata.shapes[element]["geometry"].geom_type.iloc[0]) == 'Polygon': # vitessce only has polygon and circles
+            print("POLYGON!!!!!!")
+            obs_path = {"obs_segmentations_path": f"shapes/{element}"}
+        else:
+            obs_path = {"obs_spots_path": f"shapes/{element}"}
+            
+        self.kwargs.update(obs_path)
+
+        if "table" in kwargs.keys():
+            # have user specify which file to use?
+            table_path = {"table_path": f"tables/{kwargs.get('table')}"}
+            matrix_path = {"obs_feature_matrix_path": f"tables/{kwargs.get('table')}/X"}
+            self.kwargs.update(table_path)
+            self.kwargs.update(matrix_path)
 
         if "color" in kwargs.keys():
-            color = {"featureSelection": [kwargs["color"]]}
-            color_encoding = {"obsColorEncoding": "geneSelection"}
-            self.views.update(color)
-            self.views.update(color_encoding)
+            if kwargs.get("color") in self.sdata.tables["table"].var.index: # gene
+                color = {"featureSelection": [kwargs["color"]]}
+                color_encoding = {"obsColorEncoding": "geneSelection"}
+                
+                self.views.update(color)
+                self.views.update(color_encoding)
+                
+            elif kwargs.get("color") in self.sdata.tables["tables"].obs: # categorical?
+                color = {"obsSetSelection": [kwargs["color"]]}
+                color_encoding = {"obsColorEncoding": "cellSetSelection"}
+                
+                self.views.update(color)
+                self.views.update(color_encoding)
             
-        if "color_map" in kwargs.keys():
-            color_map = {"featureValueColormap": kwargs["color_map"]}
-            self.views.update(color_map)
+        if "cmap" in kwargs.keys():
+            cmap = {"featureValueColormap": kwargs["cmap"]}
+            self.views.update(cmap)
             
         return self.sdata
 
@@ -145,7 +165,8 @@ class VitessceSpatialData:
         """
         if not VitessceSpatialData._is_enabled:
             return self._pl.show(**kwargs)
-
+            
+        self.vc = VitessceConfig(schema_version="1.0.18", name='spatial data')
         self.wrapper = SpatialDataWrapper(**self.kwargs)
         
         dataset = self.vc.add_dataset(name='Mouse Brain Merfish').add_object(self.wrapper)
@@ -162,4 +183,4 @@ class VitessceSpatialData:
         # Layout the views
         self.vc.layout(spatial | (feature_list / layer_controller))
         
-        return self.vc.widget()
+        return self.vc.widget(js_package_version="3.6.17")
