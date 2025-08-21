@@ -73,3 +73,12 @@ uv run pytest
 uv run make html
 open _build/html/index.html
 ```
+
+### Launch Jupyter notebook or lab
+
+```sh
+# uv sync --extra dev
+uv run jupyter notebook --notebook-dir .
+# or
+uv run jupyter lab --notebook-dir .
+```

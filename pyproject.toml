@@ -36,7 +36,7 @@ dependencies = [
 
 [project.optional-dependencies]
 docs = ['sphinx', 'sphinx-book-theme']
-dev = ['pytest>= 8.4.1']
+dev = ['pytest>= 8.4.1', 'jupyter', 'jupyterlab']
 
 
 [tool.setuptools]
