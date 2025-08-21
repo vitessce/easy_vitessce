@@ -30,6 +30,7 @@ from spatialdata import SpatialData
 from xarray.core.extensions import _CachedAccessor
 
 from easy_vitessce.VitessceSpatialData import VitessceSpatialData
+from easy_vitessce.widget import to_widget
 
 def _create_zarr_filepath(adata, plot_type):
     """
@@ -193,7 +194,7 @@ def embedding(adata, basis, **kwargs):
             )
             vc.layout(mapping | genes)
            
-        vw = vc.widget()
+        vw = to_widget(vc)
         return vw
 
 
@@ -250,7 +251,7 @@ def embedding(adata, basis, **kwargs):
                 vc.layout(tsne | obs)
                 
             
-        vw = vc.widget()
+        vw = to_widget(vc)
         return vw
 
 def spatial(adata, **kwargs):
@@ -345,7 +346,7 @@ def spatial(adata, **kwargs):
     
     vc.layout(spatial_view | lc_view / histogram)
     
-    vw = vc.widget()
+    vw = to_widget(vc)
     return vw
 
 def heatmap(adata, **kwargs):
@@ -393,7 +394,7 @@ def heatmap(adata, **kwargs):
             
     vc.layout(heatmap | cells)
 
-    vw = vc.widget()
+    vw = to_widget(vc)
     return vw
 
 def violin(adata, groupby,**kwargs):
@@ -452,7 +453,7 @@ def violin(adata, groupby,**kwargs):
     
         vc.layout(violin | genes / cells)
 
-    vw = vc.widget()
+    vw = to_widget(vc)
     return vw
 
 def dotplot(adata, groupby, **kwargs):
@@ -507,7 +508,7 @@ def dotplot(adata, groupby, **kwargs):
         
         
         vc.layout(dotPlot | featureList / (obsSets))
-        vw = vc.widget()
+        vw = to_widget(vc)
         return vw
 
 def _monkeypatch(cls, func):

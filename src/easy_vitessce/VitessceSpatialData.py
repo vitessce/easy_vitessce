@@ -13,14 +13,17 @@ from vitessce import (
     VitessceConfig,
     ViewType as vt,
     #CoordinationType as ct,
-    #CoordinationLevel as CL,
+    CoordinationLevel as CL,
     SpatialDataWrapper,
-    #get_initial_coordination_scope_prefix
+    get_initial_coordination_scope_prefix,
 )
 
 from os.path import join
 
 from spatialdata_plot.pl.basic import PlotAccessor
+from spatialdata import get_element_annotators
+
+from easy_vitessce.widget import to_widget
 
 class VitessceSpatialData:
     """
@@ -58,7 +61,8 @@ class VitessceSpatialData:
                     # The following tells Vitessce to consider each observation as a "spot"
                     "obsType": "spot",
                 }}
-        self.views = {"featureValueColormap": "viridis"}     
+        self.views = {"featureValueColormap": "viridis"}
+        self.spatial_layers_coordination = {}
 
         # This is the static PlotAccessor instance that will be used when monkeypatching is not enabled.
         self._pl = PlotAccessor(sdata)
@@ -91,20 +95,38 @@ class VitessceSpatialData:
         if not VitessceSpatialData._is_enabled:
             return self._pl.render_shapes(element=element, **kwargs)
 
-        if (self.sdata.shapes[element]["geometry"].geom_type.iloc[0]) == 'Polygon': # vitessce only has polygon and circles
-            print("POLYGON!!!!!!")
+        if self.sdata.shapes[element]["geometry"].geom_type.iloc[0] == 'Polygon': # vitessce only has polygon and circles
             obs_path = {"obs_segmentations_path": f"shapes/{element}"}
+
+            self.spatial_layers_coordination = {
+                # We want to keep any existing spatial layer coordination information.
+                **self.spatial_layers_coordination,
+                "segmentationLayer": CL([{
+                    'segmentationChannel': CL([{
+                        # We initialize with a single channel.
+                    }]),
+                }]),
+            }
+
         else:
             obs_path = {"obs_spots_path": f"shapes/{element}"}
             
         self.kwargs.update(obs_path)
 
-        if "table" in kwargs.keys():
-            # have user specify which file to use?
-            table_path = {"table_path": f"tables/{kwargs.get('table')}"}
-            matrix_path = {"obs_feature_matrix_path": f"tables/{kwargs.get('table')}/X"}
+        table_name = kwargs.get("table_name", None)
+        if table_name is None:
+            annotating_tables = list(get_element_annotators(self.sdata, element))
+            if len(annotating_tables) > 0:
+                # Use the first annotating table if no specific table is provided.
+                table_name = annotating_tables[0]
+
+        if table_name is not None:
+            # have user specify which matrix to use?
+            table_path = {"table_path": f"tables/{table_name}"}
+            matrix_path = {"obs_feature_matrix_path": f"tables/{table_name}/X"}
             self.kwargs.update(table_path)
             self.kwargs.update(matrix_path)
+
 
         if "color" in kwargs.keys():
             if kwargs.get("color") in self.sdata.tables["table"].var.index: # gene
@@ -179,8 +201,9 @@ class VitessceSpatialData:
         self.vc.link_views([spatial, layer_controller, feature_list], ['obsType'], [self.wrapper.obs_type_label])
         
         self.vc.link_views_by_dict([spatial, layer_controller, feature_list], self.views, meta=False)
+        self.vc.link_views_by_dict([spatial, layer_controller], self.spatial_layers_coordination, meta=True)
         
         # Layout the views
         self.vc.layout(spatial | (feature_list / layer_controller))
         
-        return self.vc.widget(js_package_version="3.6.17")
+        return to_widget(self.vc)

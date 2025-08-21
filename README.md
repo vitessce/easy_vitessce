@@ -61,16 +61,20 @@ configure_plots(enable_plots = ["spatial", "violin"])
 uv sync --extra dev --extra docs
 ```
 
+This command should also be run after updating dependencies in `pyproject.toml`.
+
 ### Run tests
 
 ```sh
+# uv sync --extra dev
 uv run pytest
 ```
 
 ### Make documentation
 
 ```sh
-uv run make html
+uv run make html # on mac/linux
+# uv run make.bat html # on windows
 open _build/html/index.html
 ```
 
