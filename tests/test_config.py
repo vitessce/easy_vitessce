@@ -8,7 +8,7 @@ from spatialdata_plot.pl.basic import PlotAccessor
 
 from vitessce import VitessceConfig
 from easy_vitessce.VitessceSpatialData import VitessceSpatialData
-from configure_plots import (
+from easy_vitessce.configure_plots import (
     configure_plots,
     _monkeypatch_spatialdata,
     _undo_monkeypatch_spatialdata
