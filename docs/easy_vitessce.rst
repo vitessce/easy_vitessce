@@ -1,10 +1,10 @@
-easy\_vitessce package
-======================
+easy_vitessce Plotting Functions
+==================================
 
-Submodules
-----------
+.. Submodules
+.. ----------
 
-easy\_vitessce.VitessceSpatialData module
+VitessceSpatialData module
 -----------------------------------------
 
 .. automodule:: easy_vitessce.VitessceSpatialData
@@ -12,10 +12,10 @@ easy\_vitessce.VitessceSpatialData module
    :show-inheritance:
    :undoc-members:
 
-easy\_vitessce.configuring\_plots module
+configure\_plots module
 ----------------------------------------
 
-.. automodule:: easy_vitessce.configuring_plots
+.. automodule:: easy_vitessce.configure_plots
    :members:
    :show-inheritance:
    :undoc-members:

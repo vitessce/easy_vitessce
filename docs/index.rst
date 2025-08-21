@@ -23,7 +23,6 @@ The package can be imported with
 
 .. code-block:: 
 
-   from easy_vitessce.VitessceSpatialData import VitessceSpatialData
    from easy_vitessce import configure_plots
 
 **Scanpy is also required for this package.**
@@ -40,7 +39,7 @@ Passing ``disable_plots`` into ``configure_plots`` will deactivate Vitessce plot
 
 Passing ``enable_plots`` into ``configure_plots`` will reactivate Vitessce plots.
 
-**Note:** While ``diable_plots`` and ``enable_plots`` can be passed in at the same time, listing the same plot in both will result in an error.
+**Note:** While ``disable_plots`` and ``enable_plots`` can be passed in at the same time, listing the same plot in both will result in an error.
 
 .. code-block:: 
 
