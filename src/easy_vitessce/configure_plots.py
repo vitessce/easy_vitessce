@@ -30,6 +30,7 @@ from spatialdata import SpatialData
 from xarray.core.extensions import _CachedAccessor
 
 from easy_vitessce.VitessceSpatialData import VitessceSpatialData
+from easy_vitessce.widget import to_widget
 
 def _create_zarr_filepath(adata, plot_type):
     """
@@ -258,7 +259,7 @@ def embedding(adata, basis, **kwargs):
                 vc.layout(scatterplot | obs_view)
                 
             
-        vw = vc.widget(js_package_version="3.6.17")
+        vw = to_widget(vc)
         return vw
 
     else: # one color
@@ -283,7 +284,7 @@ def embedding(adata, basis, **kwargs):
 
         vc.layout(mapping | view_list)
        
-    vw = vc.widget(js_package_version="3.6.17")
+    vw = to_widget(vc)
     return vw
 
 def spatial(adata, **kwargs):
@@ -434,7 +435,7 @@ def spatial(adata, **kwargs):
             
     #         vc.layout(spatial_view_1 | spatial_view_2)
     
-    #     vw = vc.widget()
+    #     vw = to_widget(vc)
     #     return vw
 
     
@@ -469,7 +470,7 @@ def spatial(adata, **kwargs):
     
     vc.layout(spatial_view | (lc_view / (histogram if color in adata.obs.columns else genes)))
     
-    vw = vc.widget(js_package_version="3.6.16")
+    vw = to_widget(vc)
     return vw
 
 def heatmap(adata, **kwargs):
@@ -517,7 +518,7 @@ def heatmap(adata, **kwargs):
             
     vc.layout(heatmap | cells)
 
-    vw = vc.widget()
+    vw = to_widget(vc)
     return vw
 
 def violin(adata, groupby,**kwargs):
@@ -576,7 +577,7 @@ def violin(adata, groupby,**kwargs):
     
         vc.layout(violin | genes / cells)
 
-    vw = vc.widget()
+    vw = to_widget(vc)
     return vw
 
 def dotplot(adata, groupby, **kwargs):
@@ -631,7 +632,7 @@ def dotplot(adata, groupby, **kwargs):
         
         
         vc.layout(dotPlot | featureList / (obsSets))
-        vw = vc.widget()
+        vw = to_widget(vc)
         return vw
 
 def _monkeypatch(cls, func):
