@@ -1078,7 +1078,7 @@ requires-dist = [
     { name = "spatialdata-plot", specifier = ">=0.2.7" },
     { name = "sphinx", marker = "extra == 'docs'" },
     { name = "sphinx-book-theme", marker = "extra == 'docs'" },
-    { name = "vitessce", extras = ["all"], specifier = ">=3.6.9" },
+    { name = "vitessce", extras = ["all"], specifier = ">=3.7.3" },
     { name = "xarray", specifier = ">=2024.10.0,<=2025.3.0" },
     { name = "zarr", specifier = ">=2.5.0,<3" },
 ]
@@ -4880,7 +4880,7 @@ wheels = [
 
 [[package]]
 name = "vitessce"
-version = "3.7.1"
+version = "3.7.3"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "black" },
@@ -4893,9 +4893,9 @@ dependencies = [
     { name = "zarr", version = "2.18.3", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version < '3.11'" },
     { name = "zarr", version = "2.18.7", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version >= '3.11'" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/35/26/d2c8fb9db8d213dc0b85f64c87c7e94ef5ace5a7808e4cb7058ba723bb6d/vitessce-3.7.1.tar.gz", hash = "sha256:d259544c69e10c0a906505705c6def1b045894b253139557c23f77508e8251f6", size = 323148 }
+sdist = { url = "https://files.pythonhosted.org/packages/e7/15/ffcd6d26125595a6531530c8c5f413b694ecc829847af72088eb3f36b211/vitessce-3.7.3.tar.gz", hash = "sha256:0ed55b81355ac50be4c5096da9f71b4ce5771d815292e30672440b669fa6e7c8", size = 323328 }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/bf/6d/d8faa267137b61f868e570d602fddecebc56d60b545733bd410c598ce985/vitessce-3.7.1-py3-none-any.whl", hash = "sha256:6ea90bc9246eed22073e093c352bf679ec27ca4e34aca4f21a99650a12345215", size = 72912 },
+    { url = "https://files.pythonhosted.org/packages/9f/57/ac56cdf98cafd08b26d03ca356487d9a6237019770f22be1d407a9458575/vitessce-3.7.3-py3-none-any.whl", hash = "sha256:3471e46504d9c0e65e77c0cd3abc790658fd25e1a027bcaecd4861489625be1c", size = 72914 },
 ]
 
 [package.optional-dependencies]

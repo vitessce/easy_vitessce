@@ -98,15 +98,15 @@ class VitessceSpatialData:
         if self.sdata.shapes[element]["geometry"].geom_type.iloc[0] == 'Polygon': # vitessce only has polygon and circles
             obs_path = {"obs_segmentations_path": f"shapes/{element}"}
 
-            self.spatial_layers_coordination = {
-                # We want to keep any existing spatial layer coordination information.
-                **self.spatial_layers_coordination,
-                "segmentationLayer": CL([{
-                    'segmentationChannel': CL([{
-                        # We initialize with a single channel.
-                    }]),
-                }]),
-            }
+            # self.spatial_layers_coordination = {
+            #     # We want to keep any existing spatial layer coordination information.
+            #     **self.spatial_layers_coordination,
+            #     "segmentationLayer": CL([{
+            #         'segmentationChannel': CL([{
+            #             # We initialize with a single channel.
+            #         }]),
+            #     }]),
+            # }
 
         else:
             obs_path = {"obs_spots_path": f"shapes/{element}"}
