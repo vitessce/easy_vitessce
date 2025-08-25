@@ -111,9 +111,7 @@ def embedding(adata, basis, **kwargs):
     include_genes = kwargs.get("include_gene_list", False)
     include_cells = kwargs.get("include_cell_sets", False)
     
-    if "color" not in kwargs.keys():
-        color = ""
-
+    color = kwargs.get("color", "")
     color_map = kwargs.get("color_map", "viridis")
     size  = kwargs.get("size", 2.5)
 
@@ -125,8 +123,8 @@ def embedding(adata, basis, **kwargs):
     coordination_types = ["embeddingObsRadiusMode", "embeddingObsRadius", "embeddingObsOpacityMode", "obsColorEncoding"]
     coordination_values = ["manual", size, "manual"]
     
-    if type(kwargs.get("color")) == str or len(kwargs.get("color")) == 1:
-        color = kwargs.get("color") if type(kwargs.get("color")) == str else kwargs.get("color")[0]
+    if (type(color) == str and len(color) != 0) or len(color) == 1:
+        # color = kwargs.get("color") if type(kwargs.get("color")) == str else kwargs.get("color")[0]
         
         if color in adata.obs.columns:
           # `color` is the name of a categorical `obs` dataframe column
@@ -160,8 +158,26 @@ def embedding(adata, basis, **kwargs):
             'obs_feature_matrix_path':"X"
         }
 
+    if len(color) == 0:
+        dataset = vc.add_dataset(name='data').add_object(AnnDataWrapper(**adata_wrapper_dict))
+        coordination_types.remove("obsColorEncoding")
+        coordination_types.append("featureValueColormap")
+        coordination_values.append(color_map)
+        mapping = vc.add_view(cm.SCATTERPLOT, dataset=dataset, mapping=basis_name) # mapping value corresponds to one of the obs_embedding_names values.
+        view_list = vc.add_view(cm.FEATURE_LIST, dataset=dataset) # default to feature_list if no color is provided
 
-    if type(color) == list and len(color) > 1: 
+        vc.link_views(
+            [mapping, view_list], 
+            coordination_types, # https://vitessce.io/docs/coordination-types/
+            coordination_values
+        )
+
+        vc.layout(mapping | view_list)
+       
+        vw = vc.widget()
+        return vw
+    
+    elif type(color) == list and len(color) > 1: 
         
         if color[0] in adata.var.index: # gene names
             dataset = vc.add_dataset(name='data').add_object(AnnDataWrapper(**adata_wrapper_dict))
@@ -258,7 +274,7 @@ def embedding(adata, basis, **kwargs):
                 vc.layout(scatterplot | obs_view)
                 
             
-        vw = vc.widget(js_package_version="3.6.17")
+        vw = vc.widget()
         return vw
 
     else: # one color
@@ -283,7 +299,7 @@ def embedding(adata, basis, **kwargs):
 
         vc.layout(mapping | view_list)
        
-    vw = vc.widget(js_package_version="3.6.17")
+    vw = vc.widget()
     return vw
 
 def spatial(adata, **kwargs):

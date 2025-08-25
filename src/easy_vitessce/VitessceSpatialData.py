@@ -49,6 +49,7 @@ class VitessceSpatialData:
             self.sdata_filepath = join("data", "sdata.zarr")
             sdata.write(self.sdata_filepath, overwrite=True)
         
+        self.color = ""
         self.kwargs = {"sdata_path": self.sdata_filepath,
                 # The following paths are relative to the root of the SpatialData zarr store on-disk.
                 "table_path":"tables/table",
@@ -58,7 +59,7 @@ class VitessceSpatialData:
                     # The following tells Vitessce to consider each observation as a "spot"
                     "obsType": "spot",
                 }}
-        self.views = {"featureValueColormap": "viridis"}     
+        self.views = {"featureValueColormap": "viridis"} 
 
         # This is the static PlotAccessor instance that will be used when monkeypatching is not enabled.
         self._pl = PlotAccessor(sdata)
@@ -74,8 +75,9 @@ class VitessceSpatialData:
         if not VitessceSpatialData._is_enabled:
             return self._pl.render_images(element=element, **kwargs)
 
-        image_path = {"image_path":f"images/{element}"}
-        self.kwargs.update(image_path)
+        self.image = f"images/{element}"
+        self.image_path = {"image_path":f"images/{element}"}
+        self.kwargs.update(self.image_path)
 
         return self.sdata
         
@@ -91,35 +93,42 @@ class VitessceSpatialData:
         if not VitessceSpatialData._is_enabled:
             return self._pl.render_shapes(element=element, **kwargs)
 
+        self.color = kwargs.get("color", "")
+
         if (self.sdata.shapes[element]["geometry"].geom_type.iloc[0]) == 'Polygon': # vitessce only has polygon and circles
-            print("POLYGON!!!!!!")
             obs_path = {"obs_segmentations_path": f"shapes/{element}"}
+            segmentation_layer = {"spatial_segmentation_layer": [obs_path, self.image]}
+            self.kwargs.update(segmentation_layer)
         else:
             obs_path = {"obs_spots_path": f"shapes/{element}"}
             
         self.kwargs.update(obs_path)
+        print(f"self.kwargs: {self.kwargs}")
 
-        if "table" in kwargs.keys():
+        if "table_layer" in kwargs.keys():
             # have user specify which file to use?
-            table_path = {"table_path": f"tables/{kwargs.get('table')}"}
-            matrix_path = {"obs_feature_matrix_path": f"tables/{kwargs.get('table')}/X"}
+            table_path = {"table_path": f"tables/{kwargs.get('table_layer')}"}
+            matrix_path = {"obs_feature_matrix_path": f"tables/{kwargs.get('table_layer')}/X"}
             self.kwargs.update(table_path)
             self.kwargs.update(matrix_path)
 
         if "color" in kwargs.keys():
-            if kwargs.get("color") in self.sdata.tables["table"].var.index: # gene
+            self.color = kwargs.get("color")
+            if self.color in self.sdata.tables["table"].var.index: # gene
                 color = {"featureSelection": [kwargs["color"]]}
                 color_encoding = {"obsColorEncoding": "geneSelection"}
                 
                 self.views.update(color)
                 self.views.update(color_encoding)
+                print(f"self.views: {self.views}")
                 
-            elif kwargs.get("color") in self.sdata.tables["tables"].obs: # categorical?
-                color = {"obsSetSelection": [kwargs["color"]]}
+            elif self.color in self.sdata.tables["table"].obs: # categorical?
+                color = {"obsSetSelection": [[kwargs["color"]]]}
                 color_encoding = {"obsColorEncoding": "cellSetSelection"}
                 
                 self.views.update(color)
                 self.views.update(color_encoding)
+                print(f"self.views: {self.views}")
             
         if "cmap" in kwargs.keys():
             cmap = {"featureValueColormap": kwargs["cmap"]}
@@ -169,18 +178,21 @@ class VitessceSpatialData:
         self.vc = VitessceConfig(schema_version="1.0.18", name='spatial data')
         self.wrapper = SpatialDataWrapper(**self.kwargs)
         
-        dataset = self.vc.add_dataset(name='Mouse Brain Merfish').add_object(self.wrapper)
+        dataset = self.vc.add_dataset(name='Spatial Data').add_object(self.wrapper)
         
+        side_list = vt.OBS_SETS if self.color in self.sdata.tables["table"].obs else vt.FEATURE_LIST
+        print(self.color)
+
         # Add views (visualizations) to the configuration:
         spatial = self.vc.add_view("spatialBeta", dataset=dataset)
-        feature_list = self.vc.add_view(vt.FEATURE_LIST, dataset=dataset)
+        feature_obs_list = self.vc.add_view(side_list, dataset=dataset)
         layer_controller = self.vc.add_view("layerControllerBeta", dataset=dataset)
         
-        self.vc.link_views([spatial, layer_controller, feature_list], ['obsType'], [self.wrapper.obs_type_label])
+        self.vc.link_views([spatial, layer_controller, feature_obs_list], ['obsType'], [self.wrapper.obs_type_label])
         
-        self.vc.link_views_by_dict([spatial, layer_controller, feature_list], self.views, meta=False)
+        self.vc.link_views_by_dict([spatial, layer_controller, feature_obs_list], self.views, meta=False)
         
         # Layout the views
-        self.vc.layout(spatial | (feature_list / layer_controller))
+        self.vc.layout(spatial | (feature_obs_list / layer_controller))
         
-        return self.vc.widget(js_package_version="3.6.17")
+        return self.vc.widget()
