@@ -87,49 +87,44 @@ def test_embedding_config_creation():
     vc_dict = vc.to_dict(base_url='')
     assert vc_dict["datasets"][0]["files"][0]["url"].endswith(".adata.zarr")
     del vc_dict["datasets"][0]["files"][0]["url"]
-    assert vc_dict == {
-        'version': '1.0.15',
-        'name': 'UMAP',
-        'description': '',
-        'datasets': [{'uid': 'A',
-        'name': 'data',
-        'files': [{'fileType': 'anndata.zarr',
-            'options': {'obsEmbedding': [{'path': 'obsm/X_umap',
+    assert vc_dict == {'version': '1.0.15',
+    'name': 'UMAP',
+    'description': '',
+    'datasets': [{'uid': 'A',
+    'name': 'data',
+    'files': [{'fileType': 'anndata.zarr',
+        'options': {'obsEmbedding': [{'path': 'obsm/X_umap',
             'dims': [0, 1],
             'embeddingType': 'UMAP'}],
-            'obsFeatureMatrix': {'path': 'X'}}}]}],
-        'coordinationSpace': {'dataset': {'A': 'A'},
-        'embeddingType': {'A': 'UMAP'},
-        'featureSelection': {'A': ['']},
-        'obsColorEncoding': {'A': 'geneSelection'},
-        'embeddingObsRadiusMode': {'A': 'manual'},
-        'embeddingObsRadius': {'A': 2.5},
-        'featureValueColormap': {'A': 'viridis'}},
-        'layout': [{'component': 'scatterplot',
-        'coordinationScopes': {'dataset': 'A',
+        'obsFeatureMatrix': {'path': 'X'}}}]}],
+    'coordinationSpace': {'dataset': {'A': 'A'},
+    'embeddingType': {'A': 'UMAP'},
+    'embeddingObsRadiusMode': {'A': 'manual'},
+    'embeddingObsRadius': {'A': 2.5},
+    'embeddingObsOpacityMode': {'A': 'manual'},
+    'featureValueColormap': {'A': 'viridis'}},
+    'layout': [{'component': 'scatterplot',
+    'coordinationScopes': {'dataset': 'A',
         'embeddingType': 'A',
-        'featureSelection': 'A',
-        'obsColorEncoding': 'A',
         'embeddingObsRadiusMode': 'A',
         'embeddingObsRadius': 'A',
+        'embeddingObsOpacityMode': 'A',
         'featureValueColormap': 'A'},
-        'x': 0,
-        'y': 0,
-        'w': 6,
-        'h': 12},
-        {'component': 'featureList',
-        'coordinationScopes': {'dataset': 'A',
-        'featureSelection': 'A',
-        'obsColorEncoding': 'A',
+    'x': 0,
+    'y': 0,
+    'w': 6,
+    'h': 12},
+    {'component': 'featureList',
+    'coordinationScopes': {'dataset': 'A',
         'embeddingObsRadiusMode': 'A',
         'embeddingObsRadius': 'A',
+        'embeddingObsOpacityMode': 'A',
         'featureValueColormap': 'A'},
-        'x': 6,
-        'y': 0,
-        'w': 6,
-        'h': 12}],
-        'initStrategy': 'auto'
-    }
+    'x': 6,
+    'y': 0,
+    'w': 6,
+    'h': 12}],
+    'initStrategy': 'auto'}
 
 def test_sc_tl():
     adata = sc.datasets.pbmc68k_reduced()
@@ -223,9 +218,9 @@ def test_spatialdata_config_creation():
     assert vc_dict["datasets"][0]["files"][0] == {
         'fileType': 'spatialdata.zarr',
         'options': {
-            'obsFeatureMatrix': {'path': 'tables/table/X'},
-            'obsSpots': {'path': 'shapes/cells', 'tablePath': 'tables/table'},
-            'image': {'path': 'images/rasterized'}
+            'obsFeatureMatrix': {'path': 'tables/table/X'}, 
+            'obsSpots': {'path': 'shapes/cells','tablePath': 'tables/table','coordinateSystem': 'global'},
+            'image': {'path': 'images/rasterized', 'coordinateSystem': 'global'}
         },
         'coordinationValues': {'obsType': 'spot'}
     }
