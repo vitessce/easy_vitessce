@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "easy_vitessce"
-version = "0.0.1"
+version = "0.0.2"
 authors = [
   {name="HIDIVE Lab"},
   {name="Selena Luo"}
@@ -24,7 +24,7 @@ dependencies = [
   'numpy>=1.21.2',
   'zarr>=2.5.0,<3',
   'numcodecs>=0.5.7,<0.16.0',
-  'vitessce[all] >=3.6.9',
+  'vitessce[all] >=3.7.3',
   'scanpy >= 1.11.3',
   'anndata >= 0.11.4',
   'spatialdata >= 0.3.0',
@@ -32,11 +32,20 @@ dependencies = [
   'spatialdata-plot >= 0.2.7',
   'dask[dataframe]==2024.11.1',
   'distributed <= 2024.11.2',
+  'donfig >= 0.3.1',
 ]
 
 [project.optional-dependencies]
-docs = ['sphinx', 'sphinx-book-theme', 'sphinx-copybutton']
-dev = ['pytest>= 8.4.1', 'jupyter', 'jupyterlab']
+docs = [
+  'sphinx',
+  'sphinx-book-theme',
+  'sphinx-copybutton'
+]
+dev = [
+  'pytest>= 8.4.1',
+  'jupyter',
+  'jupyterlab'
+]
 
 
 [tool.setuptools]

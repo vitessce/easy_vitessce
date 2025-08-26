@@ -13,7 +13,8 @@ import sys
 #sys.path.append("/easy_vitessce/src/easy_vitessce")
 
 import easy_vitessce
-from easy_vitessce import configure_plots, VitessceSpatialData
+from easy_vitessce import configure_plots
+from easy_vitessce.spatialdata_plot import VitesscePlotAccessor
 
 project = 'Easy Vitessce'
 copyright = '2025, Selena Luo'
@@ -34,7 +35,7 @@ exclude_patterns = ['_build', 'Thumbs.db', '.DS_Store']
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#options-for-html-output
 
 html_theme = 'sphinx_book_theme'
-html_static_path = ["_static"]
+html_static_path = []
 html_theme_options = {
   "show_toc_level": 3,
   "max_navbar_depth": 2

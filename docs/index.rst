@@ -10,11 +10,11 @@ Easy Vitessce is a Python package for turning Scanpy and SpatialData plots into 
 
 Installation
 ########################
-Requires Python 3.9 or greater.
+Requires Python 3.10 or greater.
 
-.. code-block:: 
+.. code-block::
 
-    pip install 'easy_vitessce @ git+https://github.com/vitessce/easy_vitessce@main'
+   pip install easy_vitessce
 
 How to Use and Examples
 ############################
@@ -23,29 +23,23 @@ The package can be imported with
 
 .. code-block:: 
 
-   from easy_vitessce import configure_plots
+   import easy_vitessce as ev
 
-**Scanpy is also required for this package.**
-
-.. code-block::
-
-   import scanpy as sc
-
-**Note:** All example datasets are from Scanpy unless otherwise noted. 
 
 Deactivating/Reactivating Interactive Plots
 **************************************************
-Passing ``disable_plots`` into ``configure_plots`` will deactivate Vitessce plots.
+Passing ``disable_plots`` into ``ev.configure_plots`` will deactivate Vitessce plots.
 
-Passing ``enable_plots`` into ``configure_plots`` will reactivate Vitessce plots.
-
-**Note:** While ``disable_plots`` and ``enable_plots`` can be passed in at the same time, listing the same plot in both will result in an error.
+Passing ``enable_plots`` into ``ev.configure_plots`` will reactivate Vitessce plots.
 
 .. code-block:: 
 
-   configure_plots(disable_plots = ["spatial", "violin"])
-   
-   configure_plots(enable_plots = ["spatial", "violin"])
+   ev.configure_plots(disable_plots = ["embedding", "violin", "spatialdata-plot"])
+
+   ev.configure_plots(enable_plots = ["spatialdata-plot", "violin"])
+
+
+**Note:** While the parameters ``disable_plots`` and ``enable_plots`` can be specified at the same time, including the same plot in both lists will result in an error.
 
 Spatial Plot (SpatialData version)
 ***********************************************
@@ -140,7 +134,9 @@ Heatmap
 
 .. toctree::
    :maxdepth: 2
-   :caption: Contents:
+   :hidden:
+   :caption: Contents
 
-   modules
+   easy_vitessce
+   customization
 

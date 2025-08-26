@@ -1,0 +1,30 @@
+name: Unit tests
+
+# Reference: https://github.com/alex-page/alexpage.dev/commit/717efbcc57d0c8ce9f64d28526263610ea444823
+
+on:
+  push:
+    branches: main
+  pull_request:
+    branches: main
+
+jobs:
+  unit_test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v3
+        with:
+          version: "latest"
+      - name: Install system dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y pandoc
+      - name: Install vitessce
+        run: uv sync --extra docs --extra dev
+      - name: Run unit tests
+        run: uv run pytest
+      - name: Ensure that build works
+        run: uv build --sdist --wheel
+      - name: Ensure that docs build works
+        run: uv run make html
