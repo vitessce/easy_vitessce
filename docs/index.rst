@@ -32,13 +32,14 @@ Passing ``disable_plots`` into ``ev.configure_plots`` will deactivate Vitessce p
 
 Passing ``enable_plots`` into ``ev.configure_plots`` will reactivate Vitessce plots.
 
-**Note:** While ``disable_plots`` and ``enable_plots`` can be passed in at the same time, listing the same plot in both will result in an error.
-
 .. code-block:: 
 
-   configure_plots(disable_plots = ["embedding", "violin", "spatialdata-plot"])
+   ev.configure_plots(disable_plots = ["embedding", "violin", "spatialdata-plot"])
 
-   configure_plots(enable_plots = ["spatialdata-plot", "violin"])
+   ev.configure_plots(enable_plots = ["spatialdata-plot", "violin"])
+
+
+**Note:** While the parameters ``disable_plots`` and ``enable_plots`` can be specified at the same time, including the same plot in both lists will result in an error.
 
 Spatial Plot (SpatialData version)
 ***********************************************

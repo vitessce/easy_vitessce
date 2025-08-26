@@ -4,14 +4,14 @@ Customization
 
 While Easy Vitessce is designed to work with minimal code changes, and provide sensible defaults, there are some additional ways to customize the behavior.
 
-The most basic form of configuration is to enable or disable plots using ``configure_plots``:
+The simplest form of configuration is to enable or disable plots using ``configure_plots``:
 
 .. code-block:: 
 
     import easy_vitessce as ev
 
     # Enable or disable particular plotting functions
-    ev.configure_plots(enable_plots=["embedding"], disable_plots = ["violin", "heatmap"])
+    ev.configure_plots(enable_plots=["embedding"], disable_plots=["violin", "heatmap"])
 
 
 For all other types of configuration, import the `Donfig-based <https://donfig.readthedocs.io/en/latest/index.html>`_ ``config`` variable:
