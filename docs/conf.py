@@ -13,7 +13,8 @@ import sys
 #sys.path.append("/easy_vitessce/src/easy_vitessce")
 
 import easy_vitessce
-from easy_vitessce import configure_plots, VitessceSpatialData
+from easy_vitessce import configure_plots
+from easy_vitessce.spatialdata_plot import VitesscePlotAccessor
 
 project = 'Easy Vitessce'
 copyright = '2025, Selena Luo'

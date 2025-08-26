@@ -23,35 +23,36 @@ from os.path import join
 from spatialdata_plot.pl.basic import PlotAccessor
 from spatialdata import get_element_annotators
 
-from easy_vitessce.widget import to_widget
+from easy_vitessce.widget import _to_widget, config
 
-class VitessceSpatialData:
+# This class is analogous to PlotAccessor from spatialdata-plot.
+# Reference: https://github.com/scverse/spatialdata-plot/blob/788eb2206cca8f4c21977c4f7b08a818ee6580f7/src/spatialdata_plot/pl/basic.py#L68
+class VitesscePlotAccessor:
     """
-    A class for configuring spatial plot with similar syntax to spatialdata from scverse.
+    A class for configuring a spatial plot, using the same syntax as spatialdata-plot.
     """
 
     # This is a class variable to determine whether the monkeypatching is enabled.
     # This is a workaround since our monkeypatching does not work with the existing instances of the SpatialData class.
     # In other words, when we change SpatialData.pl, the existing instances of SpatialData class are not affected.
     # Instead, we use this class variable.
-    # This way, existing instances of the SpatialData class in which SpatialData.pl has been monkeypatched with VitessceSpatialData,
+    # This way, existing instances of the SpatialData class in which SpatialData.pl has been monkeypatched with VitesscePlotAccessor,
     # will see that monkeypatching is enabled/disabled, and will behave accordingly.
     _is_enabled = True
 
     def __init__(self, sdata):
         """
-        Initializes filepaths, Vitessce configuration, SpatialDataWrapper arguments, color map.
+        Initialize the plot accessor.
 
-        :param str spatialdata_filepath: filepath of spatialdata zarr file containing image data.
-        :returns: Self, allows for chaining.
+        :param SpatialData sdata: The SpatialData object to use for plotting.
         """
         self.sdata = sdata
         if sdata.is_backed() and sdata.is_self_contained():
             self.sdata_filepath = sdata.path
         else:
-            self.sdata_filepath = join("data", "sdata.zarr")
-            sdata.write(self.sdata_filepath, overwrite=True)
-        
+            self.sdata_filepath = join(config.get('data.out_dir'), "sdata.zarr")
+            sdata.write(self.sdata_filepath, overwrite=config.get('data.overwrite'))
+
         self.color = ""
         self.kwargs = {"sdata_path": self.sdata_filepath,
                 # The following paths are relative to the root of the SpatialData zarr store on-disk.
@@ -76,7 +77,7 @@ class VitessceSpatialData:
         :param str element: location of image data inside "images" folder.
         :returns: Self, allows for chaining.
         """
-        if not VitessceSpatialData._is_enabled:
+        if not VitesscePlotAccessor._is_enabled:
             return self._pl.render_images(element=element, **kwargs)
 
         self.image = f"images/{element}"
@@ -94,7 +95,7 @@ class VitessceSpatialData:
         :param str cmap: color map (viridis, plasma, jet).
         :returns: Self, allows for chaining.
         """
-        if not VitessceSpatialData._is_enabled:
+        if not VitesscePlotAccessor._is_enabled:
             return self._pl.render_shapes(element=element, **kwargs)
         
         self.color = kwargs.get("color", "")
@@ -166,7 +167,7 @@ class VitessceSpatialData:
         :param str element: location of label data in "labels" folder.
         :returns: Self, allows for chaining.
         """
-        if not VitessceSpatialData._is_enabled:
+        if not VitesscePlotAccessor._is_enabled:
             return self._pl.render_labels(element=element, **kwargs)
         
         labels_path = {"obs_segmentations_path":f"labels/{element}"}
@@ -181,7 +182,7 @@ class VitessceSpatialData:
         :param str element: location of point data in "points" folder.
         :returns: Self, allows for chaining.
         """
-        if not VitessceSpatialData._is_enabled:
+        if not VitesscePlotAccessor._is_enabled:
             return self._pl.render_points(element=element, **kwargs)
         
         obs_points_path = {"obs_points_path":f"points/{element}"}
@@ -195,7 +196,7 @@ class VitessceSpatialData:
         
         :returns: Vitessce widget.
         """
-        if not VitessceSpatialData._is_enabled:
+        if not VitesscePlotAccessor._is_enabled:
             return self._pl.show(**kwargs)
             
         self.vc = VitessceConfig(schema_version="1.0.18", name='spatial data')
@@ -220,4 +221,4 @@ class VitessceSpatialData:
         # Layout the views
         self.vc.layout(spatial | (feature_obs_list / layer_controller))
         
-        return to_widget(self.vc)
+        return _to_widget(self.vc)

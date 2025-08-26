@@ -10,11 +10,11 @@ Easy Vitessce is a Python package for turning Scanpy and SpatialData plots into 
 
 Installation
 ########################
-Requires Python 3.9 or greater.
+Requires Python 3.10 or greater.
 
-.. code-block:: 
+.. code-block::
 
-    pip install 'easy_vitessce @ git+https://github.com/vitessce/easy_vitessce@main'
+   pip install easy_vitessce
 
 How to Use and Examples
 ############################
