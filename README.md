@@ -16,9 +16,7 @@ Turn your static [Scanpy](https://github.com/scverse/scanpy) and [SpatialData](h
 - `sc.pl.violin`
 - `sc.pl.dotplot`
 - `sc.pl.heatmap`
-- `sdata.pl.render_images`
-- `sdata.pl.render_labels`
-- `sdata.pl.render_shapes`
+- `sdata.pl` (`.render_images`, `.render_labels`, and `.render_shapes`)
 
 See the [documentation](https://vitessce.github.io/easy_vitessce/) for further details.
 
@@ -36,21 +34,21 @@ pip install easy_vitessce
 #### Importing Easy Vitessce
 
 ```py
-from easy_vitessce import configure_plots
+import easy_vitessce as ev
 ```
 
-🪄 By default, interactive plots are **enabled**.
+🪄 By default, interactive plots are **enabled** via this import statement.
 
 #### Deactivating Interactive Plots:
 
 ```py
-configure_plots(disable_plots = ["spatial", "violin"])
+ev.configure_plots(disable_plots = ["spatial", "violin"])
 ```
 
 #### Reactivating Interactive Plots:
 
 ```py
-configure_plots(enable_plots = ["spatial", "violin"])
+ev.configure_plots(enable_plots = ["spatial", "violin"])
 ```
 
 ## Development

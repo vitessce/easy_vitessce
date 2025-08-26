@@ -23,21 +23,14 @@ The package can be imported with
 
 .. code-block:: 
 
-   from easy_vitessce import configure_plots
+   import easy_vitessce as ev
 
-**Scanpy is also required for this package.**
-
-.. code-block::
-
-   import scanpy as sc
-
-**Note:** All example datasets are from Scanpy unless otherwise noted. 
 
 Deactivating/Reactivating Interactive Plots
 **************************************************
-Passing ``disable_plots`` into ``configure_plots`` will deactivate Vitessce plots.
+Passing ``disable_plots`` into ``ev.configure_plots`` will deactivate Vitessce plots.
 
-Passing ``enable_plots`` into ``configure_plots`` will reactivate Vitessce plots.
+Passing ``enable_plots`` into ``ev.configure_plots`` will reactivate Vitessce plots.
 
 **Note:** While ``disable_plots`` and ``enable_plots`` can be passed in at the same time, listing the same plot in both will result in an error.
 
@@ -140,7 +133,8 @@ Heatmap
 
 .. toctree::
    :maxdepth: 2
-   :caption: Contents:
+   :hidden:
+   :caption: Contents
 
    easy_vitessce
    customization

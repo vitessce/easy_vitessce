@@ -1,4 +1,4 @@
-easy_vitessce Plotting Functions
+Plotting Functions
 ==================================
 
 .. automodule:: easy_vitessce.configure_plots
@@ -8,13 +8,6 @@ easy_vitessce Plotting Functions
 
 
 .. automodule:: easy_vitessce.spatialdata_plot
-   :members:
-   :show-inheritance:
-   :undoc-members:
-
----------------
-
-.. automodule:: easy_vitessce
    :members:
    :show-inheritance:
    :undoc-members:

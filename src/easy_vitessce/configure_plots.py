@@ -715,8 +715,9 @@ def configure_plots(disable_plots=None, enable_plots=None):
     # By default, enable all plots.
     if disable_plots is None:
         disable_plots = []
+
     if enable_plots is None:
-        enable_plots = ALL_PLOT_NAMES
+        enable_plots = list(set(ALL_PLOT_NAMES) - set(disable_plots))
 
     for plot, func in SCANPY_PLOTTING_FUNCTIONS.items():
         if plot in enable_plots:

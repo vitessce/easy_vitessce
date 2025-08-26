@@ -1,4 +1,4 @@
-easy_vitessce Customization
+Customization
 ===========================
 
 
@@ -8,17 +8,20 @@ The most basic form of configuration is to enable or disable plots using ``confi
 
 .. code-block:: 
 
-    from easy_vitessce import configure_plots
+    import easy_vitessce as ev
+
+    # Enable or disable particular plotting functions
+    ev.configure_plots(enable_plots=["embedding"], disable_plots = ["violin", "heatmap"])
 
 
 For all other types of configuration, import the `Donfig-based <https://donfig.readthedocs.io/en/latest/index.html>`_ ``config`` variable:
 
 .. code-block:: 
 
-    from easy_vitessce import config
+    import easy_vitessce as ev
 
     # Pretty-print the current configuration
-    config.pprint()
+    ev.config.pprint()
 
 
 Widget Configuration
@@ -28,17 +31,17 @@ Configure the parameters that ``easy_vitessce`` plotting functions will internal
 
 .. code-block:: 
 
-    from easy_vitessce import config
+    import easy_vitessce as ev
 
-    config.set({ 'widget': { 'js_dev_mode': True } })
+    ev.config.set({ 'widget': { 'js_dev_mode': True } })
 
 Configure whether to use ``VitessceConfig.widget`` or ``VitessceConfig.display`` to show the widget:
 
 .. code-block:: 
 
-    from easy_vitessce import config
+    import easy_vitessce as ev
 
-    config.set({ 'widget_function': 'display' })
+    ev.config.set({ 'widget_function': 'display' })
 
 
 Data-Related Configuration
@@ -51,11 +54,11 @@ To avoid redundantly writing AnnData objects, you can tell ``easy_vitessce`` tha
 
 .. code-block:: 
 
-    from easy_vitessce import register_data_path
+    import easy_vitessce as ev
 
-    register_data_path(adata, '/path/to/my_object.adata.zarr')
+    ev.register_data_path(adata, '/path/to/my_object.adata.zarr')
     # or
-    register_data_path(adata, '/path/to/my_object.h5ad')
+    ev.register_data_path(adata, '/path/to/my_object.h5ad')
 
 
 For SpatialData objects, this problem is resolved by the fact that disk-backed objects have an ``sdata.path`` attribute to specify the on-disk location.
@@ -66,15 +69,15 @@ Other data-related options include configuring usage of ``AnnData.write_zarr`` (
 
 .. code-block:: 
 
-    from easy_vitessce import config
+    import easy_vitessce as ev
 
-    config.set({ 'data.anndata_format': 'h5ad' })
+    ev.config.set({ 'data.anndata_format': 'h5ad' })
 
 
 Or, specify an alternative output directory (the default is ``data``):
 
 .. code-block:: 
 
-    from easy_vitessce import config
+    import easy_vitessce as ev
 
-    config.set({ 'data.out_dir': '/path/to/some/dir' })
+    ev.config.set({ 'data.out_dir': '/path/to/some/dir' })
