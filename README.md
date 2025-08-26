@@ -42,13 +42,13 @@ import easy_vitessce as ev
 #### Deactivating Interactive Plots:
 
 ```py
-ev.configure_plots(disable_plots = ["spatial", "violin"])
+ev.configure_plots(disable_plots = ["embedding", "violin", "spatialdata-plot"])
 ```
 
 #### Reactivating Interactive Plots:
 
 ```py
-ev.configure_plots(enable_plots = ["spatial", "violin"])
+ev.configure_plots(enable_plots = ["spatialdata-plot"])
 ```
 
 ## Development

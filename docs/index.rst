@@ -36,9 +36,9 @@ Passing ``enable_plots`` into ``ev.configure_plots`` will reactivate Vitessce pl
 
 .. code-block:: 
 
-   configure_plots(disable_plots = ["spatial", "violin"])
-   
-   configure_plots(enable_plots = ["spatial", "violin"])
+   configure_plots(disable_plots = ["embedding", "violin", "spatialdata-plot"])
+
+   configure_plots(enable_plots = ["spatialdata-plot", "violin"])
 
 Spatial Plot (SpatialData version)
 ***********************************************
