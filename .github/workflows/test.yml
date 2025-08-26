@@ -27,6 +27,4 @@ jobs:
       - name: Ensure that build works
         run: uv build --sdist --wheel
       - name: Ensure that docs build works
-        run: |
-          uv run make html
-          touch docs/_build/html/.nojekyll
+        run: uv run make html

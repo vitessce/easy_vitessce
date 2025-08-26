@@ -142,5 +142,6 @@ Heatmap
    :maxdepth: 2
    :caption: Contents:
 
-   modules
+   easy_vitessce
+   customization
 

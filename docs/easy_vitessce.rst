@@ -1,9 +1,6 @@
 easy_vitessce Plotting Functions
 ==================================
 
-.. Submodules
-.. ----------
-
 .. automodule:: easy_vitessce.configure_plots
    :members:
    :show-inheritance:
