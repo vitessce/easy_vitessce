@@ -2,9 +2,8 @@
 
  🪄 *Configure Vitessce with a single line of code!*
  
-Turn your static [Scanpy](https://github.com/scverse/scanpy) and [SpatialData](https://github.com/scverse/spatialdata) plots into interactive [Vitessce](https://github.com/vitessce/vitessce) visualizations with _Easy Vitessce_ for spatial and single-cell data just by adding the `easy_vitessce` package!
+Turn your static [Scanpy](https://github.com/scverse/scanpy) and [SpatialData](https://github.com/scverse/spatialdata-plot) plots into interactive [Vitessce](https://github.com/vitessce/vitessce) visualizations simply by importing the `easy_vitessce` package!
 
-🚧 work in progress 🚧
 
 **Supported Functions**
 
