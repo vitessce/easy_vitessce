@@ -7,7 +7,7 @@ from os.path import join, abspath, dirname
 from spatialdata_plot.pl.basic import PlotAccessor
 
 from vitessce import VitessceConfig
-from easy_vitessce.VitessceSpatialData import VitessceSpatialData
+from easy_vitessce.spatialdata_plot import VitesscePlotAccessor
 from easy_vitessce.configure_plots import (
     configure_plots,
     _monkeypatch_spatialdata,
@@ -24,7 +24,7 @@ def test_monkeypatch_sd():
     spatialdata_filepath = join(TEST_DIR, "data", "merfish.spatialdata.zarr")
     sdata = sd.read_zarr(spatialdata_filepath)
     _monkeypatch_spatialdata()
-    assert isinstance(sdata.pl, VitessceSpatialData)
+    assert isinstance(sdata.pl, VitesscePlotAccessor)
     _undo_monkeypatch_spatialdata()
 
 
@@ -32,8 +32,8 @@ def test_monkeypatch_sd_2():
     spatialdata_filepath = join(TEST_DIR, "data", "merfish.spatialdata.zarr")
     sdata = sd.read_zarr(spatialdata_filepath)
     _undo_monkeypatch_spatialdata()
-    configure_plots(enable_plots=["spatial"])
-    assert isinstance(sdata.pl, VitessceSpatialData)
+    configure_plots(enable_plots=["spatialdata-plot"])
+    assert isinstance(sdata.pl, VitesscePlotAccessor)
     assert sdata.pl is not PlotAccessor
 
 
@@ -41,7 +41,7 @@ def test_undo_monkeypatch_sd():
     spatialdata_filepath = join(TEST_DIR, "data", "merfish.spatialdata.zarr")
     sdata = sd.read_zarr(spatialdata_filepath)
     _monkeypatch_spatialdata()
-    assert isinstance(sdata.pl, VitessceSpatialData)
+    assert isinstance(sdata.pl, VitesscePlotAccessor)
     assert sdata.pl is not PlotAccessor
 
 
@@ -53,7 +53,7 @@ def test_undo_monkeypatch_sd():
 
     # Undoing does not seem to affect the existing instances of the class,
     # which we verify below.
-    assert isinstance(sdata.pl, VitessceSpatialData)
+    assert isinstance(sdata.pl, VitesscePlotAccessor)
     assert sdata.pl is not PlotAccessor
     
     # However, our ._is_enabled workaround should work as expected:
@@ -63,7 +63,7 @@ def test_undo_monkeypatch_sd():
 
     # Undoing should affect a new instance of the class, however.
     new_sdata = sd.read_zarr(spatialdata_filepath)
-    assert not isinstance(new_sdata.pl, VitessceSpatialData)
+    assert not isinstance(new_sdata.pl, VitesscePlotAccessor)
     assert isinstance(new_sdata.pl, PlotAccessor)
     
     # Check that creating a plot after undoing the monkeypatch still works.
@@ -73,7 +73,7 @@ def test_undo_monkeypatch_sd():
 def test_undo_monkeypatch_2():
     # Test the class itself, rather than an sdata instance.
     _monkeypatch_spatialdata()
-    assert SpatialData.pl is VitessceSpatialData
+    assert SpatialData.pl is VitesscePlotAccessor
     assert SpatialData._orig_pl is PlotAccessor
     _undo_monkeypatch_spatialdata()
     assert SpatialData.pl is PlotAccessor
@@ -128,6 +128,7 @@ def test_embedding_config_creation():
 
 def test_sc_tl():
     adata = sc.datasets.pbmc68k_reduced()
+    sc.tl.tsne(adata, random_state=1)
     sc.pl.embedding(adata, basis="tsne")
     assert "X_tsne" in adata.obsm
 

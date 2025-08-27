@@ -2,9 +2,8 @@
 
  🪄 *Configure Vitessce with a single line of code!*
  
-Turn your static [Scanpy](https://github.com/scverse/scanpy) and [SpatialData](https://github.com/scverse/spatialdata) plots into interactive [Vitessce](https://github.com/vitessce/vitessce) visualizations with _Easy Vitessce_ for spatial and single-cell data just by adding the `easy_vitessce` package!
+Turn your static [Scanpy](https://github.com/scverse/scanpy) and [SpatialData](https://github.com/scverse/spatialdata-plot) plots into interactive [Vitessce](https://github.com/vitessce/vitessce) visualizations simply by importing the `easy_vitessce` package!
 
-🚧 work in progress 🚧
 
 **Supported Functions**
 
@@ -16,9 +15,7 @@ Turn your static [Scanpy](https://github.com/scverse/scanpy) and [SpatialData](h
 - `sc.pl.violin`
 - `sc.pl.dotplot`
 - `sc.pl.heatmap`
-- `sdata.pl.render_images`
-- `sdata.pl.render_labels`
-- `sdata.pl.render_shapes`
+- `sdata.pl` (`.render_images`, `.render_labels`, and `.render_shapes`)
 
 See the [documentation](https://vitessce.github.io/easy_vitessce/) for further details.
 
@@ -36,21 +33,21 @@ pip install easy_vitessce
 #### Importing Easy Vitessce
 
 ```py
-from easy_vitessce import configure_plots
+import easy_vitessce as ev
 ```
 
-🪄 By default, interactive plots are **enabled**.
+🪄 By default, interactive plots are **enabled** via this import statement.
 
 #### Deactivating Interactive Plots:
 
 ```py
-configure_plots(disable_plots = ["spatial", "violin"])
+ev.configure_plots(disable_plots = ["embedding", "violin", "spatialdata-plot"])
 ```
 
 #### Reactivating Interactive Plots:
 
 ```py
-configure_plots(enable_plots = ["spatial", "violin"])
+ev.configure_plots(enable_plots = ["spatialdata-plot"])
 ```
 
 ## Development
@@ -61,16 +58,20 @@ configure_plots(enable_plots = ["spatial", "violin"])
 uv sync --extra dev --extra docs
 ```
 
+This command should also be run after updating dependencies in `pyproject.toml`.
+
 ### Run tests
 
 ```sh
+# uv sync --extra dev
 uv run pytest
 ```
 
 ### Make documentation
 
 ```sh
-uv run make html
+uv run make html # on mac/linux
+# uv run make.bat html # on windows
 open _build/html/index.html
 ```
 
