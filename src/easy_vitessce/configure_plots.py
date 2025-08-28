@@ -482,7 +482,7 @@ def heatmap(adata, **kwargs):
 
     :param AnnData adata: AnnData object.
     :param str groupby: Category group.
-    :param list[str] markers: List of genes.
+    :param list[str] var_names: List of genes.
     :param str color_map: Color map (viridis, plasma, jet). Defaults to viridis.
     :returns: Vitessce widget. Documentation can be found `here. <https://python-docs.vitessce.io/api_config.html#vitessce-widget>`_ 
     """
@@ -493,8 +493,8 @@ def heatmap(adata, **kwargs):
     if "groupby" in kwargs:
         groupby = kwargs["groupby"]
 
-    if "markers" in kwargs:
-        markers = kwargs["markers"]
+    if "var_names" in kwargs.keys():
+        markers = kwargs["var_names"]
         adata.var["genes"] = list(adata.var.index)
         adata.var["in_markers"] = adata.var["genes"].apply(lambda gene: True if gene in markers else False)
 
@@ -529,20 +529,20 @@ def violin(adata, groupby,**kwargs):
 
     :param Anndata adata: AnnData object.
     :param str groupby: Category group.
-    :param list[str] markers: Genes.
+    :param list[str] keys: Genes.
     :returns: Vitessce widget. Documentation can be found `here. <https://python-docs.vitessce.io/api_config.html#vitessce-widget>`_ 
     """
     vc =  VitessceConfig(schema_version="1.0.15", name='heatmap')
     adata = adata
     groupby = groupby
 
-    if "markers" not in kwargs.keys():
+    if "keys" not in kwargs.keys():
         markers = []
     
-    if type(kwargs.get("markers")) == str:
-        markers = [kwargs.get("markers", [])]
-    elif type(kwargs.get("markers")) == list: 
-        markers = kwargs.get("markers", [])
+    if type(kwargs.get("keys")) == str:
+        markers = [kwargs.get("keys", [])]
+    elif type(kwargs.get("keys")) == list: 
+        markers = kwargs.get("keys", [])
     
     dataset = vc.add_dataset(name='data').add_object(AnnDataWrapper(
         **_get_adata_wrapper_params(adata),
@@ -558,8 +558,8 @@ def violin(adata, groupby,**kwargs):
             violin = vc.add_view('obsSetFeatureValueDistribution', dataset=dataset, uid=f'violin-plot-{gene}')
             vc.link_views(
                 [violin, genes, cells], 
-                ["featureSelection", "obsSetSelection"],
-                [[gene], None]
+                ["featureSelection", "obsSetSelection", 'obsSetExpansion'],
+                [[gene], None, [[gene]]]
             )
             vc.layout(hconcat(violin, genes, cells, split = [2,1,1]))
     else:
@@ -567,12 +567,12 @@ def violin(adata, groupby,**kwargs):
         cells = vc.add_view(cm.OBS_SETS, dataset=dataset)
         violin = vc.add_view('obsSetFeatureValueDistribution', dataset=dataset, uid='violin-plot')
 
-        if "markers" in kwargs.keys():
+        if "keys" in kwargs.keys():
             # print(markers)
             vc.link_views(
                 [violin, genes, cells], 
-                ["featureSelection"],
-                [markers]
+                ["featureSelection", 'obsSetExpansion'],
+                [markers, [markers] if type(markers) == list else [[markers]]]
             )
         
         vc.layout(violin | genes / cells)
@@ -586,14 +586,14 @@ def dotplot(adata, groupby, **kwargs):
 
     :param AnnData adata: AnnData object.
     :param str groupby: Category group.
-    :param list[str] markers: List of genes.
+    :param list[str] var_names: List of genes.
     :returns: Vitessce widget. Documentation can be found `here. <https://python-docs.vitessce.io/api_config.html#vitessce-widget>`_ 
     """
     adata = adata
     groupby = groupby
 
-    if "markers" in kwargs.keys():
-        markers = kwargs["markers"]
+    if "var_names" in kwargs.keys():
+        markers = kwargs["var_names"]
 
     vc = VitessceConfig(schema_version="1.0.17", name='dotplot data')
     
@@ -621,7 +621,7 @@ def dotplot(adata, groupby, **kwargs):
     #violinPlots = vc.add_view('obsSetFeatureValueDistribution', dataset=dataset, uid='violin-plot')
     dotPlot = vc.add_view('dotPlot', dataset=dataset, uid='dot-plot')
     
-    if "markers" in kwargs.keys():
+    if "var_names" in kwargs.keys():
         vc.link_views(
         [dotPlot, featureList], 
         ["featureSelection"],

@@ -86,6 +86,8 @@ Scatterplots
 **************************
 Easy Vitessce's ``embedding`` function displays UMAP, PCA, and t-SNE scatterplots.
 
+``umap``, ``pca``, and ``tsne`` can also be used outside of the ``embedding`` function.
+
 .. code-block:: 
 
    adata = sc.datasets.pbmc68k_reduced()
@@ -93,6 +95,10 @@ Easy Vitessce's ``embedding`` function displays UMAP, PCA, and t-SNE scatterplot
    sc.pl.embedding(adata, basis="umap", color="CD79A")
    sc.pl.embedding(adata, basis="pca", color=["CD79A", "CD53"])
    sc.pl.embedding(adata, basis="tsne", color=["bulk_labels", "louvain", "phase"])
+
+   sc.pl.umap(...)
+   sc.pl.pca(...)
+   sc.pl.tsne(...)
 
 .. image:: images/updated_umap.gif
 
@@ -106,7 +112,7 @@ Dotplot
 
    adata = sc.datasets.pbmc68k_reduced()
 
-   sc.pl.dotplot(adata, markers = ["C1QA", "PSAP", "CD79A", "CD79B", "CST3", "LYZ"], groupby="bulk_labels")
+   sc.pl.dotplot(adata, var_names = ["C1QA", "PSAP", "CD79A", "CD79B", "CST3", "LYZ"], groupby="bulk_labels")
 
 .. image:: images/dotplot_example.gif
 
@@ -117,7 +123,7 @@ Violin Plot
 
    adata = sc.datasets.pbmc68k_reduced()
 
-   sc.pl.violin(adata, markers = "AP2S1", groupby = "bulk_labels")
+   sc.pl.violin(adata, keys = "AP2S1", groupby = "bulk_labels")
 
 .. image:: /images/updated_violin.gif
 
@@ -128,7 +134,7 @@ Heatmap
 
    adata = sc.datasets.pbmc68k_reduced()
 
-   sc.pl.heatmap(adata, groupby = "bulk_labels", markers = ['C1QA', 'PSAP', 'CD79A', 'CD79B', 'CST3', 'LYZ'])
+   sc.pl.heatmap(adata, groupby = "bulk_labels", var_names = ['C1QA', 'PSAP', 'CD79A', 'CD79B', 'CST3', 'LYZ'])
 
 .. image:: /images/heatmap.gif
 

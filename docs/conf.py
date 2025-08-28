@@ -17,8 +17,7 @@ from easy_vitessce import configure_plots
 from easy_vitessce.spatialdata_plot import VitesscePlotAccessor
 
 project = 'Easy Vitessce'
-copyright = '2025, Selena Luo'
-author = 'Selena Luo'
+copyright = '2025, HIDIVE Lab'
 release = '0.0.1'
 
 # -- General configuration ---------------------------------------------------
