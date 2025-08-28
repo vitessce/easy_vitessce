@@ -141,4 +141,5 @@ Heatmap
 
    easy_vitessce
    customization
+   View on GitHub <https://github.com/vitessce/easy_vitessce>
 
