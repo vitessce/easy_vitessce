@@ -17,9 +17,8 @@ from easy_vitessce import configure_plots
 from easy_vitessce.spatialdata_plot import VitesscePlotAccessor
 
 project = 'Easy Vitessce'
-copyright = '2025, Selena Luo'
-author = 'Selena Luo'
-release = '0.0.1'
+copyright = '2025, HIDIVE Lab'
+author = 'HIDIVE Lab'
 
 # -- General configuration ---------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#general-configuration
@@ -40,3 +39,4 @@ html_theme_options = {
   "show_toc_level": 3,
   "max_navbar_depth": 2
 }
+
