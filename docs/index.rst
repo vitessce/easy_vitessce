@@ -26,6 +26,8 @@ The package can be imported with
    import easy_vitessce as ev
 
 
+By default, interactive plots are enabled via running this import statement.
+
 Deactivating/Reactivating Interactive Plots
 **************************************************
 Passing ``disable_plots`` into ``ev.configure_plots`` will deactivate Vitessce plots.
@@ -145,4 +147,5 @@ Heatmap
 
    easy_vitessce
    customization
+   View on GitHub <https://github.com/vitessce/easy_vitessce>
 
