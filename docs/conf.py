@@ -39,3 +39,10 @@ html_theme_options = {
   "show_toc_level": 3,
   "max_navbar_depth": 2
 }
+
+html_context = {
+    'display_github': True,
+    'github_user': 'vitessce',
+    'github_repo': 'easy_vitessce',
+    'github_version': 'main/docs/',
+}
