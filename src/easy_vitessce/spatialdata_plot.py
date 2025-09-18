@@ -79,7 +79,7 @@ class VitesscePlotAccessor:
         self.spot_layer_coordination = []
         self.point_layer_coordination = []
         
-    def render_images(self, element="", **kwargs):
+    def render_images(self, element=None, **kwargs):
         """
         Renders image.
 
@@ -89,15 +89,53 @@ class VitesscePlotAccessor:
         if not VitesscePlotAccessor._is_enabled:
             return self._pl.render_images(element=element, **kwargs)
 
+        # channel (list[str] | list[int] | str | int | None)
+        #   To select specific channels to plot.
+        #   Can be a single channel name/int or a list of channel names/ints.
+        #   If None, all channels will be used.
+        channel_param = kwargs.get("channel", None)
+        # cmap (list[Colormap | str] | Colormap | str | None)
+        #   Colormap or list of colormaps for continuous annotations, see matplotlib.colors.Colormap.
+        #   Each colormap applies to a corresponding channel.
+        cmap_param = kwargs.get("cmap", None)
+        # palette (list[str] | str | None)
+        #   Palette to color images.
+        #   The number of palettes should be equal to the number of channels.
+        palette_param = kwargs.get("palette", None)
+        # alpha (float | int, default 1.0)
+        #   Alpha value for the images.
+        #   Must be a numeric between 0 and 1.
+        alpha_param = kwargs.get("alpha", None)
+
         self.image = f"images/{element}"
         self.image_path = {"image_path":f"images/{element}"}
         self.wrapper_args.update(self.image_path)
+
+        # Palette logic in spatialdata-plot:
+        # Reference: https://github.com/scverse/spatialdata-plot/blob/010560f7eebdd245693a8c55eede0f895a636f5c/src/spatialdata_plot/pl/utils.py#L685
+
+        # RGB vs. non-RGB logic in spatialdata-plot:
+        # Reference: https://github.com/scverse/spatialdata-plot/blob/010560f7eebdd245693a8c55eede0f895a636f5c/src/spatialdata_plot/pl/render.py#L865
+        img = self.sdata.images[element]
+        channels = img.coords["c"].values.tolist() if channel_param is None else channel_param
+
+        # the channel parameter has been previously validated, so when not None, render_params.channel is a list
+        assert isinstance(channels, list)
+        n_channels = len(channels)
+
+        # Not ideal logic. Should ideally only use the OME-NGFF color model metadata. But this is what spatialdata-plot does.
+        photometric_interpretation = "RGB" if palette_param is None and channel_param is None and n_channels == 3 else "BlackIsZero"
 
         self.image_layer_coordination = [
             # We want to keep any existing spatial layer coordination information.
             *self.image_layer_coordination,
             {
-                
+                'spatialLayerOpacity': alpha_param if alpha_param is not None else 1.0,
+                'photometricInterpretation': photometric_interpretation,
+                # 'imageChannel': [{
+                #     # TODO: specify spatialTargetC if channel_param is not None
+                #     'spatialChannelColor': [255, 255, 255], # TODO: use the palette or cmap
+                # }]
             },
         ]
 
@@ -253,7 +291,7 @@ class VitesscePlotAccessor:
 
         return self.sdata
     
-    def show(self, **kwargs):
+    def show(self, coordinate_systems=None, **kwargs):
         """
         Displays spatial plot.
         
@@ -263,8 +301,13 @@ class VitesscePlotAccessor:
             return self._pl.show(**kwargs)
             
         self.vc = VitessceConfig(schema_version="1.0.18", name='spatial data')
+
+        if not (coordinate_systems is None or isinstance(coordinate_systems, str)):
+            raise NotImplementedError("A list of multiple 'coordinate_systems' is not yet supported.")
+
         self.wrapper = SpatialDataWrapper(**{
             **self.wrapper_args,
+            **({ "coordinate_system": coordinate_systems } if coordinate_systems is not None else {}),
             "coordination_values": {
                 **self.wrapper_args.get("coordination_values", {}),
                 "obsType": self.obs_type,
