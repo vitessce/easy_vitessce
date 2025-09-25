@@ -589,45 +589,30 @@ def dotplot(adata, groupby, **kwargs):
     :param list[str] var_names: List of genes.
     :returns: Vitessce widget. Documentation can be found `here. <https://python-docs.vitessce.io/api_config.html#vitessce-widget>`_ 
     """
-    adata = adata
-    groupby = groupby
-
-    if "var_names" in kwargs.keys():
-        markers = kwargs["var_names"]
+    markers = kwargs.get("var_names")
 
     vc = VitessceConfig(schema_version="1.0.17", name='dotplot data')
     
     dataset = vc.add_dataset('dotplot data').add_object(AnnDataWrapper(
         **_get_adata_wrapper_params(adata),
         obs_set_paths=[f"obs/{groupby}"],
-        obs_set_names=["cell type"],
-        #obs_embedding_paths=["obsm/X_umap"],
-        #obs_embedding_names=[""],
-        obs_feature_matrix_path="X" 
+        obs_set_names=[groupby],
+        obs_feature_matrix_path="X",
     )).add_object(AnnDataWrapper(
         **_get_adata_wrapper_params(adata),
-        coordination_values={
-            "obsType": 'cell',
-            "featureType": 'gene',
-            "featureValueType": 'value',
-            "sampleType": 'sample',
-        }
     ))
 
 
     obsSets = vc.add_view(cm.OBS_SETS, dataset=dataset)
-    
     featureList = vc.add_view(cm.FEATURE_LIST, dataset=dataset).set_props(enableMultiSelect=True)
-    #violinPlots = vc.add_view('obsSetFeatureValueDistribution', dataset=dataset, uid='violin-plot')
-    dotPlot = vc.add_view('dotPlot', dataset=dataset, uid='dot-plot')
+    dotPlot = vc.add_view('dotPlot', dataset=dataset)
     
-    if "var_names" in kwargs.keys():
+    if markers is not None:
         vc.link_views(
-        [dotPlot, featureList], 
-        ["featureSelection"],
-        [markers]
-    )
-    
+            [dotPlot, featureList], 
+            ["featureSelection"],
+            [markers]
+        )
     
     vc.layout(dotPlot | featureList / (obsSets))
     vw = _to_widget(vc)
