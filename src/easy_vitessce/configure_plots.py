@@ -78,7 +78,7 @@ def embedding(adata, basis, **kwargs):
 
     :param AnnData adata: AnnData object.
     :param str basis: Name of plot (umap, pca, or tsne).
-    :param str color: Gene.
+    :param str color: Gene or categorical label.
     :param str color_map: Color map (viridis, plasma, jet). Defaults to viridis.
     :param (float or int) size: Size of dots.
     :param bool include_gene_list: If a list of genes is passed in, True will add a gene list for the last plot. False by default.

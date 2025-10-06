@@ -65,6 +65,7 @@ class VitesscePlotAccessor:
                 }}
         self.views = {"featureValueColormap": "viridis"}
         self.spatial_layers_coordination = {}
+        self.vc = VitessceConfig(schema_version="1.0.18", name='spatial data')
 
         # This is the static PlotAccessor instance that will be used when monkeypatching is not enabled.
         self._pl = PlotAccessor(sdata)
@@ -95,6 +96,7 @@ class VitesscePlotAccessor:
         :param str cmap: color map (viridis, plasma, jet).
         :returns: Self, allows for chaining.
         """
+        self.element = element
         if not VitesscePlotAccessor._is_enabled:
             return self._pl.render_shapes(element=element, **kwargs)
         
@@ -105,15 +107,38 @@ class VitesscePlotAccessor:
             # This is a polygon-type Shapes element, so we use obs_segmentations_path.
             obs_path = {"obs_segmentations_path": f"shapes/{element}"}
 
-            # self.spatial_layers_coordination = {
-            #     # We want to keep any existing spatial layer coordination information.
-            #     **self.spatial_layers_coordination,
-            #     "segmentationLayer": CL([{
-            #         'segmentationChannel': CL([{
-            #             # We initialize with a single channel.
-            #         }]),
-            #     }]),
-            # }
+            # if `color` is a gene
+            self.ot_scope, self.fs_scope, self.oce_scope = self.vc.add_coordination("obsType", "featureSelection", "obsColorEncoding")
+            self.ot_scope.set_value(self.color)
+            self.fs_scope.set_value([self.color])
+            self.oce_scope.set_value("geneSelection")
+
+            self.ft_scope, self.fvt_scope = self.vc.add_coordination("featureType", "featureValueType")
+            self.ft_scope.set_value("feature")
+            self.fvt_scope.set_value("value")
+
+            self.spatial_layers_coordination = {
+                # We want to keep any existing spatial layer coordination information.
+                **self.spatial_layers_coordination,
+                "segmentationLayer": CL([{
+                    'segmentationChannel': CL([{
+                        # We initialize with a single channel.
+                        #"spatialTargetC": 0,
+                        "obsType": f"{element}", #self.ot_scope,
+                    "featureType": "gene", #self.ft_scope,
+                    "featureValueType": "expression", #self.fvt_scope,
+                    "featureSelection": [self.color], #self.fs_scope,
+                    #"spatialChannelVisible": True,
+                    #"spatialChannelColor": [197, 101, 47],
+                    #"spatialChannelOpacity": 1.0,
+                    "obsColorEncoding": "geneSelection", #self.oce_scope,
+                    #"featureValueColormapRange": [0, 0.5],
+                    # "featureAggregationStrategy": "first",
+                    #"spatialSegmentationFilled": True,
+                    # "obsHighlight": None,
+                    }]),
+                }]),
+            }
         else:
             # This is a circle-type Shapes element, so we use obs_spots_path.
             obs_path = {"obs_spots_path": f"shapes/{element}"}
@@ -199,7 +224,7 @@ class VitesscePlotAccessor:
         if not VitesscePlotAccessor._is_enabled:
             return self._pl.show(**kwargs)
             
-        self.vc = VitessceConfig(schema_version="1.0.18", name='spatial data')
+        
         self.wrapper = SpatialDataWrapper(**self.kwargs)
         
         dataset = self.vc.add_dataset(name='Spatial Data').add_object(self.wrapper)
@@ -213,6 +238,10 @@ class VitesscePlotAccessor:
         layer_controller = self.vc.add_view("layerControllerBeta", dataset=dataset)
 
         # Link the views together
+        # if self.sdata.shapes[self.element]["geometry"].geom_type.iloc[0] == 'Polygon':
+        #     self.vc.link_views_by_dict([spatial, layer_controller, feature_obs_list],
+        #         self.spatial_layers_coordination
+        #         )
         self.vc.link_views([spatial, layer_controller, feature_obs_list], ['obsType'], [self.wrapper.obs_type_label])
         
         self.vc.link_views_by_dict([spatial, layer_controller, feature_obs_list], self.views, meta=False)
