@@ -29,6 +29,7 @@ share/python-wheels/
 MANIFEST
 
 data/
+examples/*.zarr
 .vscode/
 .DS_Store
 
