@@ -295,7 +295,7 @@ class VitesscePlotAccessor:
         """
         Displays spatial plot.
         
-        :returns: Vitessce widget. Documentation can be found `here. <https://python-docs.vitessce.io/api_config.html#vitessce-widget>`_ 
+        :returns: Vitessce widget. Learn more at the vitessce-python `docs <https://python-docs.vitessce.io/api_config.html#vitessce-widget>`_ .
         """
         if not VitesscePlotAccessor._is_enabled:
             return self._pl.show(**kwargs)

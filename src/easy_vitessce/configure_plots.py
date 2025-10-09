@@ -78,7 +78,7 @@ def embedding(adata, basis, **kwargs):
 
     :param AnnData adata: AnnData object.
     :param str basis: Name of plot (umap, pca, or tsne).
-    :param str color: Gene.
+    :param str color: Gene or categorical label.
     :param str color_map: Color map (viridis, plasma, jet). Defaults to viridis.
     :param (float or int) size: Size of dots.
     :param bool include_gene_list: If a list of genes is passed in, True will add a gene list for the last plot. False by default.
@@ -502,7 +502,7 @@ def heatmap(adata, **kwargs):
     dataset = vc.add_dataset(name='data').add_object(AnnDataWrapper(
         **_get_adata_wrapper_params(adata),
         obs_set_paths=[f"obs/{groupby}"],
-        obs_set_names=["cell type"],
+        obs_set_names=[groupby],
         # obs_embedding_paths=["obsm/X_umap"],
         # obs_embedding_names=["UMAP"],
         obs_feature_matrix_path="X",
@@ -547,7 +547,7 @@ def violin(adata, groupby,**kwargs):
     dataset = vc.add_dataset(name='data').add_object(AnnDataWrapper(
         **_get_adata_wrapper_params(adata),
         obs_set_paths=[f"obs/{groupby}"],
-        obs_set_names=["cell type"],
+        obs_set_names=[groupby],
         obs_feature_matrix_path="X"
     ))
 

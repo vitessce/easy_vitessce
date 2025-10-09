@@ -82,7 +82,14 @@ Easy Vitessce's ``spatial`` function also displays a spatial plot, but with Scan
 
    sc.pl.spatial(adata, color = "log1p_n_genes_by_counts")
 
-.. image:: images/sc_spatial_documentation.gif
+|static_sc_spatial| |right_arrow2| |sc_spatial_documentation|
+
+.. |static_sc_spatial| image:: images/static_sc_spatial.png
+   :width: 25%
+.. |right_arrow2| image:: images/right_arrow_transparent.png
+   :width: 10%
+.. |sc_spatial_documentation| image:: images/sc_spatial_documentation.gif
+   :width: 60%
 
 Scatterplots
 **************************
@@ -102,7 +109,14 @@ Easy Vitessce's ``embedding`` function displays UMAP, PCA, and t-SNE scatterplot
    sc.pl.pca(...)
    sc.pl.tsne(...)
 
-.. image:: images/updated_umap.gif
+|static umap| |right arrow3| |vitessce umap| 
+
+.. |static umap| image:: images/static_umap.png
+   :width: 37%
+.. |right arrow3| image:: images/right_arrow_transparent.png
+   :width: 6%
+.. |vitessce umap| image:: images/updated_umap.gif
+   :width: 55%
 
 *Example of UMAP using Easy Vitessce*
 
@@ -116,7 +130,14 @@ Dotplot
 
    sc.pl.dotplot(adata, var_names = ["C1QA", "PSAP", "CD79A", "CD79B", "CST3", "LYZ"], groupby="bulk_labels")
 
-.. image:: images/dotplot_example.gif
+|static dotplot| |right arrow4| |vitessce dotplot| 
+
+.. |static dotplot| image:: images/static_dotplot.png
+   :width: 37%
+.. |right arrow4| image:: images/right_arrow_transparent.png
+   :width: 6%
+.. |vitessce dotplot| image:: images/dotplot_example.gif
+   :width: 55%
 
 Violin Plot
 **************************
@@ -127,7 +148,14 @@ Violin Plot
 
    sc.pl.violin(adata, keys = "AP2S1", groupby = "bulk_labels")
 
-.. image:: /images/updated_violin.gif
+|static violin| |right arrow5| |vitessce violin| 
+
+.. |static violin| image:: images/static_violin.png
+   :width: 37%
+.. |right arrow5| image:: images/right_arrow_transparent.png
+   :width: 6%
+.. |vitessce violin| image:: images/updated_violin.gif
+   :width: 55%
 
 Heatmap
 *********************
@@ -138,7 +166,14 @@ Heatmap
 
    sc.pl.heatmap(adata, groupby = "bulk_labels", var_names = ['C1QA', 'PSAP', 'CD79A', 'CD79B', 'CST3', 'LYZ'])
 
-.. image:: /images/heatmap.gif
+|static heatmap| |right arrow6| |vitessce heatmap| 
+
+.. |static heatmap| image:: images/static_heatmap.png
+   :width: 37%
+.. |right arrow6| image:: images/right_arrow_transparent.png
+   :width: 6%
+.. |vitessce heatmap| image:: images/heatmap.gif
+   :width: 55%
 
 .. toctree::
    :maxdepth: 2
