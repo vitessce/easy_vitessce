@@ -1,5 +1,8 @@
 # Easy Vitessce
 
+[![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/vitessce/easy_vitessce/blob/main/examples/scanpy_pbmc68k.ipynb)
+
+
  🪄 *Configure Vitessce with a single line of code!*
  
 Turn your static [Scanpy](https://github.com/scverse/scanpy) and [SpatialData](https://github.com/scverse/spatialdata-plot) plots into interactive [Vitessce](https://github.com/vitessce/vitessce) visualizations simply by importing the `easy_vitessce` package!

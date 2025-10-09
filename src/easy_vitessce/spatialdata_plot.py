@@ -182,7 +182,7 @@ class VitesscePlotAccessor:
                     
                 },
             ]
-            
+        
         self.wrapper_args.update(obs_path)
 
         table_name = kwargs.get("table_name", None)
@@ -256,16 +256,76 @@ class VitesscePlotAccessor:
         labels_path = {"obs_segmentations_path":f"labels/{element}"}
         self.wrapper_args.update(labels_path)
 
-        # TODO: need same coloring logic as render_shapes
+        # Same coloring logic as in render_shapes.
+        color_param = kwargs.get("color")
 
         self.segmentation_layer_coordination = [
             # We want to keep any existing spatial layer coordination information.
             *self.segmentation_layer_coordination,
             {
-                
+                'segmentationChannel': [{
+                    # We initialize with a single channel.
+
+                }],
             },
         ]
 
+        table_name = kwargs.get("table_name", None)
+        if table_name is None:
+            annotating_tables = list(get_element_annotators(self.sdata, element))
+            if len(annotating_tables) > 0:
+                # Use the first annotating table if no specific table is provided.
+                table_name = annotating_tables[0]
+
+        if table_name is not None:
+            # have user specify which matrix to use?
+            table_path = {"table_path": f"tables/{table_name}"}
+            self.wrapper_args.update(table_path)
+
+            self.wrapper_args = {
+                **self.wrapper_args,
+                # TODO: check for X existence first?
+                "obs_feature_matrix_path": f"tables/{table_name}/X"
+            }
+
+            # TODO: configure all obsSets in the table here, to allow the user to select them regardless of the "color" parameter value,
+            # rather than only when the "color" parameter is set to a categorical obs column (down below).
+
+        if color_param is not None:
+            if table_name is None:
+                raise ValueError("The 'color' parameter was provided, but an annotating table was not found. You may need to specify 'table_name' explicitly.")
+            
+            if color_param in self.sdata.tables[table_name].var.index: # gene
+                self.has_gene_color_encoding = True
+                color = {"featureSelection": [color_param]}
+                color_encoding = {"obsColorEncoding": "geneSelection"}
+                
+                self.global_coordination.update(color)
+                self.global_coordination.update(color_encoding)
+
+            elif color_param in self.sdata.tables[table_name].obs: # categorical?
+                self.has_cellset_color_encoding = True
+                # TODO: depends on https://github.com/vitessce/vitessce/issues/2254
+                color = {"obsSetSelection": [[color_param]]}
+                color_encoding = {"obsColorEncoding": "cellSetSelection"}
+                
+                self.global_coordination.update(color)
+                self.global_coordination.update(color_encoding)
+
+                # Here we configure obsSets for self.wrapper_args
+                self.wrapper_args = {
+                    **self.wrapper_args,
+                    "obs_set_paths": [f"tables/{table_name}/obs/{color_param}"],
+                    "obs_set_names": [color_param],
+                }
+            else:
+                # TODO: support a static color, such as "red" or "#FF0000"?
+                raise ValueError(f"Color value did not map to a value in var.index or obs.columns of table {table_name}.")
+            
+        if "cmap" in kwargs.keys():
+            cmap = {"featureValueColormap": kwargs["cmap"]}
+            self.global_coordination.update(cmap)
+            
         return self.sdata
 
     def render_points(self, element="", **kwargs):
