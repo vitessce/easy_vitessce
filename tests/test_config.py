@@ -223,5 +223,5 @@ def test_spatialdata_config_creation():
             'obsSpots': {'path': 'shapes/cells','tablePath': 'tables/table','coordinateSystem': 'global'},
             'image': {'path': 'images/rasterized', 'coordinateSystem': 'global'}
         },
-        'coordinationValues': {'obsType': 'spot'}
+        'coordinationValues': {'fileUid': 'main_wrapper', 'obsType': 'spot'}
     }
