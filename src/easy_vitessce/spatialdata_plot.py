@@ -118,18 +118,21 @@ class VitesscePlotAccessor:
         # Reference: https://github.com/scverse/spatialdata-plot/blob/010560f7eebdd245693a8c55eede0f895a636f5c/src/spatialdata_plot/pl/render.py#L865
         img = self.sdata.images[element]
         channels = img.coords["c"].values.tolist() if channel_param is None else channel_param
+        img_dtype = img.dtype
+        img_dtype_is_uint8 = img_dtype.kind == 'u' and img_dtype.itemsize == 1
 
         # the channel parameter has been previously validated, so when not None, render_params.channel is a list
         assert isinstance(channels, list)
         n_channels = len(channels)
 
         # Not ideal logic. Should ideally only use the OME-NGFF color model metadata. But this is what spatialdata-plot does.
-        photometric_interpretation = "RGB" if palette_param is None and channel_param is None and n_channels == 3 else "BlackIsZero"
+        photometric_interpretation = "RGB" if palette_param is None and channel_param is None and n_channels == 3 and img_dtype_is_uint8 else "BlackIsZero"
 
         self.image_layer_coordination = [
             # We want to keep any existing spatial layer coordination information.
             *self.image_layer_coordination,
             {
+                "fileUid": "main_wrapper",
                 'spatialLayerOpacity': alpha_param if alpha_param is not None else 1.0,
                 'photometricInterpretation': photometric_interpretation,
                 # 'imageChannel': [{
@@ -164,6 +167,7 @@ class VitesscePlotAccessor:
                 # We want to keep any existing spatial layer coordination information.
                 *self.segmentation_layer_coordination,
                 {
+                    "fileUid": "main_wrapper",
                     'segmentationChannel': [{
                         # We initialize with a single channel.
 
@@ -179,7 +183,7 @@ class VitesscePlotAccessor:
                 # We want to keep any existing spatial layer coordination information.
                 *self.spot_layer_coordination,
                 {
-                    
+                    "fileUid": "main_wrapper", # TODO: spot-specific wrapper?
                 },
             ]
         
@@ -263,6 +267,7 @@ class VitesscePlotAccessor:
             # We want to keep any existing spatial layer coordination information.
             *self.segmentation_layer_coordination,
             {
+                "fileUid": "main_wrapper",
                 'segmentationChannel': [{
                     # We initialize with a single channel.
 
@@ -345,7 +350,9 @@ class VitesscePlotAccessor:
             # We want to keep any existing spatial layer coordination information.
             *self.point_layer_coordination,
             {
-                
+                "obsType": 'point',
+                "obsHighlight": None,
+                "fileUid": "points_wrapper",
             },
         ]
 
@@ -365,17 +372,31 @@ class VitesscePlotAccessor:
         if not (coordinate_systems is None or isinstance(coordinate_systems, str)):
             raise NotImplementedError("A list of multiple 'coordinate_systems' is not yet supported.")
 
-        self.wrapper = SpatialDataWrapper(**{
+        wrapper = SpatialDataWrapper(**{
             **self.wrapper_args,
             **({ "coordinate_system": coordinate_systems } if coordinate_systems is not None else {}),
             "coordination_values": {
                 **self.wrapper_args.get("coordination_values", {}),
                 "obsType": self.obs_type,
+                "fileUid": "main_wrapper",
             },
         })
         
         dataset_uid = "A"
-        dataset = self.vc.add_dataset(name='Spatial Data', uid=dataset_uid).add_object(self.wrapper)
+        dataset = self.vc.add_dataset(name='Spatial Data', uid=dataset_uid).add_object(wrapper)
+
+        if "obs_points_path" in self.wrapper_args:
+            # TODO: cleanup
+            points_wrapper = SpatialDataWrapper(**{
+                **self.wrapper_args,
+                **({ "coordinate_system": coordinate_systems } if coordinate_systems is not None else {}),
+                "coordination_values": {
+                    **self.wrapper_args.get("coordination_values", {}),
+                    "obsType": "point",
+                    "fileUid": "points_wrapper",
+                },
+            })
+            dataset = dataset.add_object(points_wrapper)
 
         side_list = vt.OBS_SETS if self.has_cellset_color_encoding else vt.FEATURE_LIST
 
