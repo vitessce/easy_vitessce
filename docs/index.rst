@@ -67,10 +67,14 @@ Spatial Plot (SpatialData version)
    └── Tables
          └── 'table': AnnData (2389, 268)
 
-|easy_vitessce_example|
+|static sd| |right arrow1| |vitessce sd| 
 
-.. |easy_vitessce_example| image:: images/spatial_documentation.gif
-
+.. |static sd| image:: images/static_sd_spatial.png
+   :width: 30%
+.. |right arrow1| image:: images/right_arrow_transparent.png
+   :width: 8%
+.. |vitessce sd| image:: images/spatial_documentation.gif
+   :width: 60%
 
 Spatial Plot (Scanpy version)
 ********************************************
