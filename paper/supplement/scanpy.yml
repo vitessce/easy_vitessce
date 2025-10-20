@@ -1,0 +1,430 @@
+# Based on https://scanpy.readthedocs.io/en/stable/api/plotting.html as of October 13, 2025
+# Scanpy version 1.11.4
+scatter:
+  function:
+    implemented: false
+heatmap:
+  function:
+    implemented: true
+  parameters:
+    var_names: supported
+    groupby: supported
+    use_raw: not currently supported
+    log: not currently supported
+    num_categories: not currently supported
+    categories_order: not currently supported
+    dendrogram: not currently supported
+    gene_symbols: not currently supported # TODO: implement via featureLabels
+    var_group_positions: not currently supported
+    var_group_labels: not currently supported
+    var_group_rotation: not currently supported
+    layer: not currently supported # TODO: implement via obs_feature_matrix_path
+    standard_scale: not currently supported
+    swap_axes: not currently supported # TODO: corresponds to transpose prop
+    show_gene_labels: not currently supported
+    show: N/A
+    save: N/A
+    figsize: N/A
+    vmin: not currently supported # TODO: corresponds to featureValueColormapRange[0]
+    vmax: not currently supported # TODO: corresponds to featureValueColormapRange[1]
+    vcenter: not currently supported
+    norm: not currently supported
+dotplot: 
+  function:
+    implemented: true
+  parameters:
+    var_names: supported
+    groupby: supported
+    use_raw: not currently supported
+    log: not currently supported
+    num_categories: not currently supported
+    categories_order: not currently supported
+    expression_cutoff: not currently supported # TODO: implement via existing coordination type
+    mean_only_expressed: not currently supported
+    standard_scale: not currently supported 
+    title: not currently supported # TODO: implement via title prop
+    colorbar_title: not currently supported
+    size_title: not currently supported
+    figsize: N/A
+    dendrogram: not currently supported
+    gene_symbols: not currently supported # TODO: implement via featureLabels
+    var_group_positions: not currently supported
+    var_group_labels: not currently supported
+    var_group_rotation: not currently supported
+    layer: not currently supported # TODO
+    swap_axes: not currently supported # TODO
+    dot_color_df: lacks description
+    show: N/A
+    save: N/A
+    ax: N/A
+    return_fig: N/A
+    vmin: not currently supported
+    vmax: not currently supported
+    vcenter: not currently supported
+    norm: not currently supported
+    cmap: not currently supported # TODO
+    dot_max: not currently supported
+    dot_min: not currently supported
+    smallest_dot: not currently supported
+tracksplot:
+  function:
+    implemented: false
+violin:
+  function:
+    implemented: true
+  parameters:
+    keys: supported
+    groupby: supported
+    log: not currently supported # TODO
+    use_raw: not currently supported
+    stripplot: not currently supported # TODO
+    jitter: not currently supported # TODO
+    size: not currently supported
+    layer: not currently supported # TODO
+    density_norm: not currently supported
+    order: not currently supported # TODO: use value to define obsSetSelection array
+    multi_panel: not currently supported
+    xlabel: not currently supported
+    ylabel: not currently supported
+    rotation: not currently supported
+    show: N/A
+    save: N/A
+    ax: N/A
+    scale: lacks description
+stacked_violin:
+  function:
+    implemented: false
+matrixplot:
+  function:
+    implemented: false
+clustermap:
+  function:
+    implemented: false
+ranking:
+  function:
+    implemented: false
+dendrogram:
+  function:
+    implemented: false
+highest_expr_genes:
+  function:
+    implemented: false
+filter_genes_dispersion:
+  function:
+    implemented: false
+highly_variable_genes:
+  function:
+    implemented: false
+scrublet_score_distribution:
+  function:
+    implemented: false
+pca:
+  function:
+    implemented: true
+  parameters:
+    color: supported
+    mask_obs: lacks description
+    gene_symbols: not currently supported # TODO
+    use_raw: not currently supported
+    sort_order: not currently supported
+    edges: lacks description
+    edges_width: lacks description
+    edges_color: lacks description
+    neighbors_key: lacks description
+    arrows: lacks description
+    arrows_kwds: lacks description
+    groups: not currently supported
+    components: not currently supported # TODO
+    dimensions: not currently supported # TODO
+    layer: not currently supported # TODO
+    projection: not currently supported
+    scale_factor: lacks description
+    color_map: partially supported # TODO: check
+    cmap: lacks description
+    palette: not currently supported # TODO
+    na_color: not currently supported
+    na_in_legend: not currently supported
+    size: supported # TODO: check
+    frameon: not currently supported
+    legend_fontsize: not currently supported
+    legend_fontweight: not currently supported
+    legend_loc: not currently supported
+    legend_fontoutline: not currently supported
+    colorbar_loc: not currently supported
+    vmax: not currently supported # TODO
+    vmin: not currently supported # TODO
+    vcenter: not currently supported
+    norm: lacks description
+    add_outline: not currently supported
+    outline_width: not currently supported
+    outline_color: not currently supported
+    ncols: supported
+    hspace: not currently supported
+    wspace: not currently supported
+    title: supported # TODO: check
+    show: N/A
+    save: N/A
+    ax: N/A
+    return_fig: N/A
+    marker: lacks description
+    annotate_var_explained: lacks description
+pca_loadings:
+  function:
+    implemented: false
+pca_variance_ratio:
+  function:
+    implemented: false
+pca_overview:
+  function:
+    implemented: false
+tsne:
+  function:
+    implemented: true
+  parameters:
+    color: supported
+    mask_obs: lacks description
+    use_raw: not currently supported
+    gene_symbols: not currently supported # TODO
+    sort_order: not currently supported
+    edges: not currently supported
+    edges_width: not currently supported
+    edges_color: not currently supported
+    neighbors_key: N/A
+    arrows: not currently supported
+    arrows_kwds: not currently supported
+    groups: not currently supported
+    components: not currently supported # TODO
+    dimensions: not currently supported # TODO
+    layer: not currently supported # TODO
+    projection: not currently supported
+    scale_factor: lacks description
+    color_map: partially supported # TODO: check
+    cmap: lacks description
+    palette: not currently supported # TODO
+    na_color: not currently supported
+    na_in_legend: not currently supported
+    size: supported # TODO: check
+    frameon: not currently supported
+    legend_fontsize: not currently supported
+    legend_fontweight: not currently supported
+    legend_loc: not currently supported
+    legend_fontoutline: not currently supported
+    colorbar_loc: not currently supported
+    vmax: not currently supported # TODO
+    vmin: not currently supported # TODO
+    vcenter: not currently supported
+    norm: lacks description
+    add_outline: not currently supported
+    outline_width: not currently supported
+    outline_color: not currently supported
+    ncols: supported
+    hspace: not currently supported
+    wspace: not currently supported
+    title: supported # TODO: check
+    show: N/A
+    save: N/A
+    ax: N/A
+    return_fig: N/A
+    marker: lacks description
+umap:
+  function:
+    implemented: true
+  parameters:
+    color: supported
+    mask_obs: lacks description
+    use_raw: not currently supported
+    gene_symbols: not currently supported # TODO
+    sort_order: not currently supported
+    edges: not currently supported
+    edges_width: not currently supported
+    edges_color: not currently supported
+    neighbors_key: N/A
+    arrows: not currently supported
+    arrows_kwds: not currently supported
+    groups: not currently supported
+    components: not currently supported # TODO
+    dimensions: not currently supported # TODO
+    layer: not currently supported # TODO
+    projection: not currently supported
+    scale_factor: lacks description
+    color_map: partially supported # TODO: check
+    cmap: lacks description
+    palette: not currently supported # TODO
+    na_color: not currently supported
+    na_in_legend: not currently supported
+    size: supported # TODO: check
+    frameon: not currently supported
+    legend_fontsize: not currently supported
+    legend_fontweight: not currently supported
+    legend_loc: not currently supported
+    legend_fontoutline: not currently supported
+    colorbar_loc: not currently supported
+    vmax: not currently supported # TODO
+    vmin: not currently supported # TODO
+    vcenter: not currently supported
+    norm: lacks description
+    add_outline: not currently supported
+    outline_width: not currently supported
+    outline_color: not currently supported
+    ncols: supported
+    hspace: not currently supported
+    wspace: not currently supported
+    title: supported # TODO: check
+    show: N/A
+    save: N/A
+    ax: N/A
+    return_fig: N/A
+    marker: lacks description
+diffmap:
+  function:
+    implemented: false # TODO
+draw_graph:
+  function:
+    implemented: false
+spatial:
+  function:
+    implemented: true
+    deprecated: true
+  parameters:
+    color: supported
+    mask_obs: lacks description
+    color_map: supported
+    gene_symbols: not currently supported # TODO
+    use_raw: not currently supported # TODO
+    sort_order: not currently supported
+    edges: lacks description
+    edges_width: lacks description
+    edges_color: lacks description
+    neighbors_key: lacks description
+    arrows: lacks description
+    arrows_kwds: lacks description
+    groups: not currently supported # TODO (to plot a subset of cell sets)
+    components: not currently supported
+    dimensions: not currently supported
+    layer: not currently supported # TODO (the layer to use for gene expression data)
+    projection: not currently supported
+    scale_factor: not currently supported # TODO
+    cmap: lacks description
+    palette: not currently supported # TODO
+    na_color: not currently supported
+    na_in_legend: not currently supported
+    size: not currently supported # TODO: "Diameter in pixels of the spots will be size * spot_size * scale_factor"
+    frameon: not currently supported
+    legend_fontsize: not currently supported
+    legend_fontweight: not currently supported
+    legend_loc: not currently supported
+    legend_fontoutline: not currently supported
+    colorbar_loc: not currently supported
+    vmax: not currently supported # TODO
+    vmin: not currently supported # TODO
+    vcenter: not currently supported
+    add_outline: not currently supported
+    outline_width: not currently supported
+    outline_color: not currently supported
+    ncols: not currently supported # TODO
+    hspace: not currently supported
+    wspace: not currently supported
+    title: not currently supported # TODO
+    show: N/A
+    save: N/A
+    ax: N/A
+    return_fig: N/A
+    basis: lacks description
+    img: not currently supported
+    img_key: not currently supported # TODO "Key for image data, used to get img and scale_factor from "images" and "scalefactors" entires for this library. To use spatial coordinates, but not plot an image, pass img_key=None."
+    library_id: not currently supported # TODO "library_id for Visium data, e.g. key in adata.uns["spatial"]"
+    crop_coord: not currently supported
+    alpha_img: not currently supported # TODO
+    bw: not currently supported # TODO
+    spot_size: not currently supported # TODO
+embedding:
+  function:
+    implemented: true
+  parameters:
+    basis: supported
+    color: supported
+    mask_obs: lacks description
+    gene_symbols: not currently supported # TODO
+    use_raw: not currently supported # TODO
+    sort_order: not currently supported
+    edges: not currently supported
+    edges_width: not currently supported
+    edges_color: not currently supported
+    neighbors_key: not currently supported
+    arrows: not currently supported
+    arrows_kwds: not currently supported
+    groups: not currently supported # TODO
+    components: not currently supported # TODO
+    dimensions: not currently supported # TODO
+    layer: not currently supported # TODO
+    projection: not currently supported
+    scale_factor: lacks description
+    color_map: supported
+    cmap: lacks description
+    palette: not currently supported # TODO
+    na_color: not currently supported
+    na_in_legend: not currently supported
+    size: supported # TODO
+    frameon: not currently supported
+    legend_fontsize: not currently supported
+    legend_fontweight: not currently supported
+    legend_loc: not currently supported
+    legend_fontoutline: not currently supported
+    colorbar_loc: not currently supported
+    vmax: not currently supported # TODO
+    vmin: not currently supported # TODO
+    vcenter: not currently supported
+    norm: not currently supported
+    add_outline: not currently supported
+    outline_width: not currently supported
+    outline_color: not currently supported
+    ncols: supported
+    hspace: not currently supported
+    wspace: not currently supported
+    title: not currently supported # TODO
+    show: N/A
+    save: N/A
+    ax: N/A
+    return_fig: N/A
+embedding_density:
+  function:
+    implemented: false
+dpt_groups_pseudotime:
+  function:
+    implemented: false
+dpt_timeseries:
+  function:
+    implemented: false
+paga:
+  function:
+    implemented: false
+paga_path:
+  function:
+    implemented: false
+paga_compare:
+  function:
+    implemented: false
+rank_genes_groups:
+  function:
+    implemented: false
+rank_genes_groups_violin:
+  function:
+    implemented: false
+rank_genes_groups_stacked_violin:
+  function:
+    implemented: false
+rank_genes_groups_heatmap:
+  function:
+    implemented: false
+rank_genes_groups_dotplot:
+  function:
+    implemented: false
+rank_genes_groups_matrixplot:
+  function:
+    implemented: false
+rank_genes_groups_tracksplot:
+  function:
+    implemented: false
+sim:
+  function:
+    implemented: false
