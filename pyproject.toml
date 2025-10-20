@@ -44,7 +44,8 @@ docs = [
 dev = [
   'pytest>= 8.4.1',
   'jupyter',
-  'jupyterlab'
+  'jupyterlab',
+  'pyyaml',
 ]
 
 
