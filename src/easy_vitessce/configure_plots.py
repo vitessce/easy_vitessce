@@ -1,7 +1,15 @@
+
+
+from os.path import join
+import warnings
+
+import pandas as pd
+import numpy as np
+import scanpy as sc
+
 from vitessce import (
     VitessceConfig,
     AnnDataWrapper,
-    SpatialDataWrapper,
     ImageOmeZarrWrapper,
     CoordinationLevel as CL,
     ViewType as vt,
@@ -9,24 +17,12 @@ from vitessce import (
     hconcat
 )
 
-import os
-import shutil
-from os.path import join
-import scanpy as sc
-import math
-import warnings
-
 from vitessce.data_utils import (
     VAR_CHUNK_SIZE,
     rgb_img_to_ome_zarr
 )
 
-import pandas as pd
-import numpy as np
-import warnings
-
-from anndata import (AnnData, read_h5ad)
-
+from anndata import AnnData
 import spatialdata as sd
 from spatialdata import SpatialData
 from xarray.core.extensions import _CachedAccessor
@@ -34,7 +30,8 @@ from xarray.core.extensions import _CachedAccessor
 from easy_vitessce.spatialdata_plot import VitesscePlotAccessor
 from easy_vitessce.widget import _to_widget
 from easy_vitessce.data import _get_adata_wrapper_params
-    
+
+
 def umap(adata, **kwargs):
   """
   Creates interactive UMAP plot.
@@ -164,7 +161,7 @@ def embedding(
     if gene_symbols is not None:
         wrapper_params['feature_labels_path'] = f"var/{gene_symbols}"
     
-    dataset = vc.add_dataset(name='data').add_object(AnnDataWrapper(
+    dataset = vc.add_dataset(name='embedding data').add_object(AnnDataWrapper(
         **_get_adata_wrapper_params(adata),
         **wrapper_params
     ))
@@ -419,8 +416,8 @@ def spatial(adata, **kwargs):
     # feature_filter_path=[f"obs/{color}"],
         
         
-    vc = VitessceConfig(schema_version="1.0.17", name="AnnData with image")
-    dataset = vc.add_dataset("My dataset").add_object(
+    vc = VitessceConfig(schema_version="1.0.18", name="sc.pl.spatial (deprecated)")
+    dataset = vc.add_dataset(name='spatial data').add_object(
         AnnDataWrapper(
             adata_path=output_adata,
             obs_spots_path = "obsm/spatial", 
@@ -555,7 +552,7 @@ def heatmap(
 
     # TODO: throw errors/warnings for unsupported parameters?
 
-    vc =  VitessceConfig(schema_version="1.0.16", name='sc.pl.heatmap')
+    vc =  VitessceConfig(schema_version="1.0.18", name='sc.pl.heatmap')
 
     # We need to make a copy since we will be modifying adata.
     # TODO: this will mean the object will always be re-written to disk
@@ -582,7 +579,7 @@ def heatmap(
     if gene_symbols is not None:
         wrapper_params["feature_labels_path"] = f"var/{gene_symbols}"
 
-    dataset = vc.add_dataset(name='data').add_object(AnnDataWrapper(
+    dataset = vc.add_dataset(name='heatmap data').add_object(AnnDataWrapper(
         **_get_adata_wrapper_params(adata),
         **wrapper_params,
     ))
@@ -662,7 +659,7 @@ def violin(
         ]
     
 
-    dataset = vc.add_dataset(name='data').add_object(AnnDataWrapper(
+    dataset = vc.add_dataset(name='violin data').add_object(AnnDataWrapper(
         **_get_adata_wrapper_params(adata),
         obs_set_paths=[f"obs/{groupby}"],
         obs_set_names=[group_name],
@@ -767,7 +764,7 @@ def dotplot(
     :returns: Vitessce widget. Documentation can be found `here. <https://python-docs.vitessce.io/api_config.html#vitessce-widget>`_ 
     """
 
-    vc = VitessceConfig(schema_version="1.0.17", name='sc.pl.dotplot')
+    vc = VitessceConfig(schema_version="1.0.18", name='sc.pl.dotplot')
 
     group_name = groupby.capitalize()
 
