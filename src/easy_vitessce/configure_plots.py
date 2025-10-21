@@ -336,7 +336,7 @@ def embedding(
 
 def spatial(adata, **kwargs):
     """
-    Creates interactive spatial plot. Similar syntax to Scanpy's spatial plot.
+    This plotting function is deprecated since Scanpy version 1.11.0.
 
     :param AnnData adata: AnnData object.
     :param str color: Gene.
