@@ -518,9 +518,11 @@ def heatmap(
     # We name it using double underscores to reduce the chance of name collisions.
     adata.var["__ev_initial_feature_filter__"] = adata.var_names.to_series().apply(lambda gene: True if gene in var_names else False)
 
+    group_name = groupby.capitalize()
+
     wrapper_params = {
         "obs_set_paths": [f"obs/{groupby}"],
-        "obs_set_names": [groupby.capitalize()],
+        "obs_set_names": [group_name],
         "obs_feature_matrix_path": "X" if layer is None else f"layers/{layer}",
         "initial_feature_filter_path": "var/__ev_initial_feature_filter__",
     }
@@ -544,6 +546,11 @@ def heatmap(
             ["featureValueColormap"],
             [color_map]
         )
+    
+    vc.link_views([obs_sets_view], 
+        ['obsSetExpansion'],
+        [[[group_name]]]
+    )
 
     if vmin is not None or vmax is not None:
         vc.link_views(
@@ -561,7 +568,21 @@ def heatmap(
     vw = _to_widget(vc)
     return vw
 
-def violin(adata, groupby,**kwargs):
+# References:
+# - https://scanpy.readthedocs.io/en/stable/generated/scanpy.pl.violin.html
+# - https://github.com/scverse/scanpy/blob/cf8b46dea735c35a629abfaa2e1bab9047281e34/src/scanpy/plotting/_anndata.py#L735
+def violin(
+        adata,
+        keys,
+        groupby,
+        *,
+        log=False,
+        stripplot=True,
+        jitter=True,
+        layer=None,
+        order=None,
+        **kwargs
+    ):
     """
     Creates interactive violin plot.
 
@@ -570,50 +591,101 @@ def violin(adata, groupby,**kwargs):
     :param list[str] keys: Genes.
     :returns: Vitessce widget. Documentation can be found `here. <https://python-docs.vitessce.io/api_config.html#vitessce-widget>`_ 
     """
-    vc =  VitessceConfig(schema_version="1.0.15", name='heatmap')
-    adata = adata
-    groupby = groupby
+    vc =  VitessceConfig(schema_version="1.0.18", name='sc.pl.violin')
+    
+    if type(keys) == str:
+        markers = [keys]
+    elif type(keys) == list: 
+        markers = keys
+    else:
+        raise ValueError("Parameter 'keys' must be a string or a list of strings.")
 
-    if "keys" not in kwargs.keys():
-        markers = []
+    group_name = groupby.capitalize()
     
-    if type(kwargs.get("keys")) == str:
-        markers = [kwargs.get("keys", [])]
-    elif type(kwargs.get("keys")) == list: 
-        markers = kwargs.get("keys", [])
+    obs_set_selection = None
+    if order is not None:
+        obs_set_selection = [
+            # Construct the obsSetPaths in the order specified by `order`.
+            [group_name, item] for item in order
+        ]
     
+
     dataset = vc.add_dataset(name='data').add_object(AnnDataWrapper(
         **_get_adata_wrapper_params(adata),
         obs_set_paths=[f"obs/{groupby}"],
-        obs_set_names=[groupby],
-        obs_feature_matrix_path="X"
+        obs_set_names=[group_name],
+        obs_feature_matrix_path="X" if layer is None else f"layers/{layer}",
     ))
 
-    if type(markers) == list and len(markers) > 1:
-        for gene in markers:
-            genes = vc.add_view(vt.FEATURE_LIST, dataset=dataset)
-            cells = vc.add_view(vt.OBS_SETS, dataset=dataset)
-            violin = vc.add_view('obsSetFeatureValueDistribution', dataset=dataset, uid=f'violin-plot-{gene}')
-            vc.link_views(
-                [violin, genes, cells], 
-                ["featureSelection", "obsSetSelection", 'obsSetExpansion'],
-                [[gene], None, [[gene]]]
-            )
-            vc.layout(hconcat(violin, genes, cells, split = [2,1,1]))
-    else:
-        genes = vc.add_view(vt.FEATURE_LIST, dataset=dataset)
-        cells = vc.add_view(vt.OBS_SETS, dataset=dataset)
-        violin = vc.add_view('obsSetFeatureValueDistribution', dataset=dataset, uid='violin-plot')
+    # Case: multiple genes. Create one violin plot view per gene.
+    if len(markers) > 1:
+        feature_list_view = vc.add_view(vt.FEATURE_LIST, dataset=dataset)
+        obs_sets_view = vc.add_view(vt.OBS_SETS, dataset=dataset)
+        # Create one violin plot per gene, and add to the list violin_views.
+        violin_views = []
+        for gene_i, gene in enumerate(markers):
+            violin_view = vc.add_view('obsSetFeatureValueDistribution', dataset=dataset).set_props(jitter=(stripplot and jitter))
 
-        if "keys" in kwargs.keys():
-            # print(markers)
-            vc.link_views(
-                [violin, genes, cells], 
-                ["featureSelection", 'obsSetExpansion'],
-                [markers, [markers] if type(markers) == list else [[markers]]]
+            if gene_i == 0:
+                # We want to link the first violin plot to the feature list, but not the others.
+                vc.link_views([violin_view, feature_list_view], 
+                    ["featureSelection"],
+                    [[gene]]
+                )
+            else:
+                vc.link_views([violin_view], 
+                    ["featureSelection"],
+                    [[gene]]
+                )
+            
+            vc.link_views([violin_view, obs_sets_view], 
+                ['obsSetExpansion'],
+                [[[group_name]]]
             )
-        
-        vc.layout(violin | genes / cells)
+
+            if obs_set_selection is not None:
+                vc.link_views([violin_view, obs_sets_view],
+                    ["obsSetSelection"],
+                    [obs_set_selection]
+                )
+
+            if log:
+                vc.link_views([violin_view],
+                    ["featureValueTransform"],
+                    ["log1p"]
+                )
+            violin_views.append(violin_view)
+
+        # Layout all of the views.
+        vc.layout(hconcat(vconcat(*violin_views), vconcat(feature_list_view, obs_sets_view), split = [2, 1]))
+    else:
+        # Case: single gene. Create one violin plot view.
+        feature_list_view = vc.add_view(vt.FEATURE_LIST, dataset=dataset)
+        obs_sets_view = vc.add_view(vt.OBS_SETS, dataset=dataset)
+        violin_view = vc.add_view('obsSetFeatureValueDistribution', dataset=dataset).set_props(jitter=(stripplot and jitter))
+
+        vc.link_views([violin_view, feature_list_view], 
+            ["featureSelection"],
+            [markers]
+        )
+        vc.link_views([violin_view, obs_sets_view], 
+            ['obsSetExpansion'],
+            [[[group_name]]]
+        )
+
+        if obs_set_selection is not None:
+            vc.link_views([violin_view, obs_sets_view],
+                ["obsSetSelection"],
+                [obs_set_selection]
+            )
+
+        if log:
+            vc.link_views([violin_view],
+                ["featureValueTransform"],
+                ["log1p"]
+            )
+
+        vc.layout(hconcat(violin_view, vconcat(feature_list_view, obs_sets_view), split=[2, 1]))
 
     vw = _to_widget(vc)
     return vw
@@ -645,9 +717,11 @@ def dotplot(
 
     vc = VitessceConfig(schema_version="1.0.17", name='sc.pl.dotplot')
 
+    group_name = groupby.capitalize()
+
     wrapper_params = {
         "obs_set_paths": [f"obs/{groupby}"],
-        "obs_set_names": [groupby.capitalize()],
+        "obs_set_names": [group_name],
         "obs_feature_matrix_path": "X" if layer is None else f"layers/{layer}",
     }
 
@@ -664,6 +738,11 @@ def dotplot(
     obs_sets_view = vc.add_view(vt.OBS_SETS, dataset=dataset)
     feature_list_view = vc.add_view(vt.FEATURE_LIST, dataset=dataset).set_props(enableMultiSelect=True)
     dot_plot_view = vc.add_view('dotPlot', dataset=dataset).set_props(title=title, transpose=swap_axes)
+
+    vc.link_views([obs_sets_view], 
+        ['obsSetExpansion'],
+        [[[group_name]]]
+    )
     
     if var_names is not None:
         vc.link_views([dot_plot_view, feature_list_view],

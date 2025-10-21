@@ -75,14 +75,14 @@ violin:
   parameters:
     keys: supported
     groupby: supported
-    log: not currently supported # TODO
+    log: supported
     use_raw: not currently supported
-    stripplot: not currently supported # TODO
-    jitter: not currently supported # TODO
+    stripplot: partially supported
+    jitter: supported
     size: not currently supported
-    layer: not currently supported # TODO
+    layer: supported
     density_norm: not currently supported
-    order: not currently supported # TODO: use value to define obsSetSelection array
+    order: supported
     multi_panel: not currently supported
     xlabel: not currently supported
     ylabel: not currently supported
