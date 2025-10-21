@@ -2,7 +2,7 @@
 # Scanpy version 1.11.4
 scatter:
   function:
-    implemented: false
+    implemented: false # TODO
 heatmap:
   function:
     implemented: true
@@ -14,19 +14,19 @@ heatmap:
     num_categories: not currently supported
     categories_order: not currently supported
     dendrogram: not currently supported
-    gene_symbols: not currently supported # TODO: implement via featureLabels
+    gene_symbols: supported
     var_group_positions: not currently supported
     var_group_labels: not currently supported
     var_group_rotation: not currently supported
-    layer: not currently supported # TODO: implement via obs_feature_matrix_path
+    layer: supported
     standard_scale: not currently supported
-    swap_axes: not currently supported # TODO: corresponds to transpose prop
+    swap_axes: supported
     show_gene_labels: not currently supported
     show: N/A
     save: N/A
     figsize: N/A
-    vmin: not currently supported # TODO: corresponds to featureValueColormapRange[0]
-    vmax: not currently supported # TODO: corresponds to featureValueColormapRange[1]
+    vmin: supported
+    vmax: supported
     vcenter: not currently supported
     norm: not currently supported
 dotplot: 
@@ -39,20 +39,20 @@ dotplot:
     log: not currently supported
     num_categories: not currently supported
     categories_order: not currently supported
-    expression_cutoff: not currently supported # TODO: implement via existing coordination type
+    expression_cutoff: supported
     mean_only_expressed: not currently supported
     standard_scale: not currently supported 
-    title: not currently supported # TODO: implement via title prop
+    title: supported
     colorbar_title: not currently supported
     size_title: not currently supported
     figsize: N/A
     dendrogram: not currently supported
-    gene_symbols: not currently supported # TODO: implement via featureLabels
+    gene_symbols: supported
     var_group_positions: not currently supported
     var_group_labels: not currently supported
     var_group_rotation: not currently supported
-    layer: not currently supported # TODO
-    swap_axes: not currently supported # TODO
+    layer: supported
+    swap_axes: supported
     dot_color_df: lacks description
     show: N/A
     save: N/A
@@ -62,7 +62,7 @@ dotplot:
     vmax: not currently supported
     vcenter: not currently supported
     norm: not currently supported
-    cmap: not currently supported # TODO
+    cmap: partially supported
     dot_max: not currently supported
     dot_min: not currently supported
     smallest_dot: not currently supported
@@ -75,14 +75,14 @@ violin:
   parameters:
     keys: supported
     groupby: supported
-    log: not currently supported # TODO
+    log: supported
     use_raw: not currently supported
-    stripplot: not currently supported # TODO
-    jitter: not currently supported # TODO
+    stripplot: partially supported
+    jitter: supported
     size: not currently supported
-    layer: not currently supported # TODO
+    layer: supported
     density_norm: not currently supported
-    order: not currently supported # TODO: use value to define obsSetSelection array
+    order: supported
     multi_panel: not currently supported
     xlabel: not currently supported
     ylabel: not currently supported
@@ -124,7 +124,7 @@ pca:
   parameters:
     color: supported
     mask_obs: lacks description
-    gene_symbols: not currently supported # TODO
+    gene_symbols: supported
     use_raw: not currently supported
     sort_order: not currently supported
     edges: lacks description
@@ -136,7 +136,7 @@ pca:
     groups: not currently supported
     components: not currently supported # TODO
     dimensions: not currently supported # TODO
-    layer: not currently supported # TODO
+    layer: supported
     projection: not currently supported
     scale_factor: lacks description
     color_map: partially supported # TODO: check
@@ -144,15 +144,15 @@ pca:
     palette: not currently supported # TODO
     na_color: not currently supported
     na_in_legend: not currently supported
-    size: supported # TODO: check
+    size: supported
     frameon: not currently supported
     legend_fontsize: not currently supported
     legend_fontweight: not currently supported
     legend_loc: not currently supported
     legend_fontoutline: not currently supported
     colorbar_loc: not currently supported
-    vmax: not currently supported # TODO
-    vmin: not currently supported # TODO
+    vmax: supported
+    vmin: supported
     vcenter: not currently supported
     norm: lacks description
     add_outline: not currently supported
@@ -161,7 +161,7 @@ pca:
     ncols: supported
     hspace: not currently supported
     wspace: not currently supported
-    title: supported # TODO: check
+    title: supported
     show: N/A
     save: N/A
     ax: N/A
@@ -184,7 +184,7 @@ tsne:
     color: supported
     mask_obs: lacks description
     use_raw: not currently supported
-    gene_symbols: not currently supported # TODO
+    gene_symbols: supported
     sort_order: not currently supported
     edges: not currently supported
     edges_width: not currently supported
@@ -195,23 +195,23 @@ tsne:
     groups: not currently supported
     components: not currently supported # TODO
     dimensions: not currently supported # TODO
-    layer: not currently supported # TODO
+    layer: supported
     projection: not currently supported
     scale_factor: lacks description
-    color_map: partially supported # TODO: check
+    color_map: partially supported
     cmap: lacks description
     palette: not currently supported # TODO
     na_color: not currently supported
     na_in_legend: not currently supported
-    size: supported # TODO: check
+    size: supported
     frameon: not currently supported
     legend_fontsize: not currently supported
     legend_fontweight: not currently supported
     legend_loc: not currently supported
     legend_fontoutline: not currently supported
     colorbar_loc: not currently supported
-    vmax: not currently supported # TODO
-    vmin: not currently supported # TODO
+    vmax: supported
+    vmin: supported
     vcenter: not currently supported
     norm: lacks description
     add_outline: not currently supported
@@ -220,7 +220,7 @@ tsne:
     ncols: supported
     hspace: not currently supported
     wspace: not currently supported
-    title: supported # TODO: check
+    title: supported
     show: N/A
     save: N/A
     ax: N/A
@@ -233,7 +233,7 @@ umap:
     color: supported
     mask_obs: lacks description
     use_raw: not currently supported
-    gene_symbols: not currently supported # TODO
+    gene_symbols: supported
     sort_order: not currently supported
     edges: not currently supported
     edges_width: not currently supported
@@ -244,23 +244,23 @@ umap:
     groups: not currently supported
     components: not currently supported # TODO
     dimensions: not currently supported # TODO
-    layer: not currently supported # TODO
+    layer: supported
     projection: not currently supported
     scale_factor: lacks description
-    color_map: partially supported # TODO: check
+    color_map: partially supported
     cmap: lacks description
     palette: not currently supported # TODO
     na_color: not currently supported
     na_in_legend: not currently supported
-    size: supported # TODO: check
+    size: supported
     frameon: not currently supported
     legend_fontsize: not currently supported
     legend_fontweight: not currently supported
     legend_loc: not currently supported
     legend_fontoutline: not currently supported
     colorbar_loc: not currently supported
-    vmax: not currently supported # TODO
-    vmin: not currently supported # TODO
+    vmax: supported
+    vmin: supported
     vcenter: not currently supported
     norm: lacks description
     add_outline: not currently supported
@@ -269,7 +269,7 @@ umap:
     ncols: supported
     hspace: not currently supported
     wspace: not currently supported
-    title: supported # TODO: check
+    title: supported
     show: N/A
     save: N/A
     ax: N/A
@@ -277,7 +277,53 @@ umap:
     marker: lacks description
 diffmap:
   function:
-    implemented: false # TODO
+    implemented: true
+  parameters:
+    color: supported
+    mask_obs: lacks description
+    use_raw: not currently supported
+    gene_symbols: supported
+    sort_order: not currently supported
+    edges: not currently supported
+    edges_width: not currently supported
+    edges_color: not currently supported
+    neighbors_key: N/A
+    arrows: not currently supported
+    arrows_kwds: not currently supported
+    groups: not currently supported
+    components: not currently supported # TODO
+    dimensions: not currently supported # TODO
+    layer: supported
+    projection: not currently supported
+    scale_factor: lacks description
+    color_map: partially supported
+    cmap: lacks description
+    palette: not currently supported # TODO
+    na_color: not currently supported
+    na_in_legend: not currently supported
+    size: supported
+    frameon: not currently supported
+    legend_fontsize: not currently supported
+    legend_fontweight: not currently supported
+    legend_loc: not currently supported
+    legend_fontoutline: not currently supported
+    colorbar_loc: not currently supported
+    vmax: supported
+    vmin: supported
+    vcenter: not currently supported
+    norm: lacks description
+    add_outline: not currently supported
+    outline_width: not currently supported
+    outline_color: not currently supported
+    ncols: supported
+    hspace: not currently supported
+    wspace: not currently supported
+    title: supported
+    show: N/A
+    save: N/A
+    ax: N/A
+    return_fig: N/A
+    marker: lacks description
 draw_graph:
   function:
     implemented: false
@@ -344,8 +390,8 @@ embedding:
     basis: supported
     color: supported
     mask_obs: lacks description
-    gene_symbols: not currently supported # TODO
-    use_raw: not currently supported # TODO
+    gene_symbols: supported
+    use_raw: not currently supported
     sort_order: not currently supported
     edges: not currently supported
     edges_width: not currently supported
@@ -356,23 +402,23 @@ embedding:
     groups: not currently supported # TODO
     components: not currently supported # TODO
     dimensions: not currently supported # TODO
-    layer: not currently supported # TODO
+    layer: supported
     projection: not currently supported
     scale_factor: lacks description
-    color_map: supported
+    color_map: partially supported
     cmap: lacks description
     palette: not currently supported # TODO
     na_color: not currently supported
     na_in_legend: not currently supported
-    size: supported # TODO
+    size: supported
     frameon: not currently supported
     legend_fontsize: not currently supported
     legend_fontweight: not currently supported
     legend_loc: not currently supported
     legend_fontoutline: not currently supported
     colorbar_loc: not currently supported
-    vmax: not currently supported # TODO
-    vmin: not currently supported # TODO
+    vmax: supported
+    vmin: supported
     vcenter: not currently supported
     norm: not currently supported
     add_outline: not currently supported
@@ -381,7 +427,7 @@ embedding:
     ncols: supported
     hspace: not currently supported
     wspace: not currently supported
-    title: not currently supported # TODO
+    title: supported
     show: N/A
     save: N/A
     ax: N/A

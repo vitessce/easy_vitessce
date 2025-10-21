@@ -1,30 +1,28 @@
+
+
+from os.path import join
+import warnings
+
+import pandas as pd
+import numpy as np
+import scanpy as sc
+
 from vitessce import (
     VitessceConfig,
     AnnDataWrapper,
-    SpatialDataWrapper,
     ImageOmeZarrWrapper,
     CoordinationLevel as CL,
-    Component as cm,
+    ViewType as vt,
     vconcat,
     hconcat
 )
-
-import os
-import shutil
-from os.path import join
-import scanpy as sc
 
 from vitessce.data_utils import (
     VAR_CHUNK_SIZE,
     rgb_img_to_ome_zarr
 )
 
-import pandas as pd
-import numpy as np
-import warnings
-
-from anndata import (AnnData, read_h5ad)
-
+from anndata import AnnData
 import spatialdata as sd
 from spatialdata import SpatialData
 from xarray.core.extensions import _CachedAccessor
@@ -32,7 +30,8 @@ from xarray.core.extensions import _CachedAccessor
 from easy_vitessce.spatialdata_plot import VitesscePlotAccessor
 from easy_vitessce.widget import _to_widget
 from easy_vitessce.data import _get_adata_wrapper_params
-    
+
+
 def umap(adata, **kwargs):
   """
   Creates interactive UMAP plot.
@@ -72,7 +71,37 @@ def pca(adata, **kwargs):
   """
   return embedding(adata, basis="pca", **kwargs)
 
-def embedding(adata, basis, **kwargs):
+def diffmap(adata, **kwargs):
+  """
+  Creates interactive Diffusion Map plot.
+
+  :param AnnData adata: AnnData object.
+  :param str color: Gene or category group.
+  :param str color_map: Color map (viridis, plasma, jet).
+  :param (float or int) size: Size of dots.
+  :param bool include_gene_list: If a list of genes is passed in, True will add a gene list for the last plot. False by default.
+  :returns: Vitessce widget. Documentation can be found `here. <https://python-docs.vitessce.io/api_config.html#vitessce-widget>`_ 
+  """
+  return embedding(adata, basis="diffmap", **kwargs)
+
+# Reference:
+# - https://scanpy.readthedocs.io/en/stable/api/generated/scanpy.pl.embedding.html
+# - https://github.com/scverse/scanpy/blob/cf8b46dea735c35a629abfaa2e1bab9047281e34/src/scanpy/plotting/_tools/scatterplots.py#L70
+def embedding(
+        adata,
+        basis,
+        *,
+        color = None,
+        gene_symbols = None,
+        layer = None,
+        color_map = None,
+        size = None,
+        vmin = None,
+        vmax = None,
+        title = None,
+        ncols = 4,
+        **kwargs
+    ):
     """
     Creates interactive versions of UMAP, PCA, t-SNE plots.
 
@@ -85,219 +114,238 @@ def embedding(adata, basis, **kwargs):
     :returns: Vitessce widget. Documentation can be found `here. <https://python-docs.vitessce.io/api_config.html#vitessce-widget>`_ 
 
     """
-    basis = basis
     basis_name = "t-SNE" if basis == "tsne" else basis.upper()
     basis_obsm_key = f"X_{basis}"
-    adata = adata
 
     if basis_obsm_key not in adata.obsm:
         raise ValueError(f"{basis_name} coordinates not found in adata.obsm.")
-    
-    ncols = kwargs.get("ncols", 1)
-    if ncols > 3:
-        warnings.warn("To prevent plots from being too small, ncols should be ≤ 3.")
 
-    include_genes = kwargs.get("include_gene_list", False) # Note: Not a parameter in Scanpy.
-    include_cells = kwargs.get("include_cell_sets", False) # Note: Not a parameter in Scanpy.
-    
-    color = kwargs.get("color", "")
-    color_map = kwargs.get("color_map", "viridis")
-    size  = kwargs.get("size", 2.5)
+    # Normalize the color parameter to be either list or None.
+    if type(color) == str:
+        color = [color]
 
-    if "color_map" in kwargs.keys():
-        if "plasma" not in kwargs["color_map"].lower() and "viridis" not in kwargs["color_map"].lower() and "jet" not in kwargs["color_map"].lower():
-            print("Invalid color_map. Supported color_maps: plasma, viridis, jet.")
-            color_map = "viridis"
-            
-    coordination_types = ["embeddingObsRadiusMode", "embeddingObsRadius", "embeddingObsOpacityMode", "obsColorEncoding"]
-    coordination_values = ["manual", size, "manual"]
+    if size is None:
+        # TODO: make this dependent on number of cells?
+        size = 2.5
     
-    if (type(color) == str and len(color) != 0) or len(color) == 1:
-        # color = kwargs.get("color") if type(kwargs.get("color")) == str else kwargs.get("color")[0]
-        
-        if color in adata.obs.columns:
-            # `color` is the name of a categorical `obs` dataframe column
-            new_coord_values = ["cellSetSelection", [color if type(color) == str else color[0]], color_map]
-            new_coord_types = ["featureSelection", "featureValueColormap"]
-            coordination_values.extend(new_coord_values)
-            coordination_types.extend(new_coord_types)
-            
-            
-        elif color in adata.var.index:
-            # `color` is a gene name
-            new_coord_values = ["geneSelection", [color if type(color) == str else color[0]], color_map]
-            new_coord_types = ["featureSelection", "featureValueColormap"]
-            coordination_values.extend(new_coord_values)
-            coordination_types.extend(new_coord_types) 
-        else:
-          raise ValueError("color not found in AnnData object")
-        
-    elif type(kwargs.get("color")) == list and len(kwargs.get("color")) > 1: 
-        color = kwargs.get("color", [])
-        
-    vc =  VitessceConfig(schema_version="1.0.15", name=basis_name)
+    vc = VitessceConfig(schema_version="1.0.18", name=f"sc.pl.embedding for {basis_name}")
 
-    adata_wrapper_dict = {
-        **_get_adata_wrapper_params(adata),
-        'obs_embedding_paths':[f"obsm/{basis_obsm_key}"],
-        'obs_embedding_names':[basis_name],
-        'obs_feature_matrix_path':"X"
+    wrapper_params = {
+        'obs_embedding_paths': [f"obsm/{basis_obsm_key}"],
+        'obs_embedding_names': [basis_name],
     }
 
-    if len(color) == 0:
-        dataset = vc.add_dataset(name='data').add_object(AnnDataWrapper(**adata_wrapper_dict))
-        coordination_types.remove("obsColorEncoding")
-        coordination_types.append("featureValueColormap")
-        coordination_values.append(color_map)
-        mapping = vc.add_view(cm.SCATTERPLOT, dataset=dataset, mapping=basis_name) # mapping value corresponds to one of the obs_embedding_names values.
-        view_list = vc.add_view(cm.FEATURE_LIST, dataset=dataset) # default to feature_list if no color is provided
+    # Configure wrapper_params.
+    has_color_in_var = False
+    has_color_in_obs = False
 
-        vc.link_views(
-            [mapping, view_list], 
-            coordination_types, # https://vitessce.io/docs/coordination-types/
-            coordination_values
+    obs_set_paths = []
+    obs_set_names = []
+    
+    if color is not None:
+        for c in color:
+            if c in adata.obs.columns:
+                has_color_in_obs = True
+                obs_set_paths.append(f"obs/{c}")
+                obs_set_names.append(c.capitalize())
+            elif c in adata.var.index:
+                has_color_in_var = True
+
+        if len(obs_set_paths) > 0:
+            wrapper_params['obs_set_paths'] = obs_set_paths
+            wrapper_params['obs_set_names'] = obs_set_names
+        
+        if has_color_in_var:
+            wrapper_params['obs_feature_matrix_path'] = "X" if layer is None else f"layers/{layer}"
+    
+    if gene_symbols is not None:
+        wrapper_params['feature_labels_path'] = f"var/{gene_symbols}"
+    
+    dataset = vc.add_dataset(name='embedding data').add_object(AnnDataWrapper(
+        **_get_adata_wrapper_params(adata),
+        **wrapper_params
+    ))
+
+    if type(color) == list and len(color) > 1:
+        # Multiple colors: multiple scatterplot views.
+
+        scatterplot_views = []
+        obs_sets_view = None
+        feature_list_view = None
+
+        for color_i, color_val in enumerate(color):
+            scatterplot_props = {}
+            if type(title) == str and color_i == 0:
+                scatterplot_props['title'] = title
+            elif type(title) == list and len(color) == len(title):
+                scatterplot_props['title'] = title[color_i]
+            
+            scatterplot_view = vc.add_view(vt.SCATTERPLOT, dataset=dataset).set_props(**scatterplot_props)
+            scatterplot_views.append(scatterplot_view)
+
+            if type(size) is list and len(size) == len(color):
+                vc.link_views(scatterplot_views,
+                    ["embeddingObsRadiusMode", "embeddingObsRadius"],
+                    ["manual", size[color_i]]
+                )
+            
+            # Check if color[i] is in obs or var.
+            if color_val in adata.obs.columns:
+                if obs_sets_view is None:
+                    obs_sets_view = vc.add_view(vt.OBS_SETS, dataset=dataset)
+                
+                # TODO: simplify this once https://github.com/vitessce/vitessce/issues/2254 is addressed.
+                group_name = color_val.capitalize()
+                obs_set_categories = adata.obs[color_val].unique().tolist()
+                obs_set_paths = [
+                    [group_name, str(cat)] for cat in obs_set_categories
+                ]
+
+                vc.link_views([scatterplot_view, obs_sets_view],
+                    ["obsColorEncoding", "obsSetSelection", "obsSetExpansion"],
+                    ["cellSetSelection", obs_set_paths, [[group_name]]]
+                )
+            elif color_val in adata.var.index:
+                if feature_list_view is None:
+                    feature_list_view = vc.add_view(vt.FEATURE_LIST, dataset=dataset)
+                vc.link_views([scatterplot_view, feature_list_view],
+                    ["featureSelection", "obsColorEncoding"],
+                    [[color_val], "geneSelection"]
+                )
+        
+        # Link the zoom/pan interactions across all scatterplot views.
+        vc.link_views(scatterplot_views,
+            ["embeddingZoom", "embeddingTargetX", "embeddingTargetY"],
+            [None, None, None]
         )
 
-        vc.layout(mapping | view_list)
-       
-        vw = vc.widget()
-        return vw
-    
-    elif type(color) == list and len(color) > 1: 
-        
-        if color[0] in adata.var.index: # gene names
-            dataset = vc.add_dataset(name='data').add_object(AnnDataWrapper(**adata_wrapper_dict))
-        
-            mapping_dict = {}
-            for i in range(0, len(color), ncols):
-                row = color[i:i + ncols] # not inclusive
-                for gene in row:
-                    mapping_dict[f"{gene}"] = vc.add_view(cm.SCATTERPLOT, dataset=dataset, mapping=basis_name).set_props(title=f"{basis_name} ({gene})")
-            
-            scatterplots = list(mapping_dict.values())
-            vc.link_views(scatterplots,
-                ["embeddingZoom", "embeddingTargetX", "embeddingTargetY"],
-                [None, None, None]
+        # Other linkings that are common across all scatterplot views.
+        vc.link_views(scatterplot_views,
+            ["embeddingType"],
+            [basis_name]
+        )
+
+        if size is not None and type(size) is not list:
+            vc.link_views(scatterplot_views,
+                ["embeddingObsRadiusMode", "embeddingObsRadius"],
+                ["manual", size]
             )
-                                                                
-            for key, value in mapping_dict.items():
-               vc.link_views(
-                    [value], 
-                    ["featureSelection", "obsColorEncoding", "embeddingObsRadiusMode", "embeddingObsRadius", "featureValueColormap"], # https://vitessce.io/docs/coordination-types/
-                    [[key], "geneSelection", "manual", size, color_map]
-                )
-            
-            
-            values = [mapping_dict[key] for key in mapping_dict.keys()]
-    
-            cols = []
-            for i in range(0, len(values), ncols):
-                cols.append(values[i:i+ncols])
-            #print(cols)
-    
-            if len(values) % ncols != 0:
-                last_row = [values[len(values) - len(values)%ncols]]
-                last_key = (list(mapping_dict.keys()))[-1]
-    
-                if include_genes or include_cells: # hmmm
-                    last_gene_list = vc.add_view(cm.FEATURE_LIST, dataset=dataset)
-                    last_cell_list = vc.add_view(cm.OBS_SETS, dataset=dataset)
-                    
-                    cols[len(cols)-1].append(last_gene_list)
-                    
-                    vc.link_views(
-                        [last_row[0], last_gene_list], 
-                        ["featureSelection", "obsColorEncoding", "embeddingObsRadiusMode", "embeddingObsRadius", "featureValueColormap"], # https://vitessce.io/docs/coordination-types/
-                        [[last_key], "geneSelection", "manual", size, color_map]
-                    )
+        
+        if vmin is not None or vmax is not None:
+            vc.link_views(scatterplot_views,
+                ["featureValueColormapRange"],
+                [
+                    [
+                        vmin if vmin is not None else 0.0,
+                        vmax if vmax is not None else 1.0,
+                    ]
+                ]
+            )
 
-                    #last_row.append(last_gene_list)
-                else:
-                    vc.link_views(
-                        [last_row[0]], 
-                        ["featureSelection", "obsColorEncoding", "embeddingObsRadiusMode", "embeddingObsRadius", "featureValueColormap"], # https://vitessce.io/docs/coordination-types/
-                        [[last_key], "geneSelection", "manual", size, color_map]
-                    )
-                
-    
-                vc.layout((vconcat(*[hconcat(*row) for row in cols])))
-                    
-                    
+        if color_map is not None and color_map in ["viridis", "plasma", "jet", "greys"]:
+            vc.link_views(scatterplot_views,
+                ["featureValueColormap"],
+                [color_map]
+            )
+        
+        # Layout the views.
+        all_views = (
+            scatterplot_views
+            + ([obs_sets_view] if obs_sets_view is not None else [])
+            + ([feature_list_view] if feature_list_view is not None else [])
+        )
+        rows_of_views = []
+
+        for view_i, view in enumerate(all_views):
+            if view_i % ncols == 0:
+                # Start a new row.
+                rows_of_views.append([view])
             else:
-                last_mapping = (list(mapping_dict.values()))[-1]
-                last_key = (list(mapping_dict.keys()))[-1]
-    
-                if include_genes:
-                    genes = vc.add_view(cm.FEATURE_LIST, dataset=dataset)
-                    cols.append([genes])
-                    vc.link_views(
-                        [last_mapping, genes], 
-                        ["featureSelection", "obsColorEncoding", "embeddingObsRadiusMode", "embeddingObsRadius", "featureValueColormap"], # https://vitessce.io/docs/coordination-types/
-                        [[last_key], "geneSelection", "manual", size, color_map]
-                    )
-                    vc.layout(genes)
-    
-                vc.layout((vconcat(*[hconcat(*row) for row in cols])))
-                
-        elif color[0] in adata.obs.columns: # categorical, layout shouldn't be side-by-side 
-            for obs in color:
-                # print(obs)
-                new_obs_paths_names = {'obs_set_paths': [f"obs/{obs}"], 'obs_set_names':[obs]} # is the problem here?
-                adata_wrapper_dict.update(new_obs_paths_names)
-                # print(adata_wrapper_dict)
-                
-                dataset = vc.add_dataset(name='tsne data').add_object(AnnDataWrapper(**adata_wrapper_dict))
-                
-                scatterplot = vc.add_view(cm.SCATTERPLOT, dataset=dataset, mapping=basis_name)
-                obs_view = vc.add_view(cm.OBS_SETS, dataset=dataset)
-            
-                vc.link_views(
-                    [scatterplot, obs_view], 
-                    ["obsColorEncoding", "embeddingObsRadiusMode", "embeddingObsRadius", "embeddingObsOpacityMode", "obsSetSelection", "obsSetColor", 'obsSetExpansion'],
-                    ["cellSetSelection", "manual", size, "manual", None, None, [[obs]]]
-                )
-            
-                vc.layout(scatterplot | obs_view)
-                
-            
-        vw = _to_widget(vc)
-        return vw
-
-    else: # one color
-        if color in adata.var.index:
-            dataset = vc.add_dataset(name='data').add_object(AnnDataWrapper(**adata_wrapper_dict))
+                rows_of_views[-1].append(view)
         
-        elif color in adata.obs.columns:
-            first_color = color if type(color) == str else color[0]
-            obs_paths_names = {'obs_set_paths':[f"obs/{first_color}"], 'obs_set_names':[first_color.capitalize()]}
-            adata_wrapper_dict.update(obs_paths_names)
-            
-        dataset = vc.add_dataset(name='data').add_object(AnnDataWrapper(**adata_wrapper_dict))
-        
-        mapping = vc.add_view(cm.SCATTERPLOT, dataset=dataset, mapping=basis_name) # mapping value corresponds to one of the obs_embedding_names values.
-        view_list = vc.add_view(cm.FEATURE_LIST if color in adata.var.index else cm.OBS_SETS, dataset=dataset) #change dimensions?
-    
+        # Combine rows.
+        row_layouts = [hconcat(*row) for row in rows_of_views]
+        vc.layout(vconcat(*row_layouts))
 
-        vc.link_views(
-            [mapping, view_list], 
-            coordination_types, # https://vitessce.io/docs/coordination-types/
-            coordination_values
+    else:
+        # Single color or color=None: single scatterplot view.
+        scatterplot_props = {} if title is None else { 'title': title }
+        scatterplot_view = vc.add_view(vt.SCATTERPLOT, dataset=dataset).set_props(**scatterplot_props)
+        control_views = []
+        if has_color_in_obs:
+            obs_sets_view = vc.add_view(vt.OBS_SETS, dataset=dataset)
+            control_views.append(obs_sets_view)
+        if has_color_in_var:
+            feature_list_view = vc.add_view(vt.FEATURE_LIST, dataset=dataset)
+            control_views.append(feature_list_view)
+        
+        # Link views.
+        vc.link_views([scatterplot_view],
+            ["embeddingType"],
+            [basis_name]
         )
 
-        vc.layout(mapping | view_list)
-       
+        if size is not None:
+            vc.link_views([scatterplot_view],
+                ["embeddingObsRadiusMode", "embeddingObsRadius"],
+                ["manual", size]
+            )
+        
+        if vmin is not None or vmax is not None:
+            vc.link_views([scatterplot_view],
+                ["featureValueColormapRange"],
+                [
+                    [
+                        vmin if vmin is not None else 0.0,
+                        vmax if vmax is not None else 1.0,
+                    ]
+                ]
+            )
+        
+        if has_color_in_obs:
+            vc.link_views([scatterplot_view, *control_views],
+                ["obsColorEncoding"],
+                ["cellSetSelection"]
+            )
+            vc.link_views([obs_sets_view],
+                ["obsSetExpansion"],
+                [[[obs_set_names[0]]]]
+            )
+
+        if has_color_in_var:
+            vc.link_views([scatterplot_view, *control_views],
+                ["featureSelection", "obsColorEncoding"],
+                [[color[0]], "geneSelection"]
+            )
+        
+        if color_map is not None and color_map in ["viridis", "plasma", "jet", "greys"]:
+            vc.link_views([scatterplot_view],
+                ["featureValueColormap"],
+                [color_map]
+            )
+
+        # Layout views.
+        if len(control_views) > 0:
+            vc.layout(hconcat(scatterplot_view, vconcat(*control_views), split=[2, 1]))
+        else:
+            vc.layout(scatterplot_view)
+
     vw = _to_widget(vc)
     return vw
 
+
 def spatial(adata, **kwargs):
     """
-    Creates interactive spatial plot. Similar syntax to Scanpy's spatial plot.
+    This plotting function is deprecated since Scanpy version 1.11.0.
 
     :param AnnData adata: AnnData object.
     :param str color: Gene.
     :param str color_map: Color map (viridis, plasma, jet). Defaults to viridis.
     :returns: Vitessce widget. Documentation can be found `here. <https://python-docs.vitessce.io/api_config.html#vitessce-widget>`_ 
     """
+
+    warnings.warn("This plotting function is deprecated since Scanpy version 1.11.0.", DeprecationWarning)
+
     sc.pp.calculate_qc_metrics(adata, inplace=True)
     sample_id = (list(adata.uns["spatial"].keys()))[0]
     
@@ -306,7 +354,7 @@ def spatial(adata, **kwargs):
 
     ncols = kwargs.get("ncols", 1)
     if ncols > 3:
-        warnings.warn("To prevent plots from being too small, ncols should be ≤ 3.")
+        warnings.warn("To prevent plots from being too small, ncols should be ≤ 3.", UserWarning)
     
     
     output_img = join("data", "spatial.ome.zarr")
@@ -368,8 +416,8 @@ def spatial(adata, **kwargs):
     # feature_filter_path=[f"obs/{color}"],
         
         
-    vc = VitessceConfig(schema_version="1.0.17", name="AnnData with image")
-    dataset = vc.add_dataset("My dataset").add_object(
+    vc = VitessceConfig(schema_version="1.0.18", name="sc.pl.spatial (deprecated)")
+    dataset = vc.add_dataset(name='spatial data').add_object(
         AnnDataWrapper(
             adata_path=output_adata,
             obs_spots_path = "obsm/spatial", 
@@ -409,10 +457,10 @@ def spatial(adata, **kwargs):
     }
 
     if color in adata.var.index: # gene
-        genes = vc.add_view(cm.FEATURE_LIST, dataset=dataset) #assumes featureType = gene
+        genes = vc.add_view(vt.FEATURE_LIST, dataset=dataset) #assumes featureType = gene
         
     if color in adata.obs.columns:
-        histogram = vc.add_view(cm.FEATURE_VALUE_HISTOGRAM, dataset=dataset)
+        histogram = vc.add_view(vt.FEATURE_VALUE_HISTOGRAM, dataset=dataset)
 
     # if type(color) == list and len(color) > 1:
     #     for i in range(0, len(color), 2):
@@ -476,7 +524,22 @@ def spatial(adata, **kwargs):
     vw = _to_widget(vc)
     return vw
 
-def heatmap(adata, **kwargs):
+
+# References:
+# - https://github.com/scverse/scanpy/blob/cf8b46dea735c35a629abfaa2e1bab9047281e34/src/scanpy/plotting/_anndata.py#L1107
+# - https://scanpy.readthedocs.io/en/stable/generated/scanpy.pl.heatmap.html
+def heatmap(
+        adata,
+        var_names,
+        groupby,
+        *,
+        gene_symbols=None,
+        layer=None,
+        swap_axes=False,
+        vmin=None,
+        vmax=None,
+        **kwargs
+    ):
     """
     Creates interactive heatmap.
 
@@ -486,44 +549,89 @@ def heatmap(adata, **kwargs):
     :param str color_map: Color map (viridis, plasma, jet). Defaults to viridis.
     :returns: Vitessce widget. Documentation can be found `here. <https://python-docs.vitessce.io/api_config.html#vitessce-widget>`_ 
     """
-    vc =  VitessceConfig(schema_version="1.0.15", name='heatmap')
-    adata = adata
-    color_map = kwargs.get("color_map", "viridis")
 
-    if "groupby" in kwargs:
-        groupby = kwargs["groupby"]
+    # TODO: throw errors/warnings for unsupported parameters?
 
-    if "var_names" in kwargs.keys():
-        markers = kwargs["var_names"]
-        adata.var["genes"] = list(adata.var.index)
-        adata.var["in_markers"] = adata.var["genes"].apply(lambda gene: True if gene in markers else False)
+    vc =  VitessceConfig(schema_version="1.0.18", name='sc.pl.heatmap')
 
+    # We need to make a copy since we will be modifying adata.
+    # TODO: this will mean the object will always be re-written to disk
+    # (and redundantly if the function is called multiple times),
+    # and breaking the functionality of register_data_path() if the user had specified an existing on-disk location.
+    # Workarounds for future work (TODO: create github issues):
+    # - Create a new AnnData object (or CSV file) to store var/__ev_initial_feature_filter__ column only.
+    # - In JS, implement a way to specify a list of features directly rather than via a path in the AnnData object.
+    adata = adata.copy()
 
-    dataset = vc.add_dataset(name='data').add_object(AnnDataWrapper(
+    # We need to create a boolean mask in adata.var to indicate which genes to show initially.
+    # We name it using double underscores to reduce the chance of name collisions.
+    adata.var["__ev_initial_feature_filter__"] = adata.var_names.to_series().apply(lambda gene: True if gene in var_names else False)
+
+    group_name = groupby.capitalize()
+
+    wrapper_params = {
+        "obs_set_paths": [f"obs/{groupby}"],
+        "obs_set_names": [group_name],
+        "obs_feature_matrix_path": "X" if layer is None else f"layers/{layer}",
+        "initial_feature_filter_path": "var/__ev_initial_feature_filter__",
+    }
+
+    if gene_symbols is not None:
+        wrapper_params["feature_labels_path"] = f"var/{gene_symbols}"
+
+    dataset = vc.add_dataset(name='heatmap data').add_object(AnnDataWrapper(
         **_get_adata_wrapper_params(adata),
-        obs_set_paths=[f"obs/{groupby}"],
-        obs_set_names=[groupby],
-        # obs_embedding_paths=["obsm/X_umap"],
-        # obs_embedding_names=["UMAP"],
-        obs_feature_matrix_path="X",
-        initial_feature_filter_path="var/in_markers"
+        **wrapper_params,
     ))
 
-    cells = vc.add_view(cm.OBS_SETS, dataset=dataset)
-    heatmap = vc.add_view(cm.HEATMAP, dataset=dataset).set_props(transpose=True)
+    obs_sets_view = vc.add_view(vt.OBS_SETS, dataset=dataset)
+    heatmap_view = vc.add_view(vt.HEATMAP, dataset=dataset).set_props(transpose=(not swap_axes))
 
-    vc.link_views(
-        [heatmap, cells], 
-        ["featureValueColormap"],
-        [color_map]
+    if "color_map" in kwargs:
+        # TODO: color_map is not listed as a parameter for sc.pl.heatmap in Scanpy docs.
+        # Should we still keep it here?
+        color_map = kwargs["color_map"]
+        vc.link_views([heatmap_view, obs_sets_view], 
+            ["featureValueColormap"],
+            [color_map]
+        )
+    
+    vc.link_views([obs_sets_view], 
+        ['obsSetExpansion'],
+        [[[group_name]]]
     )
-            
-    vc.layout(heatmap | cells)
 
+    if vmin is not None or vmax is not None:
+        vc.link_views(
+            [heatmap_view, obs_sets_view], 
+            ["featureValueColormapRange"],
+            [
+                [
+                    vmin if vmin is not None else 0.0,
+                    vmax if vmax is not None else 1.0,
+                ]
+            ]
+        )
+
+    vc.layout(hconcat(heatmap_view, obs_sets_view, split=[2, 1]))
     vw = _to_widget(vc)
     return vw
 
-def violin(adata, groupby,**kwargs):
+# References:
+# - https://scanpy.readthedocs.io/en/stable/generated/scanpy.pl.violin.html
+# - https://github.com/scverse/scanpy/blob/cf8b46dea735c35a629abfaa2e1bab9047281e34/src/scanpy/plotting/_anndata.py#L735
+def violin(
+        adata,
+        keys,
+        groupby,
+        *,
+        log=False,
+        stripplot=True,
+        jitter=True,
+        layer=None,
+        order=None,
+        **kwargs
+    ):
     """
     Creates interactive violin plot.
 
@@ -532,55 +640,121 @@ def violin(adata, groupby,**kwargs):
     :param list[str] keys: Genes.
     :returns: Vitessce widget. Documentation can be found `here. <https://python-docs.vitessce.io/api_config.html#vitessce-widget>`_ 
     """
-    vc =  VitessceConfig(schema_version="1.0.15", name='heatmap')
-    adata = adata
-    groupby = groupby
+    vc =  VitessceConfig(schema_version="1.0.18", name='sc.pl.violin')
+    
+    if type(keys) == str:
+        markers = [keys]
+    elif type(keys) == list: 
+        markers = keys
+    else:
+        raise ValueError("Parameter 'keys' must be a string or a list of strings.")
 
-    if "keys" not in kwargs.keys():
-        markers = []
+    group_name = groupby.capitalize()
     
-    if type(kwargs.get("keys")) == str:
-        markers = [kwargs.get("keys", [])]
-    elif type(kwargs.get("keys")) == list: 
-        markers = kwargs.get("keys", [])
+    obs_set_selection = None
+    if order is not None:
+        obs_set_selection = [
+            # Construct the obsSetPaths in the order specified by `order`.
+            [group_name, item] for item in order
+        ]
     
-    dataset = vc.add_dataset(name='data').add_object(AnnDataWrapper(
+
+    dataset = vc.add_dataset(name='violin data').add_object(AnnDataWrapper(
         **_get_adata_wrapper_params(adata),
         obs_set_paths=[f"obs/{groupby}"],
-        obs_set_names=[groupby],
-        obs_feature_matrix_path="X"
+        obs_set_names=[group_name],
+        obs_feature_matrix_path="X" if layer is None else f"layers/{layer}",
     ))
 
-    if type(markers) == list and len(markers) > 1:
-        for gene in markers:
-            genes = vc.add_view(cm.FEATURE_LIST, dataset=dataset)
-            cells = vc.add_view(cm.OBS_SETS, dataset=dataset)
-            violin = vc.add_view('obsSetFeatureValueDistribution', dataset=dataset, uid=f'violin-plot-{gene}')
-            vc.link_views(
-                [violin, genes, cells], 
-                ["featureSelection", "obsSetSelection", 'obsSetExpansion'],
-                [[gene], None, [[gene]]]
-            )
-            vc.layout(hconcat(violin, genes, cells, split = [2,1,1]))
-    else:
-        genes = vc.add_view(cm.FEATURE_LIST, dataset=dataset)
-        cells = vc.add_view(cm.OBS_SETS, dataset=dataset)
-        violin = vc.add_view('obsSetFeatureValueDistribution', dataset=dataset, uid='violin-plot')
+    # Case: multiple genes. Create one violin plot view per gene.
+    if len(markers) > 1:
+        feature_list_view = vc.add_view(vt.FEATURE_LIST, dataset=dataset)
+        obs_sets_view = vc.add_view(vt.OBS_SETS, dataset=dataset)
+        # Create one violin plot per gene, and add to the list violin_views.
+        violin_views = []
+        for gene_i, gene in enumerate(markers):
+            violin_view = vc.add_view('obsSetFeatureValueDistribution', dataset=dataset).set_props(jitter=(stripplot and jitter))
 
-        if "keys" in kwargs.keys():
-            # print(markers)
-            vc.link_views(
-                [violin, genes, cells], 
-                ["featureSelection", 'obsSetExpansion'],
-                [markers, [markers] if type(markers) == list else [[markers]]]
+            if gene_i == 0:
+                # We want to link the first violin plot to the feature list, but not the others.
+                vc.link_views([violin_view, feature_list_view], 
+                    ["featureSelection"],
+                    [[gene]]
+                )
+            else:
+                vc.link_views([violin_view], 
+                    ["featureSelection"],
+                    [[gene]]
+                )
+            
+            vc.link_views([violin_view, obs_sets_view], 
+                ['obsSetExpansion'],
+                [[[group_name]]]
             )
-        
-        vc.layout(violin | genes / cells)
+
+            if obs_set_selection is not None:
+                vc.link_views([violin_view, obs_sets_view],
+                    ["obsSetSelection"],
+                    [obs_set_selection]
+                )
+
+            if log:
+                vc.link_views([violin_view],
+                    ["featureValueTransform"],
+                    ["log1p"]
+                )
+            violin_views.append(violin_view)
+
+        # Layout all of the views.
+        vc.layout(hconcat(vconcat(*violin_views), vconcat(feature_list_view, obs_sets_view), split = [2, 1]))
+    else:
+        # Case: single gene. Create one violin plot view.
+        feature_list_view = vc.add_view(vt.FEATURE_LIST, dataset=dataset)
+        obs_sets_view = vc.add_view(vt.OBS_SETS, dataset=dataset)
+        violin_view = vc.add_view('obsSetFeatureValueDistribution', dataset=dataset).set_props(jitter=(stripplot and jitter))
+
+        vc.link_views([violin_view, feature_list_view], 
+            ["featureSelection"],
+            [markers]
+        )
+        vc.link_views([violin_view, obs_sets_view], 
+            ['obsSetExpansion'],
+            [[[group_name]]]
+        )
+
+        if obs_set_selection is not None:
+            vc.link_views([violin_view, obs_sets_view],
+                ["obsSetSelection"],
+                [obs_set_selection]
+            )
+
+        if log:
+            vc.link_views([violin_view],
+                ["featureValueTransform"],
+                ["log1p"]
+            )
+
+        vc.layout(hconcat(violin_view, vconcat(feature_list_view, obs_sets_view), split=[2, 1]))
 
     vw = _to_widget(vc)
     return vw
 
-def dotplot(adata, groupby, **kwargs):
+# References:
+# - https://scanpy.readthedocs.io/en/stable/generated/scanpy.pl.dotplot.html
+# - https://github.com/scverse/scanpy/blob/cf8b46dea735c35a629abfaa2e1bab9047281e34/src/scanpy/plotting/_dotplot.py#L844
+def dotplot(
+        adata,
+        var_names,
+        groupby,
+        *,
+        expression_cutoff=None,
+        title=None,
+        gene_symbols=None,
+        layer=None,
+        cmap=False,
+        swap_axes=False,
+        **kwargs,
+    ):
     """
     Creates interactive dotplot.
 
@@ -589,32 +763,56 @@ def dotplot(adata, groupby, **kwargs):
     :param list[str] var_names: List of genes.
     :returns: Vitessce widget. Documentation can be found `here. <https://python-docs.vitessce.io/api_config.html#vitessce-widget>`_ 
     """
-    markers = kwargs.get("var_names")
 
-    vc = VitessceConfig(schema_version="1.0.17", name='dotplot data')
+    vc = VitessceConfig(schema_version="1.0.18", name='sc.pl.dotplot')
+
+    group_name = groupby.capitalize()
+
+    wrapper_params = {
+        "obs_set_paths": [f"obs/{groupby}"],
+        "obs_set_names": [group_name],
+        "obs_feature_matrix_path": "X" if layer is None else f"layers/{layer}",
+    }
+
+    if gene_symbols is not None:
+        wrapper_params["feature_labels_path"] = f"var/{gene_symbols}"
     
     dataset = vc.add_dataset('dotplot data').add_object(AnnDataWrapper(
         **_get_adata_wrapper_params(adata),
-        obs_set_paths=[f"obs/{groupby}"],
-        obs_set_names=[groupby],
-        obs_feature_matrix_path="X",
+        **wrapper_params,
     )).add_object(AnnDataWrapper(
         **_get_adata_wrapper_params(adata),
     ))
 
+    obs_sets_view = vc.add_view(vt.OBS_SETS, dataset=dataset)
+    feature_list_view = vc.add_view(vt.FEATURE_LIST, dataset=dataset).set_props(enableMultiSelect=True)
+    dot_plot_view = vc.add_view('dotPlot', dataset=dataset).set_props(title=title, transpose=swap_axes)
 
-    obsSets = vc.add_view(cm.OBS_SETS, dataset=dataset)
-    featureList = vc.add_view(cm.FEATURE_LIST, dataset=dataset).set_props(enableMultiSelect=True)
-    dotPlot = vc.add_view('dotPlot', dataset=dataset)
+    vc.link_views([obs_sets_view], 
+        ['obsSetExpansion'],
+        [[[group_name]]]
+    )
     
-    if markers is not None:
-        vc.link_views(
-            [dotPlot, featureList], 
+    if var_names is not None:
+        vc.link_views([dot_plot_view, feature_list_view],
             ["featureSelection"],
-            [markers]
+            [var_names]
         )
     
-    vc.layout(dotPlot | featureList / (obsSets))
+    if expression_cutoff is not None:
+        vc.link_views([dot_plot_view],
+            ["featureValuePositivityThreshold"],
+            [expression_cutoff]
+        )
+    
+    if cmap is not None and cmap in ["viridis", "plasma", "jet", "greys"]:
+        # TODO: support a "reds" colormap to reflect the scanpy default.
+        vc.link_views([dot_plot_view],
+            ["featureValueColormap"],
+            [cmap]
+        )
+
+    vc.layout(hconcat(dot_plot_view, vconcat(feature_list_view, obs_sets_view), split=[2, 1]))
     vw = _to_widget(vc)
     return vw
 
@@ -686,12 +884,16 @@ def configure_plots(disable_plots=None, enable_plots=None):
         "umap": umap,
         "pca": pca,
         "tsne": tsne,
+        "diffmap": diffmap,
         "spatial": spatial,
         "dotplot": dotplot,
         "heatmap": heatmap,
         "violin": violin
     }
     ALL_PLOT_NAMES = list(SCANPY_PLOTTING_FUNCTIONS.keys()) + ["spatialdata-plot"]
+
+    if type(enable_plots) == str or type(disable_plots) == str:
+        raise RuntimeError("Expected enable_plots/disable_plots to be a list of string.")
 
     if type(enable_plots) == list and type(disable_plots) == list:
         if any(plot in enable_plots for plot in disable_plots):
@@ -716,3 +918,42 @@ def configure_plots(disable_plots=None, enable_plots=None):
     elif "spatialdata-plot" in disable_plots:
         _undo_monkeypatch_spatialdata()
         print("Deactivated Vitessce spatialdata-plot")
+
+
+# Convenience functions for enabling/disabling.
+ALL_PLOTS = [
+    "embedding",
+    "umap",
+    "pca",
+    "tsne",
+    "diffmap",
+    "spatial",
+    "dotplot",
+    "heatmap",
+    "violin",
+    "spatialdata-plot"
+]
+
+def enable_plots(plots=None):
+    """
+    Activates interactive Vitessce plots.
+
+    :param list[str] plots: List of plots to enable. If None, enables all plots.
+    """
+
+    if plots is None:
+        plots = ALL_PLOTS
+    
+    configure_plots(enable_plots=plots)
+
+def disable_plots(plots=None):
+    """
+    Deactivates interactive Vitessce plots.
+
+    :param list[str] plots: List of plots to disable. If None, disables all plots.
+    """
+
+    if plots is None:
+        plots = ALL_PLOTS
+
+    configure_plots(disable_plots=plots)
