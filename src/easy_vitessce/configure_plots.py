@@ -40,7 +40,6 @@ def umap(adata, **kwargs):
   :param str color: Gene or category group.
   :param str color_map: Color map (viridis, plasma, jet).
   :param float or int size: Size of dots.
-  :param bool include_gene_list: If a list of genes is passed in, True will add a gene list for the last plot. False by default.
   :returns: Vitessce widget. Documentation can be found `here. <https://python-docs.vitessce.io/api_config.html#vitessce-widget>`_ 
   """
   return embedding(adata, basis="umap", **kwargs)
@@ -53,7 +52,6 @@ def tsne(adata, **kwargs):
   :param str color: Gene or category group.
   :param str color_map: Color map (viridis, plasma, jet).
   :param (float or int) size: Size of dots.
-  :param bool include_gene_list: If a list of genes is passed in, True will add a gene list for the last plot. False by default.
   :returns: Vitessce widget. Documentation can be found `here. <https://python-docs.vitessce.io/api_config.html#vitessce-widget>`_ 
   """
   return embedding(adata, basis="tsne", **kwargs)
@@ -66,7 +64,6 @@ def pca(adata, **kwargs):
   :param str color: Gene or category group.
   :param str color_map: Color map (viridis, plasma, jet).
   :param (float or int) size: Size of dots.
-  :param bool include_gene_list: If a list of genes is passed in, True will add a gene list for the last plot. False by default.
   :returns: Vitessce widget. Documentation can be found `here. <https://python-docs.vitessce.io/api_config.html#vitessce-widget>`_ 
   """
   return embedding(adata, basis="pca", **kwargs)
@@ -79,7 +76,6 @@ def diffmap(adata, **kwargs):
   :param str color: Gene or category group.
   :param str color_map: Color map (viridis, plasma, jet).
   :param (float or int) size: Size of dots.
-  :param bool include_gene_list: If a list of genes is passed in, True will add a gene list for the last plot. False by default.
   :returns: Vitessce widget. Documentation can be found `here. <https://python-docs.vitessce.io/api_config.html#vitessce-widget>`_ 
   """
   return embedding(adata, basis="diffmap", **kwargs)
@@ -110,7 +106,6 @@ def embedding(
     :param str color: Gene or categorical label.
     :param str color_map: Color map (viridis, plasma, jet). Defaults to viridis.
     :param (float or int) size: Size of dots.
-    :param bool include_gene_list: If a list of genes is passed in, True will add a gene list for the last plot. False by default.
     :returns: Vitessce widget. Documentation can be found `here. <https://python-docs.vitessce.io/api_config.html#vitessce-widget>`_ 
 
     """
