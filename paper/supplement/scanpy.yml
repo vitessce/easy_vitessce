@@ -14,19 +14,19 @@ heatmap:
     num_categories: not currently supported
     categories_order: not currently supported
     dendrogram: not currently supported
-    gene_symbols: not currently supported # TODO: implement via featureLabels
+    gene_symbols: supported
     var_group_positions: not currently supported
     var_group_labels: not currently supported
     var_group_rotation: not currently supported
-    layer: not currently supported # TODO: implement via obs_feature_matrix_path
+    layer: supported
     standard_scale: not currently supported
-    swap_axes: not currently supported # TODO: corresponds to transpose prop
+    swap_axes: supported
     show_gene_labels: not currently supported
     show: N/A
     save: N/A
     figsize: N/A
-    vmin: not currently supported # TODO: corresponds to featureValueColormapRange[0]
-    vmax: not currently supported # TODO: corresponds to featureValueColormapRange[1]
+    vmin: supported
+    vmax: supported
     vcenter: not currently supported
     norm: not currently supported
 dotplot: 
