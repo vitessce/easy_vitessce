@@ -277,7 +277,53 @@ umap:
     marker: lacks description
 diffmap:
   function:
-    implemented: false # TODO
+    implemented: true
+  parameters:
+    color: supported
+    mask_obs: lacks description
+    use_raw: not currently supported
+    gene_symbols: not currently supported # TODO
+    sort_order: not currently supported
+    edges: not currently supported
+    edges_width: not currently supported
+    edges_color: not currently supported
+    neighbors_key: N/A
+    arrows: not currently supported
+    arrows_kwds: not currently supported
+    groups: not currently supported
+    components: not currently supported # TODO
+    dimensions: not currently supported # TODO
+    layer: not currently supported # TODO
+    projection: not currently supported
+    scale_factor: lacks description
+    color_map: partially supported # TODO: check
+    cmap: lacks description
+    palette: not currently supported # TODO
+    na_color: not currently supported
+    na_in_legend: not currently supported
+    size: supported # TODO: check
+    frameon: not currently supported
+    legend_fontsize: not currently supported
+    legend_fontweight: not currently supported
+    legend_loc: not currently supported
+    legend_fontoutline: not currently supported
+    colorbar_loc: not currently supported
+    vmax: not currently supported # TODO
+    vmin: not currently supported # TODO
+    vcenter: not currently supported
+    norm: lacks description
+    add_outline: not currently supported
+    outline_width: not currently supported
+    outline_color: not currently supported
+    ncols: supported
+    hspace: not currently supported
+    wspace: not currently supported
+    title: supported # TODO: check
+    show: N/A
+    save: N/A
+    ax: N/A
+    return_fig: N/A
+    marker: lacks description
 draw_graph:
   function:
     implemented: false

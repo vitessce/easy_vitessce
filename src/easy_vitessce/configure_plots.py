@@ -72,6 +72,19 @@ def pca(adata, **kwargs):
   """
   return embedding(adata, basis="pca", **kwargs)
 
+def diffmap(adata, **kwargs):
+  """
+  Creates interactive Diffusion Map plot.
+
+  :param AnnData adata: AnnData object.
+  :param str color: Gene or category group.
+  :param str color_map: Color map (viridis, plasma, jet).
+  :param (float or int) size: Size of dots.
+  :param bool include_gene_list: If a list of genes is passed in, True will add a gene list for the last plot. False by default.
+  :returns: Vitessce widget. Documentation can be found `here. <https://python-docs.vitessce.io/api_config.html#vitessce-widget>`_ 
+  """
+  return embedding(adata, basis="diffmap", **kwargs)
+
 def embedding(adata, basis, **kwargs):
     """
     Creates interactive versions of UMAP, PCA, t-SNE plots.
@@ -835,6 +848,7 @@ def configure_plots(disable_plots=None, enable_plots=None):
         "umap": umap,
         "pca": pca,
         "tsne": tsne,
+        "diffmap": diffmap,
         "spatial": spatial,
         "dotplot": dotplot,
         "heatmap": heatmap,
@@ -868,3 +882,42 @@ def configure_plots(disable_plots=None, enable_plots=None):
     elif "spatialdata-plot" in disable_plots:
         _undo_monkeypatch_spatialdata()
         print("Deactivated Vitessce spatialdata-plot")
+
+
+# Convenience functions for enabling/disabling.
+ALL_PLOTS = [
+    "embedding",
+    "umap",
+    "pca",
+    "tsne",
+    "diffmap",
+    "spatial",
+    "dotplot",
+    "heatmap",
+    "violin",
+    "spatialdata-plot"
+]
+
+def enable_plots(plots=None):
+    """
+    Activates interactive Vitessce plots.
+
+    :param list[str] plots: List of plots to enable. If None, enables all plots.
+    """
+
+    if plots is None:
+        plots = ALL_PLOTS
+    
+    configure_plots(enable_plots=plots)
+
+def disable_plots(plots=None):
+    """
+    Deactivates interactive Vitessce plots.
+
+    :param list[str] plots: List of plots to disable. If None, disables all plots.
+    """
+
+    if plots is None:
+        plots = ALL_PLOTS
+
+    configure_plots(disable_plots=plots)
