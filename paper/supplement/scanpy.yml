@@ -39,20 +39,20 @@ dotplot:
     log: not currently supported
     num_categories: not currently supported
     categories_order: not currently supported
-    expression_cutoff: not currently supported # TODO: implement via existing coordination type
+    expression_cutoff: supported
     mean_only_expressed: not currently supported
     standard_scale: not currently supported 
-    title: not currently supported # TODO: implement via title prop
+    title: supported
     colorbar_title: not currently supported
     size_title: not currently supported
     figsize: N/A
     dendrogram: not currently supported
-    gene_symbols: not currently supported # TODO: implement via featureLabels
+    gene_symbols: supported
     var_group_positions: not currently supported
     var_group_labels: not currently supported
     var_group_rotation: not currently supported
-    layer: not currently supported # TODO
-    swap_axes: not currently supported # TODO
+    layer: supported
+    swap_axes: supported
     dot_color_df: lacks description
     show: N/A
     save: N/A
@@ -62,7 +62,7 @@ dotplot:
     vmax: not currently supported
     vcenter: not currently supported
     norm: not currently supported
-    cmap: not currently supported # TODO
+    cmap: partially supported
     dot_max: not currently supported
     dot_min: not currently supported
     smallest_dot: not currently supported

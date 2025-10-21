@@ -618,7 +618,22 @@ def violin(adata, groupby,**kwargs):
     vw = _to_widget(vc)
     return vw
 
-def dotplot(adata, groupby, **kwargs):
+# References:
+# - https://scanpy.readthedocs.io/en/stable/generated/scanpy.pl.dotplot.html
+# - https://github.com/scverse/scanpy/blob/cf8b46dea735c35a629abfaa2e1bab9047281e34/src/scanpy/plotting/_dotplot.py#L844
+def dotplot(
+        adata,
+        var_names,
+        groupby,
+        *,
+        expression_cutoff=None,
+        title=None,
+        gene_symbols=None,
+        layer=None,
+        cmap=False,
+        swap_axes=False,
+        **kwargs,
+    ):
     """
     Creates interactive dotplot.
 
@@ -627,32 +642,49 @@ def dotplot(adata, groupby, **kwargs):
     :param list[str] var_names: List of genes.
     :returns: Vitessce widget. Documentation can be found `here. <https://python-docs.vitessce.io/api_config.html#vitessce-widget>`_ 
     """
-    markers = kwargs.get("var_names")
 
-    vc = VitessceConfig(schema_version="1.0.17", name='dotplot data')
+    vc = VitessceConfig(schema_version="1.0.17", name='sc.pl.dotplot')
+
+    wrapper_params = {
+        "obs_set_paths": [f"obs/{groupby}"],
+        "obs_set_names": [groupby.capitalize()],
+        "obs_feature_matrix_path": "X" if layer is None else f"layers/{layer}",
+    }
+
+    if gene_symbols is not None:
+        wrapper_params["feature_labels_path"] = f"var/{gene_symbols}"
     
     dataset = vc.add_dataset('dotplot data').add_object(AnnDataWrapper(
         **_get_adata_wrapper_params(adata),
-        obs_set_paths=[f"obs/{groupby}"],
-        obs_set_names=[groupby],
-        obs_feature_matrix_path="X",
+        **wrapper_params,
     )).add_object(AnnDataWrapper(
         **_get_adata_wrapper_params(adata),
     ))
 
-
-    obsSets = vc.add_view(vt.OBS_SETS, dataset=dataset)
-    featureList = vc.add_view(vt.FEATURE_LIST, dataset=dataset).set_props(enableMultiSelect=True)
-    dotPlot = vc.add_view('dotPlot', dataset=dataset)
+    obs_sets_view = vc.add_view(vt.OBS_SETS, dataset=dataset)
+    feature_list_view = vc.add_view(vt.FEATURE_LIST, dataset=dataset).set_props(enableMultiSelect=True)
+    dot_plot_view = vc.add_view('dotPlot', dataset=dataset).set_props(title=title, transpose=swap_axes)
     
-    if markers is not None:
-        vc.link_views(
-            [dotPlot, featureList], 
+    if var_names is not None:
+        vc.link_views([dot_plot_view, feature_list_view],
             ["featureSelection"],
-            [markers]
+            [var_names]
         )
     
-    vc.layout(dotPlot | featureList / (obsSets))
+    if expression_cutoff is not None:
+        vc.link_views([dot_plot_view],
+            ["featureValuePositivityThreshold"],
+            [expression_cutoff]
+        )
+    
+    if cmap is not None and cmap in ["viridis", "plasma", "jet", "greys"]:
+        # TODO: support a "reds" colormap to reflect the scanpy default.
+        vc.link_views([dot_plot_view],
+            ["featureValueColormap"],
+            [cmap]
+        )
+
+    vc.layout(hconcat(dot_plot_view, vconcat(feature_list_view, obs_sets_view), split=[2, 1]))
     vw = _to_widget(vc)
     return vw
 
