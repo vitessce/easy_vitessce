@@ -5,11 +5,11 @@ render_images:
     implemented: true
   parameters:
     element: supported
-    channel: not currently supported # TODO
-    cmap: not currently supported # TODO
-    norm: not currently supported
-    na_color: not currently supported # TODO
-    palette: not currently supported # TODO
+    channel: supported
+    cmap: partially supported
+    norm: supported
+    na_color: supported
+    palette: supported
     alpha: supported
     scale: N/A # for multiresolution images, the scale is dynamic / determined by viewport
 render_labels:

@@ -24,6 +24,7 @@ from spatialdata_plot.pl.basic import PlotAccessor
 from spatialdata import get_element_annotators
 
 from easy_vitessce.widget import _to_widget, config
+from easy_vitessce.colors import to_uint8_rgb
 
 # This class is analogous to PlotAccessor from spatialdata-plot.
 # Reference: https://github.com/scverse/spatialdata-plot/blob/788eb2206cca8f4c21977c4f7b08a818ee6580f7/src/spatialdata_plot/pl/basic.py#L68
@@ -78,8 +79,21 @@ class VitesscePlotAccessor:
         self.segmentation_layer_coordination = []
         self.spot_layer_coordination = []
         self.point_layer_coordination = []
-        
-    def render_images(self, element=None, **kwargs):
+    
+    # References:
+    # - https://spatialdata.scverse.org/projects/plot/en/latest/plotting.html#spatialdata_plot.pl.basic.PlotAccessor.render_images
+    # - https://github.com/scverse/spatialdata-plot/blob/c9bae235c0521499fb4d1098b15c79619654e5dc/src/spatialdata_plot/pl/basic.py#L482
+    def render_images(
+            self,
+            element=None,
+            channel=None,
+            cmap=None,
+            norm=None,
+            na_color=None,
+            palette=None,
+            alpha=1.0,
+            **kwargs
+        ):
         """
         Renders image.
 
@@ -87,25 +101,46 @@ class VitesscePlotAccessor:
         :returns: Self, allows for chaining.
         """
         if not VitesscePlotAccessor._is_enabled:
-            return self._pl.render_images(element=element, **kwargs)
+            return self._pl.render_images(
+                element=element,
+                channel=channel,
+                cmap=cmap,
+                norm=norm,
+                na_color=na_color,
+                palette=palette,
+                alpha=alpha,
+                **kwargs,
+            )
 
         # channel (list[str] | list[int] | str | int | None)
         #   To select specific channels to plot.
         #   Can be a single channel name/int or a list of channel names/ints.
         #   If None, all channels will be used.
-        channel_param = kwargs.get("channel", None)
+
         # cmap (list[Colormap | str] | Colormap | str | None)
         #   Colormap or list of colormaps for continuous annotations, see matplotlib.colors.Colormap.
         #   Each colormap applies to a corresponding channel.
-        cmap_param = kwargs.get("cmap", None)
+ 
         # palette (list[str] | str | None)
         #   Palette to color images.
         #   The number of palettes should be equal to the number of channels.
-        palette_param = kwargs.get("palette", None)
+
         # alpha (float | int, default 1.0)
         #   Alpha value for the images.
         #   Must be a numeric between 0 and 1.
-        alpha_param = kwargs.get("alpha", None)
+
+        if type(channel) is list:
+            # TODO: support lists of size 1 (broadcast/repeat to match num_channels length)?
+            if type(cmap) is list:
+                if len(channel) != len(cmap):
+                    raise ValueError("The length of 'channel' and 'cmap' lists must be equal.")
+            if type(palette) is list:
+                if len(channel) != len(palette):
+                    raise ValueError("The length of 'channel' and 'palette' lists must be equal.")
+            if type(norm) is list:
+                if len(channel) != len(norm):
+                    raise ValueError("The length of 'channel' and 'norm' lists must be equal.")
+            
 
         self.image = f"images/{element}"
         self.image_path = {"image_path":f"images/{element}"}
@@ -117,28 +152,52 @@ class VitesscePlotAccessor:
         # RGB vs. non-RGB logic in spatialdata-plot:
         # Reference: https://github.com/scverse/spatialdata-plot/blob/010560f7eebdd245693a8c55eede0f895a636f5c/src/spatialdata_plot/pl/render.py#L865
         img = self.sdata.images[element]
-        channels = img.coords["c"].values.tolist() if channel_param is None else channel_param
+        all_channels = img.coords["c"].values.tolist()
         img_dtype = img.dtype
         img_dtype_is_uint8 = img_dtype.kind == 'u' and img_dtype.itemsize == 1
 
-        # the channel parameter has been previously validated, so when not None, render_params.channel is a list
-        assert isinstance(channels, list)
-        n_channels = len(channels)
-
         # Not ideal logic. Should ideally only use the OME-NGFF color model metadata. But this is what spatialdata-plot does.
-        photometric_interpretation = "RGB" if palette_param is None and channel_param is None and n_channels == 3 and img_dtype_is_uint8 else "BlackIsZero"
+        photometric_interpretation = "RGB" if palette is None and channel is None and len(all_channels) == 3 and img_dtype_is_uint8 else "BlackIsZero"
 
+        # Configure image channel coordination.
+        image_channel_coordination = None
+        if channel is not None:
+            # Normalize channels to a list.
+            channel = [channel] if type(channel) in [int, str] else channel
+            # Normalize palette to a list.
+            if type(palette) is str:
+                palette = [palette for _ in channel]
+            if norm is not None and type(norm) is not list:
+                norm = [norm for _ in channel]
+            
+            image_channel_coordination = [
+                {
+                    "spatialTargetC": ch,
+                    **({ 'spatialChannelColor': to_uint8_rgb(palette[ch_i]) } if palette is not None else {}),
+                    **({ 'spatialChannelWindow': [norm[ch_i].vmin, norm[ch_i].vmax] } if norm is not None else {}),
+
+                }
+                for ch_i, ch in enumerate(channel)
+            ]
+        
+        # Configure image layer coordination.
         self.image_layer_coordination = [
             # We want to keep any existing spatial layer coordination information.
             *self.image_layer_coordination,
             {
                 "fileUid": "main_wrapper",
-                'spatialLayerOpacity': alpha_param if alpha_param is not None else 1.0,
+                'spatialLayerOpacity': alpha,
                 'photometricInterpretation': photometric_interpretation,
-                # 'imageChannel': [{
-                #     # TODO: specify spatialTargetC if channel_param is not None
-                #     'spatialChannelColor': [255, 255, 255], # TODO: use the palette or cmap
-                # }]
+                **({
+                    'spatialLayerColormap': cmap
+                } if cmap in ["viridis", "plasma", "jet", "greys"] else {}),
+                **({} if na_color in [None, "default"] else {
+                    'spatialLayerTransparentColor': to_uint8_rgb(na_color)
+                }),
+                # Pass the image channel coordination if it was configured above.
+                **({} if image_channel_coordination is None else {
+                    'imageChannel': image_channel_coordination
+                }),
             },
         ]
 
@@ -423,7 +482,22 @@ class VitesscePlotAccessor:
         self.vc.link_views(all_views, ['obsType'], [self.obs_type])
         self.vc.link_views_by_dict(all_views, dict(zip(ct_names, ct_scopes)), meta=True)
         self.vc.link_views_by_dict(spatial_views, {
-            "imageLayer": CL(self.image_layer_coordination),
+            "imageLayer": CL([
+                {
+                    **layer_dict,
+                    **({} if "imageChannel" not in layer_dict else {
+                        'imageChannel': CL([
+                            {
+                                **channel_dict,
+                                # TODO: limit this to the coordination types that are applicable to imageChannel objects
+                                **dict(zip(ct_names, ct_scopes))
+                            }
+                            for channel_dict in layer_dict['imageChannel']
+                        ])
+                    })
+                }
+                for layer_dict in self.image_layer_coordination
+            ]),
         }, meta=True, scope_prefix=get_initial_coordination_scope_prefix(dataset_uid, "image"))
         self.vc.link_views_by_dict(spatial_views, {
             "segmentationLayer": CL([
