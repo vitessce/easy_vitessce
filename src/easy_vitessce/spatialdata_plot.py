@@ -141,6 +141,9 @@ class VitesscePlotAccessor:
                 if len(channel) != len(norm):
                     raise ValueError("The length of 'channel' and 'norm' lists must be equal.")
             
+        if element is None:
+            # TODO: what does spatialdata-plot do in this case? use first image element? error if >1 images?
+            raise ValueError("The 'element' parameter must be provided to render an image.")
 
         self.image = f"images/{element}"
         self.image_path = {"image_path":f"images/{element}"}
@@ -202,8 +205,25 @@ class VitesscePlotAccessor:
         ]
 
         return self.sdata
-        
-    def render_shapes(self, element="", **kwargs):
+    
+    # References:
+    # - https://spatialdata.scverse.org/projects/plot/en/latest/plotting.html#spatialdata_plot.pl.basic.PlotAccessor.render_shapes
+    # - https://github.com/scverse/spatialdata-plot/blob/c9bae235c0521499fb4d1098b15c79619654e5dc/src/spatialdata_plot/pl/basic.py#L156
+    def render_shapes(self,
+            element=None,
+            color=None,
+            fill_alpha=None,
+            groups=None,
+            palette=None,
+            outline_width=None,
+            outline_color=None,
+            outline_alpha=None,
+            cmap=None,
+            norm=None,
+            table_name=None,
+            table_layer=None,
+            **kwargs
+        ):
         """
         Renders shapes, e.g. "cells".
 
@@ -213,9 +233,27 @@ class VitesscePlotAccessor:
         :returns: Self, allows for chaining.
         """
         if not VitesscePlotAccessor._is_enabled:
-            return self._pl.render_shapes(element=element, **kwargs)
+            return self._pl.render_shapes(
+                element=element,
+                color=color,
+                fill_alpha=fill_alpha,
+                groups=groups,
+                palette=palette,
+                outline_width=outline_width,
+                outline_color=outline_color,
+                outline_alpha=outline_alpha,
+                cmap=cmap,
+                norm=norm,
+                table_name=table_name,
+                table_layer=table_layer,
+                **kwargs
+            )
         
-        color_param = kwargs.get("color")
+        if element is None:
+            # TODO: what does spatialdata-plot do in this case? use first shapes element? error if >1 shapes?
+            raise ValueError("The 'element' parameter is required.")
+        
+        color_param = color
 
         # vitessce only has polygon and circles
         if self.sdata.shapes[element]["geometry"].geom_type.iloc[0] == 'Polygon':
@@ -248,7 +286,6 @@ class VitesscePlotAccessor:
         
         self.wrapper_args.update(obs_path)
 
-        table_name = kwargs.get("table_name", None)
         if table_name is None:
             annotating_tables = list(get_element_annotators(self.sdata, element))
             if len(annotating_tables) > 0:
@@ -300,13 +337,27 @@ class VitesscePlotAccessor:
                 # TODO: support a static color, such as "red" or "#FF0000"?
                 raise ValueError(f"Color value did not map to a value in var.index or obs.columns of table {table_name}.")
             
-        if "cmap" in kwargs.keys():
-            cmap = {"featureValueColormap": kwargs["cmap"]}
-            self.global_coordination.update(cmap)
+        if cmap is not None and cmap in ["viridis", "plasma", "jet", "greys"]:
+            self.global_coordination.update({"featureValueColormap": cmap})
             
         return self.sdata
 
-    def render_labels(self, element="", **kwargs):
+    # References:
+    # - https://spatialdata.scverse.org/projects/plot/en/latest/plotting.html#spatialdata_plot.pl.basic.PlotAccessor.render_labels
+    # - https://github.com/scverse/spatialdata-plot/blob/c9bae235c0521499fb4d1098b15c79619654e5dc/src/spatialdata_plot/pl/basic.py#L598
+    def render_labels(self,
+            element=None,
+            color=None,
+            groups=None,
+            palette=None,
+            cmap=None,
+            norm=None,
+            outline_alpha=0.0,
+            fill_alpha=0.4,
+            table_name=None,
+            table_layer=None,
+            **kwargs
+        ):
         """
         Renders label data.
 
@@ -314,13 +365,29 @@ class VitesscePlotAccessor:
         :returns: Self, allows for chaining.
         """
         if not VitesscePlotAccessor._is_enabled:
-            return self._pl.render_labels(element=element, **kwargs)
+            return self._pl.render_labels(
+                element=element,
+                color=color,
+                groups=groups,
+                palette=palette,
+                cmap=cmap,
+                norm=norm,
+                outline_alpha=outline_alpha,
+                fill_alpha=fill_alpha,
+                table_name=table_name,
+                table_layer=table_layer,
+                **kwargs
+            )
+
+        if element is None:
+            # TODO: what does spatialdata-plot do in this case? use first labels element? error if >1 labels?
+            raise ValueError("The 'element' parameter must be provided to render labels.")
         
         labels_path = {"obs_segmentations_path":f"labels/{element}"}
         self.wrapper_args.update(labels_path)
 
         # Same coloring logic as in render_shapes.
-        color_param = kwargs.get("color")
+        color_param = color
 
         self.segmentation_layer_coordination = [
             # We want to keep any existing spatial layer coordination information.
@@ -334,7 +401,6 @@ class VitesscePlotAccessor:
             },
         ]
 
-        table_name = kwargs.get("table_name", None)
         if table_name is None:
             annotating_tables = list(get_element_annotators(self.sdata, element))
             if len(annotating_tables) > 0:
@@ -386,12 +452,14 @@ class VitesscePlotAccessor:
                 # TODO: support a static color, such as "red" or "#FF0000"?
                 raise ValueError(f"Color value did not map to a value in var.index or obs.columns of table {table_name}.")
             
-        if "cmap" in kwargs.keys():
-            cmap = {"featureValueColormap": kwargs["cmap"]}
-            self.global_coordination.update(cmap)
+        if cmap is not None and cmap in ["viridis", "plasma", "jet", "greys"]:
+            self.global_coordination.update({"featureValueColormap": cmap})
             
         return self.sdata
 
+    # References:
+    # - https://spatialdata.scverse.org/projects/plot/en/latest/plotting.html#spatialdata_plot.pl.basic.PlotAccessor.render_points
+    # - https://github.com/scverse/spatialdata-plot/blob/c9bae235c0521499fb4d1098b15c79619654e5dc/src/spatialdata_plot/pl/basic.py#L338
     def render_points(self, element="", **kwargs):
         """
         Renders points.
@@ -424,7 +492,7 @@ class VitesscePlotAccessor:
         :returns: Vitessce widget. Learn more at the vitessce-python `docs <https://python-docs.vitessce.io/api_config.html#vitessce-widget>`_ .
         """
         if not VitesscePlotAccessor._is_enabled:
-            return self._pl.show(**kwargs)
+            return self._pl.show(coordinate_systems=coordinate_systems, **kwargs)
             
         self.vc = VitessceConfig(schema_version="1.0.18", name='spatial data')
 

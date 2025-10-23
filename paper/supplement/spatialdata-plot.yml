@@ -23,7 +23,7 @@ render_labels:
     palette: not currently supported # TODO
     cmap: not currently supported # TODO
     norm: not currently supported # TODO
-    na_color: not currently supported # TODO
+    na_color: not currently supported
     outline_alpha: not currently supported # TODO
     fill_alpha: not currently supported # TODO
     scale: N/A # for multiresolution labels, the scale is dynamic / determined by viewport
@@ -40,7 +40,7 @@ render_points:
     palette: not currently supported # TODO
     na_color: not currently supported
     cmap: not currently supported # TODO
-    norm: not currently supported
+    norm: not currently supported # TODO
     size: not currently supported # TODO
     method: N/A
     table_name: not currently supported # TODO
@@ -59,7 +59,7 @@ render_shapes:
     outline_color: not currently supported # TODO
     outline_alpha: not currently supported # TODO
     cmap: not currently supported # TODO
-    norm: not currently supported
+    norm: not currently supported # TODO
     scale: not currently supported
     method: N/A
     table_name: supported
