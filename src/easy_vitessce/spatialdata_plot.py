@@ -100,7 +100,7 @@ def shared_render_shapes_and_labels(
                 group_name = color.capitalize()
 
                 # Configure the obsSets data wrapper properties.
-                # Here we configure obsSets for self.wrapper_args
+                # Here we configure obsSets for wrapper_args
                 wrapper_args["obs_set_paths"] = [f"tables/{table_name}/obs/{color}"]
                 wrapper_args["obs_set_names"] = [group_name]
 
@@ -111,7 +111,7 @@ def shared_render_shapes_and_labels(
                 }
 
                 # TODO: depends on https://github.com/vitessce/vitessce/issues/2254
-                # self.global_coordination["obsSetSelection"] = [[color]]
+                # obs_coordination["obsSetSelection"] = [[color]]
                 if groups is not None:
                     obs_coordination["obsSetSelection"] = [
                         # Construct obs set paths.
@@ -179,9 +179,7 @@ class VitesscePlotAccessor:
             "sdata_path": self.sdata_filepath,
         }
 
-
-        # TODO: channel coordination, to render multiple image layers with linked channel settings?
-
+        # TODO: Support same channel coordination across multiple layers, to render multiple image layers with linked channel settings?
         self.image_layers = [
             # Tuples of (wrapper_args, image_layer_coordination)
         ]
@@ -195,33 +193,10 @@ class VitesscePlotAccessor:
             # Tuples of (wrapper_args, point_layer_coordination)
         ]
 
+        # For ensuring that counts of obs/var match if used for multiple layers.
         self.obs_type_to_num_rows = {}
         self.feature_type_to_num_rows = {}
 
-
-
-
-        # TODO: do not use the below once refactored to use the above.
-
-        self.obs_type = "cell" # TODO: support multiple obs types (one per layer?)
-        self.wrapper_args = {
-            "sdata_path": self.sdata_filepath,
-            # The following paths are relative to the root of the SpatialData zarr store on-disk.
-            "table_path":"tables/table",
-            "obs_feature_matrix_path":"tables/table/X",
-            "coordinate_system":"global",
-            "coordination_values":{}
-        }
-
-        self.has_gene_color_encoding = False
-        self.has_cellset_color_encoding = False
-
-        self.global_coordination = {"featureValueColormap": "viridis", "obsColorEncoding": "geneSelection"}
-
-        self.image_layer_coordination = []
-        self.segmentation_layer_coordination = []
-        self.spot_layer_coordination = []
-        self.point_layer_coordination = []
     
     # References:
     # - https://spatialdata.scverse.org/projects/plot/en/latest/plotting.html#spatialdata_plot.pl.basic.PlotAccessor.render_images
@@ -287,9 +262,6 @@ class VitesscePlotAccessor:
         if element is None:
             # TODO: what does spatialdata-plot do in this case? use first image element? error if >1 images?
             raise ValueError("The 'element' parameter must be provided to render an image.")
-
-        # TODO: support multiple image layers using fileUid
-        self.wrapper_args["image_path"] = f"images/{element}"
 
         file_uid = f"image_{element}"
         wrapper_args = {
@@ -748,7 +720,6 @@ class VitesscePlotAccessor:
             ]),
         }, meta=True, scope_prefix=get_initial_coordination_scope_prefix(dataset_uid, "obsSpots"))
 
-        # TODO: update the point layer coordination logic.
         self.vc.link_views_by_dict(spatial_views, {
             "pointLayer": CL([
                 {
