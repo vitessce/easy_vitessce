@@ -5,11 +5,11 @@ render_images:
     implemented: true
   parameters:
     element: supported
-    channel: not currently supported # TODO
-    cmap: not currently supported # TODO
-    norm: not currently supported
-    na_color: not currently supported # TODO
-    palette: not currently supported # TODO
+    channel: supported
+    cmap: partially supported
+    norm: supported
+    na_color: supported
+    palette: supported
     alpha: supported
     scale: N/A # for multiresolution images, the scale is dynamic / determined by viewport
 render_labels:
@@ -18,17 +18,36 @@ render_labels:
   parameters:
     element: supported
     color: supported
-    groups: not currently supported # TODO
+    groups: supported
     contour_px: not currently supported
-    palette: not currently supported # TODO
-    cmap: not currently supported # TODO
-    norm: not currently supported # TODO
-    na_color: not currently supported # TODO
+    palette: supported
+    cmap: supported
+    norm: supported
+    na_color: not currently supported
     outline_alpha: not currently supported # TODO
     fill_alpha: not currently supported # TODO
     scale: N/A # for multiresolution labels, the scale is dynamic / determined by viewport
     table_name: supported
-    table_layer: not currently supported # TODO
+    table_layer: supported
+render_shapes:
+  function:
+    implemented: true
+  parameters:
+    element: supported
+    color: supported
+    fill_alpha: not currently supported # TODO
+    groups: supported
+    palette: supported
+    na_color: not currently supported
+    outline_width: not currently supported # TODO
+    outline_color: not currently supported # TODO
+    outline_alpha: not currently supported # TODO
+    cmap: supported
+    norm: supported
+    scale: not currently supported
+    method: N/A
+    table_name: supported
+    table_layer: supported
 render_points:
   function:
     implemented: true
@@ -40,27 +59,8 @@ render_points:
     palette: not currently supported # TODO
     na_color: not currently supported
     cmap: not currently supported # TODO
-    norm: not currently supported
+    norm: not currently supported # TODO
     size: not currently supported # TODO
     method: N/A
     table_name: not currently supported # TODO
-    table_layer: not currently supported # TODO
-render_shapes:
-  function:
-    implemented: true
-  parameters:
-    element: supported
-    color: supported
-    fill_alpha: not currently supported # TODO
-    groups: not currently supported # TODO
-    palette: not currently supported # TODO
-    na_color: not currently supported
-    outline_width: not currently supported # TODO
-    outline_color: not currently supported # TODO
-    outline_alpha: not currently supported # TODO
-    cmap: not currently supported # TODO
-    norm: not currently supported
-    scale: not currently supported
-    method: N/A
-    table_name: supported
     table_layer: not currently supported # TODO

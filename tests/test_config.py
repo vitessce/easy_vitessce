@@ -201,13 +201,23 @@ def test_spatialdata_config_creation():
     vc_dict = vc.to_dict(base_url='')
 
     assert vc_dict["datasets"][0]["files"][0]["url"].endswith(".sdata.zarr")
+    assert len(vc_dict["datasets"][0]["files"]) == 2
+    
     del vc_dict["datasets"][0]["files"][0]["url"]
     assert vc_dict["datasets"][0]["files"][0] == {
         'fileType': 'spatialdata.zarr',
         'options': {
-            'obsFeatureMatrix': {'path': 'tables/table/X'}, 
-            'obsSpots': {'path': 'shapes/cells','tablePath': 'tables/table','coordinateSystem': 'global'},
-            'image': {'path': 'images/rasterized', 'coordinateSystem': 'global'}
+            'image': {'path': 'images/rasterized'}
         },
-        'coordinationValues': {'fileUid': 'main_wrapper', 'obsType': 'spot'}
+        'coordinationValues': {'fileUid': 'image_rasterized'}
+    }
+
+    del vc_dict["datasets"][0]["files"][1]["url"]
+    assert vc_dict["datasets"][0]["files"][1] == {
+        'fileType': 'spatialdata.zarr',
+        'options': {
+            'obsFeatureMatrix': {'path': 'tables/table/X'},
+            'obsSpots': {'path': 'shapes/cells', 'tablePath': 'tables/table'}
+        },
+        'coordinationValues': {'obsType': 'spot', 'featureType': 'gene'}
     }
