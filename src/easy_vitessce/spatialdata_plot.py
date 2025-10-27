@@ -16,6 +16,8 @@ from vitessce import (
     CoordinationLevel as CL,
     SpatialDataWrapper,
     get_initial_coordination_scope_prefix,
+    hconcat,
+    vconcat,
 )
 
 from os.path import join
@@ -25,6 +27,119 @@ from spatialdata import get_element_annotators
 
 from easy_vitessce.widget import _to_widget, config
 from easy_vitessce.colors import to_uint8_rgb
+
+def shared_render_shapes_and_labels(
+        sdata, element, table_name, table_layer, color, cmap, norm, groups, palette, obs_type, feature_type,
+        # Note: These dict params are modified by this function.
+        wrapper_args, obs_type_to_num_rows, feature_type_to_num_rows,
+    ):
+
+    if table_name is None:
+        annotating_tables = list(get_element_annotators(sdata, element))
+        if len(annotating_tables) > 0:
+            # Use the first annotating table if no specific table is provided.
+            table_name = annotating_tables[0]
+
+    if table_name is not None:
+        # have user specify which matrix to use?
+        wrapper_args["table_path"] = f"tables/{table_name}"
+        wrapper_args["obs_feature_matrix_path"] = f"tables/{table_name}/X" if table_layer is None else f"tables/{table_name}/layers/{table_layer}"
+
+        obs_num_rows = sdata.tables[table_name].obs.shape[0]
+        var_num_rows = sdata.tables[table_name].var.shape[0]
+
+        if obs_type not in obs_type_to_num_rows:
+            obs_type_to_num_rows[obs_type] = obs_num_rows
+        elif obs_type_to_num_rows[obs_type] != obs_num_rows:
+            # TODO: support automatically by using the element name as obsType?
+            # Maybe force the user to configure something like ev.config.set({ "sdata_pl_use_element_name_for_entity_types": True })?
+            raise ValueError(f"Multiple tables with different numbers of observations ({obs_type_to_num_rows[obs_type]} vs. {obs_num_rows}) are being used for obsType '{obs_type}'.")
+
+        if feature_type not in feature_type_to_num_rows:
+            feature_type_to_num_rows[feature_type] = var_num_rows
+        elif feature_type_to_num_rows[feature_type] != var_num_rows:
+            # TODO: same as above TODO.
+            raise ValueError(f"Multiple tables with different numbers of variables ({feature_type_to_num_rows[feature_type]} vs. {var_num_rows}) are being used for featureType '{feature_type}'.")
+
+        # TODO: configure all obsSets in the table here, to allow the user to select them regardless of the "color" parameter value,
+        # rather than only when the "color" parameter is set to a categorical obs column (down below).
+    else:
+        # No annotating table exists, but if shapes, we can use the Parquet table to check the obs count.
+        if element in sdata.shapes:
+            obs_num_rows = sdata.shapes[element].shape[0]
+            if obs_type not in obs_type_to_num_rows:
+                obs_type_to_num_rows[obs_type] = obs_num_rows
+            elif obs_type_to_num_rows[obs_type] != obs_num_rows:
+                raise ValueError(f"Multiple tables with different numbers of observations ({obs_type_to_num_rows[obs_type]} vs. {obs_num_rows}) are being used for obsType '{obs_type}'.")
+
+    obs_coordination = None
+    feature_coordination = None
+    if color is not None:
+        if table_name is None:
+            # color param must be a static color like "red" or "#FF0000"
+            # TODO
+            pass
+        else:
+            if color in sdata.tables[table_name].var.index: # gene
+                feature_coordination = {
+                    "obsType": obs_type,
+                    "featureType": feature_type,
+                    "featureSelection": [color],
+                    "obsColorEncoding": "geneSelection",
+                }
+
+                if cmap is not None and cmap in ["viridis", "plasma", "jet", "greys"]:
+                    feature_coordination["featureValueColormap"] = cmap
+                elif cmap is None:
+                    feature_coordination["featureValueColormap"] = "viridis"
+                
+                if norm is not None:
+                    feature_coordination["featureValueColormapRange"] = [norm.vmin, norm.vmax]
+            
+            elif color in sdata.tables[table_name].obs.columns: # categorical?
+                group_name = color.capitalize()
+
+                # Configure the obsSets data wrapper properties.
+                # Here we configure obsSets for self.wrapper_args
+                wrapper_args["obs_set_paths"] = [f"tables/{table_name}/obs/{color}"]
+                wrapper_args["obs_set_names"] = [group_name]
+
+                obs_coordination = {
+                    "obsType": obs_type,
+                    "obsColorEncoding": "cellSetSelection",
+                    "obsSetExpansion": [[group_name]],
+                }
+
+                # TODO: depends on https://github.com/vitessce/vitessce/issues/2254
+                # self.global_coordination["obsSetSelection"] = [[color]]
+                if groups is not None:
+                    obs_coordination["obsSetSelection"] = [
+                        # Construct obs set paths.
+                        [group_name, g] for g in groups
+                    ]
+                    if palette is not None:
+                        if type(palette) is str:
+                            # Broadcast single color to all groups.
+                            palette = [palette for _ in groups]
+                        elif type(palette) is list and len(groups) != len(palette):
+                            raise ValueError("The length of 'groups' and 'palette' lists must be equal.")
+                        
+                        obs_coordination["obsSetColor"] = [
+                            {
+                                "path": [group_name, groups[i]],
+                                "color": to_uint8_rgb(palette[i]),
+                            } for i in range(len(groups))
+                        ]
+                else:
+                    # Set to None, should initialize to children of first obsSet group by default.
+                    obs_coordination["obsSetSelection"] = None
+            else:
+                # color param must be a static color like "red" or "#FF0000"
+                # TODO
+                pass
+
+    return (obs_coordination, feature_coordination)
+
 
 # This class is analogous to PlotAccessor from spatialdata-plot.
 # Reference: https://github.com/scverse/spatialdata-plot/blob/788eb2206cca8f4c21977c4f7b08a818ee6580f7/src/spatialdata_plot/pl/basic.py#L68
@@ -60,6 +175,34 @@ class VitesscePlotAccessor:
         self._pl = PlotAccessor(sdata)
     
     def _init_params(self):
+        self.shared_wrapper_args = {
+            "sdata_path": self.sdata_filepath,
+        }
+
+
+        # TODO: channel coordination, to render multiple image layers with linked channel settings?
+
+        self.image_layers = [
+            # Tuples of (wrapper_args, image_layer_coordination)
+        ]
+        self.segmentation_layers = [
+            # Tuples of (wrapper_args, segmentation_layer_coordination, obs_coordination, feature_coordination)
+        ]
+        self.spot_layers = [
+            # Tuples of (wrapper_args, spot_layer_coordination, obs_coordination, feature_coordination)
+        ]
+        self.point_layers = [
+            # Tuples of (wrapper_args, point_layer_coordination)
+        ]
+
+        self.obs_type_to_num_rows = {}
+        self.feature_type_to_num_rows = {}
+
+
+
+
+        # TODO: do not use the below once refactored to use the above.
+
         self.obs_type = "cell" # TODO: support multiple obs types (one per layer?)
         self.wrapper_args = {
             "sdata_path": self.sdata_filepath,
@@ -145,9 +288,16 @@ class VitesscePlotAccessor:
             # TODO: what does spatialdata-plot do in this case? use first image element? error if >1 images?
             raise ValueError("The 'element' parameter must be provided to render an image.")
 
-        self.image = f"images/{element}"
-        self.image_path = {"image_path":f"images/{element}"}
-        self.wrapper_args.update(self.image_path)
+        # TODO: support multiple image layers using fileUid
+        self.wrapper_args["image_path"] = f"images/{element}"
+
+        file_uid = f"image_{element}"
+        wrapper_args = {
+            "image_path": f"images/{element}",
+            "coordination_values": {
+                "fileUid": file_uid,
+            }
+        }
 
         # Palette logic in spatialdata-plot:
         # Reference: https://github.com/scverse/spatialdata-plot/blob/010560f7eebdd245693a8c55eede0f895a636f5c/src/spatialdata_plot/pl/utils.py#L685
@@ -178,31 +328,32 @@ class VitesscePlotAccessor:
                     "spatialTargetC": ch,
                     **({ 'spatialChannelColor': to_uint8_rgb(palette[ch_i]) } if palette is not None else {}),
                     **({ 'spatialChannelWindow': [norm[ch_i].vmin, norm[ch_i].vmax] } if norm is not None else {}),
-
+                    "spatialChannelVisible": True,
                 }
                 for ch_i, ch in enumerate(channel)
             ]
         
         # Configure image layer coordination.
-        self.image_layer_coordination = [
-            # We want to keep any existing spatial layer coordination information.
-            *self.image_layer_coordination,
-            {
-                "fileUid": "main_wrapper",
-                'spatialLayerOpacity': alpha,
-                'photometricInterpretation': photometric_interpretation,
-                **({
-                    'spatialLayerColormap': cmap
-                } if cmap in ["viridis", "plasma", "jet", "greys"] else {}),
-                **({} if na_color in [None, "default"] else {
-                    'spatialLayerTransparentColor': to_uint8_rgb(na_color)
-                }),
-                # Pass the image channel coordination if it was configured above.
-                **({} if image_channel_coordination is None else {
-                    'imageChannel': image_channel_coordination
-                }),
-            },
-        ]
+        image_layer_coordination = {
+            "fileUid": file_uid,
+            "spatialLayerVisible": True,
+            'spatialLayerOpacity': alpha,
+            'photometricInterpretation': photometric_interpretation,
+            **({
+                'spatialLayerColormap': cmap
+            } if cmap in ["viridis", "plasma", "jet", "greys"] else {}),
+            **({} if na_color in [None, "default"] else {
+                'spatialLayerTransparentColor': to_uint8_rgb(na_color)
+            }),
+            # Pass the image channel coordination if it was configured above.
+            **({} if image_channel_coordination is None else {
+                'imageChannel': image_channel_coordination
+            }),
+        }
+
+        self.image_layers.append(
+            (wrapper_args, image_layer_coordination)
+        )
 
         return self.sdata
     
@@ -253,93 +404,62 @@ class VitesscePlotAccessor:
             # TODO: what does spatialdata-plot do in this case? use first shapes element? error if >1 shapes?
             raise ValueError("The 'element' parameter is required.")
         
-        color_param = color
+        is_polygons = self.sdata.shapes[element]["geometry"].geom_type.iloc[0] == 'Polygon'
 
-        # vitessce only has polygon and circles
-        if self.sdata.shapes[element]["geometry"].geom_type.iloc[0] == 'Polygon':
-            # This is a polygon-type Shapes element, so we use obs_segmentations_path.
-            obs_path = {"obs_segmentations_path": f"shapes/{element}"}
+        file_uid = f"shapes_{element}"
+        obs_type = "cell" if is_polygons else "spot"
+        feature_type = "gene" # TODO: how to determine feature type? use heuristic based on num rows in table.var?
 
-            self.segmentation_layer_coordination = [
-                # We want to keep any existing spatial layer coordination information.
-                *self.segmentation_layer_coordination,
-                {
-                    "fileUid": "main_wrapper",
-                    'segmentationChannel': [{
-                        # We initialize with a single channel.
+        wrapper_args = {
+            "coordination_values": {
+                "obsType": obs_type,
+                "featureType": feature_type,
+            }
+        }
 
-                    }],
-                },
-            ]
+        # Vitessce only supports polygon and circle shapes.
+        if is_polygons:
+            wrapper_args["obs_segmentations_path"] = f"shapes/{element}"
+            wrapper_args["coordination_values"]["fileUid"] = file_uid
+            layer_coordination = {
+                "fileUid": file_uid,
+                "spatialLayerVisible": True,
+                'segmentationChannel': [{
+                    # We initialize with a single channel.
+                    # SpatialData only supports single-channel segmentations.
+                    "obsType": obs_type,
+                    "featureType": feature_type,
+                    "spatialChannelVisible": True,
+                    "obsHighlight": None,
+                }],
+            }
         else:
-            self.obs_type = "spot"
-            # This is a circle-type Shapes element, so we use obs_spots_path.
-            obs_path = {"obs_spots_path": f"shapes/{element}"}
-
-            self.spot_layer_coordination = [
-                # We want to keep any existing spatial layer coordination information.
-                *self.spot_layer_coordination,
-                {
-                    "fileUid": "main_wrapper", # TODO: spot-specific wrapper?
-                },
-            ]
-        
-        self.wrapper_args.update(obs_path)
-
-        if table_name is None:
-            annotating_tables = list(get_element_annotators(self.sdata, element))
-            if len(annotating_tables) > 0:
-                # Use the first annotating table if no specific table is provided.
-                table_name = annotating_tables[0]
-
-        if table_name is not None:
-            # have user specify which matrix to use?
-            table_path = {"table_path": f"tables/{table_name}"}
-            self.wrapper_args.update(table_path)
-
-            self.wrapper_args = {
-                **self.wrapper_args,
-                # TODO: check for X existence first?
-                "obs_feature_matrix_path": f"tables/{table_name}/X"
+            # Assume spots
+            wrapper_args["obs_spots_path"] = f"shapes/{element}"
+            layer_coordination = {
+                "obsType": obs_type,
+                "featureType": feature_type,
+                "spatialLayerVisible": True,
+                "obsHighlight": None,
             }
 
-            # TODO: configure all obsSets in the table here, to allow the user to select them regardless of the "color" parameter value,
-            # rather than only when the "color" parameter is set to a categorical obs column (down below).
-
-        if color_param is not None:
-            if table_name is None:
-                raise ValueError("The 'color' parameter was provided, but an annotating table was not found. You may need to specify 'table_name' explicitly.")
-            
-            if color_param in self.sdata.tables[table_name].var.index: # gene
-                self.has_gene_color_encoding = True
-                color = {"featureSelection": [color_param]}
-                color_encoding = {"obsColorEncoding": "geneSelection"}
-                
-                self.global_coordination.update(color)
-                self.global_coordination.update(color_encoding)
-
-            elif color_param in self.sdata.tables[table_name].obs: # categorical?
-                self.has_cellset_color_encoding = True
-                # TODO: depends on https://github.com/vitessce/vitessce/issues/2254
-                color = {"obsSetSelection": [[color_param]]}
-                color_encoding = {"obsColorEncoding": "cellSetSelection"}
-                
-                self.global_coordination.update(color)
-                self.global_coordination.update(color_encoding)
-
-                # Here we configure obsSets for self.wrapper_args
-                self.wrapper_args = {
-                    **self.wrapper_args,
-                    "obs_set_paths": [f"tables/{table_name}/obs/{color_param}"],
-                    "obs_set_names": [color_param],
-                }
-            else:
-                # TODO: support a static color, such as "red" or "#FF0000"?
-                raise ValueError(f"Color value did not map to a value in var.index or obs.columns of table {table_name}.")
-            
-        if cmap is not None and cmap in ["viridis", "plasma", "jet", "greys"]:
-            self.global_coordination.update({"featureValueColormap": cmap})
-            
+        # Shared coloring logic for polygons, spots, and labels.
+        (obs_coordination, feature_coordination) = shared_render_shapes_and_labels(
+            self.sdata, element, table_name, table_layer, color, cmap, norm, groups, palette, obs_type, feature_type,
+            wrapper_args, self.obs_type_to_num_rows, self.feature_type_to_num_rows,
+        )
+        
+        if is_polygons:
+            self.segmentation_layers.append(
+                (wrapper_args, layer_coordination, obs_coordination, feature_coordination)
+            )
+        else:
+            self.spot_layers.append(
+                (wrapper_args, layer_coordination, obs_coordination, feature_coordination)
+            )
+            if len(self.spot_layers) > 1:
+                raise NotImplementedError("Multiple spot layers are not yet supported.")
+        
         return self.sdata
 
     # References:
@@ -383,78 +503,42 @@ class VitesscePlotAccessor:
             # TODO: what does spatialdata-plot do in this case? use first labels element? error if >1 labels?
             raise ValueError("The 'element' parameter must be provided to render labels.")
         
-        labels_path = {"obs_segmentations_path":f"labels/{element}"}
-        self.wrapper_args.update(labels_path)
+        file_uid = f"labels_{element}"
+        obs_type = "cell"
+        feature_type = "gene" # TODO: how to determine feature type? use heuristic based on num rows in table.var?
 
-        # Same coloring logic as in render_shapes.
-        color_param = color
-
-        self.segmentation_layer_coordination = [
-            # We want to keep any existing spatial layer coordination information.
-            *self.segmentation_layer_coordination,
-            {
-                "fileUid": "main_wrapper",
-                'segmentationChannel': [{
-                    # We initialize with a single channel.
-
-                }],
-            },
-        ]
-
-        if table_name is None:
-            annotating_tables = list(get_element_annotators(self.sdata, element))
-            if len(annotating_tables) > 0:
-                # Use the first annotating table if no specific table is provided.
-                table_name = annotating_tables[0]
-
-        if table_name is not None:
-            # have user specify which matrix to use?
-            table_path = {"table_path": f"tables/{table_name}"}
-            self.wrapper_args.update(table_path)
-
-            self.wrapper_args = {
-                **self.wrapper_args,
-                # TODO: check for X existence first?
-                "obs_feature_matrix_path": f"tables/{table_name}/X"
+        wrapper_args = {
+            "obs_segmentations_path": f"labels/{element}",
+            "coordination_values": {
+                "fileUid": file_uid,
+                "obsType": obs_type,
+                "featureType": feature_type,
             }
+        }
 
-            # TODO: configure all obsSets in the table here, to allow the user to select them regardless of the "color" parameter value,
-            # rather than only when the "color" parameter is set to a categorical obs column (down below).
+        layer_coordination = {
+            "fileUid": file_uid,
+            "spatialLayerVisible": True,
+            'segmentationChannel': [{
+                # We initialize with a single channel.
+                # SpatialData only supports single-channel segmentations.
+                "obsType": obs_type,
+                "featureType": feature_type,
+                "spatialChannelVisible": True,
+                "obsHighlight": None,
+            }],
+        }
 
-        if color_param is not None:
-            if table_name is None:
-                raise ValueError("The 'color' parameter was provided, but an annotating table was not found. You may need to specify 'table_name' explicitly.")
-            
-            if color_param in self.sdata.tables[table_name].var.index: # gene
-                self.has_gene_color_encoding = True
-                color = {"featureSelection": [color_param]}
-                color_encoding = {"obsColorEncoding": "geneSelection"}
-                
-                self.global_coordination.update(color)
-                self.global_coordination.update(color_encoding)
-
-            elif color_param in self.sdata.tables[table_name].obs: # categorical?
-                self.has_cellset_color_encoding = True
-                # TODO: depends on https://github.com/vitessce/vitessce/issues/2254
-                color = {"obsSetSelection": [[color_param]]}
-                color_encoding = {"obsColorEncoding": "cellSetSelection"}
-                
-                self.global_coordination.update(color)
-                self.global_coordination.update(color_encoding)
-
-                # Here we configure obsSets for self.wrapper_args
-                self.wrapper_args = {
-                    **self.wrapper_args,
-                    "obs_set_paths": [f"tables/{table_name}/obs/{color_param}"],
-                    "obs_set_names": [color_param],
-                }
-            else:
-                # TODO: support a static color, such as "red" or "#FF0000"?
-                raise ValueError(f"Color value did not map to a value in var.index or obs.columns of table {table_name}.")
-            
-        if cmap is not None and cmap in ["viridis", "plasma", "jet", "greys"]:
-            self.global_coordination.update({"featureValueColormap": cmap})
-            
+        # Shared coloring logic for polygons, spots, and labels.
+        (obs_coordination, feature_coordination) = shared_render_shapes_and_labels(
+            self.sdata, element, table_name, table_layer, color, cmap, norm, groups, palette, obs_type, feature_type,
+            wrapper_args, self.obs_type_to_num_rows, self.feature_type_to_num_rows,
+        )
+        
+        self.segmentation_layers.append(
+            (wrapper_args, layer_coordination, obs_coordination, feature_coordination)
+        )
+        
         return self.sdata
 
     # References:
@@ -469,19 +553,29 @@ class VitesscePlotAccessor:
         """
         if not VitesscePlotAccessor._is_enabled:
             return self._pl.render_points(element=element, **kwargs)
-        
-        obs_points_path = {"obs_points_path":f"points/{element}"}
-        self.wrapper_args.update(obs_points_path)
 
-        self.point_layer_coordination = [
-            # We want to keep any existing spatial layer coordination information.
-            *self.point_layer_coordination,
-            {
-                "obsType": 'point',
-                "obsHighlight": None,
-                "fileUid": "points_wrapper",
-            },
-        ]
+        file_uid = f"points_{element}"
+        obs_type = "point"
+        feature_type = "gene" # TODO: how to determine feature type? use heuristic based on num rows in table.var?
+
+        wrapper_args = {
+            "obs_points_path": f"points/{element}",
+            "coordination_values": {
+                "fileUid": file_uid,
+                "obsType": obs_type,
+                "featureType": feature_type,
+            }
+        }
+
+        layer_coordination = {
+            "obsType": obs_type,
+            "obsHighlight": None,
+            "fileUid": file_uid,
+        }
+        
+        self.point_layers.append(
+            (wrapper_args, layer_coordination)
+        )
 
         return self.sdata
     
@@ -494,61 +588,87 @@ class VitesscePlotAccessor:
         if not VitesscePlotAccessor._is_enabled:
             return self._pl.show(coordinate_systems=coordinate_systems, **kwargs)
             
-        self.vc = VitessceConfig(schema_version="1.0.18", name='spatial data')
+        self.vc = VitessceConfig(schema_version="1.0.18", name='SpatialData Plot')
 
         if not (coordinate_systems is None or isinstance(coordinate_systems, str)):
             raise NotImplementedError("A list of multiple 'coordinate_systems' is not yet supported.")
 
-        wrapper = SpatialDataWrapper(**{
-            **self.wrapper_args,
-            **({ "coordinate_system": coordinate_systems } if coordinate_systems is not None else {}),
-            "coordination_values": {
-                **self.wrapper_args.get("coordination_values", {}),
-                "obsType": self.obs_type,
-                "fileUid": "main_wrapper",
-            },
-        })
-        
         dataset_uid = "A"
-        dataset = self.vc.add_dataset(name='Spatial Data', uid=dataset_uid).add_object(wrapper)
+        dataset = self.vc.add_dataset(name='SpatialData Dataset', uid=dataset_uid)
 
-        if "obs_points_path" in self.wrapper_args:
-            # TODO: cleanup
-            points_wrapper = SpatialDataWrapper(**{
-                **self.wrapper_args,
+        # TODO: de-duplicate wrapper_args if the same for multiple layers?
+        for (layer_wrapper_args, _) in self.image_layers:
+            img_wrapper = SpatialDataWrapper(**{
+                **self.shared_wrapper_args,
                 **({ "coordinate_system": coordinate_systems } if coordinate_systems is not None else {}),
-                "coordination_values": {
-                    **self.wrapper_args.get("coordination_values", {}),
-                    "obsType": "point",
-                    "fileUid": "points_wrapper",
-                },
+                **layer_wrapper_args,
+            })
+            dataset = dataset.add_object(img_wrapper)
+        
+        for (layer_wrapper_args, _, _, _) in self.segmentation_layers:
+            seg_wrapper = SpatialDataWrapper(**{
+                **self.shared_wrapper_args,
+                **({ "coordinate_system": coordinate_systems } if coordinate_systems is not None else {}),
+                **layer_wrapper_args,
+            })
+            dataset = dataset.add_object(seg_wrapper)
+        
+        for (layer_wrapper_args, _, _, _) in self.spot_layers:
+            spot_wrapper = SpatialDataWrapper(**{
+                **self.shared_wrapper_args,
+                **({ "coordinate_system": coordinate_systems } if coordinate_systems is not None else {}),
+                **layer_wrapper_args,
+            })
+            dataset = dataset.add_object(spot_wrapper)
+        
+        for (layer_wrapper_args, _) in self.point_layers:
+            points_wrapper = SpatialDataWrapper(**{
+                **self.shared_wrapper_args,
+                **({ "coordinate_system": coordinate_systems } if coordinate_systems is not None else {}),
+                **layer_wrapper_args,
             })
             dataset = dataset.add_object(points_wrapper)
 
-        side_list = vt.OBS_SETS if self.has_cellset_color_encoding else vt.FEATURE_LIST
 
         # Add views (visualizations) to the configuration:
         spatial = self.vc.add_view("spatialBeta", dataset=dataset)
         layer_controller = self.vc.add_view("layerControllerBeta", dataset=dataset)
-        feature_obs_list = self.vc.add_view(side_list, dataset=dataset) # either feature list or obs sets # TODO: both obsSets and featureList
+        obs_set_views = []
+        feature_list_views = []
+
+        obs_set_views_by_key = {}
+        feature_list_views_by_key = {}
+
+
+        # Collect all obs_coordination and feature_coordination information
+        obs_coordination = []
+        feature_coordination = []
+        for (_, _, obs_coord, feature_coord) in self.segmentation_layers:
+            if obs_coord is not None:
+                obs_coordination.append(obs_coord)
+            if feature_coord is not None:
+                feature_coordination.append(feature_coord)
+        for (_, _, obs_coord, feature_coord) in self.spot_layers:
+            if obs_coord is not None:
+                obs_coordination.append(obs_coord)
+            if feature_coord is not None:
+                feature_coordination.append(feature_coord)
+
+        # Add obsSet and featureList views.
+        for obs_coord in obs_coordination:
+            obs_set_view = self.vc.add_view("obsSets", dataset=dataset)
+            obs_set_views.append(obs_set_view)
+            obs_set_views_by_key[obs_coord["obsType"]] = obs_set_view
+        for feature_coord in feature_coordination:
+            feature_list_view = self.vc.add_view("featureList", dataset=dataset)
+            feature_list_views.append(feature_list_view)
+            feature_list_views_by_key[feature_coord["featureType"]] = feature_list_view
 
         spatial_views = [spatial, layer_controller]
-        all_views = [spatial, layer_controller, feature_obs_list]
+        control_views = [layer_controller, *obs_set_views, *feature_list_views]
+        all_views = [spatial, *control_views]
 
-        # Create coordination scope objects for self.global_coordination
-        ct_names = []
-        ct_vals = []
-        for ct_name, ct_val in self.global_coordination.items():
-            ct_names.append(ct_name)
-            ct_vals.append(ct_val)
-        
-        ct_scopes = self.vc.add_coordination(*ct_names)
-        for i, ct_scope in enumerate(ct_scopes):
-            ct_scope.set_value(ct_vals[i])
-
-        # Link the views together
-        self.vc.link_views(all_views, ['obsType'], [self.obs_type])
-        self.vc.link_views_by_dict(all_views, dict(zip(ct_names, ct_scopes)), meta=True)
+        # Coordinate views.
         self.vc.link_views_by_dict(spatial_views, {
             "imageLayer": CL([
                 {
@@ -557,16 +677,48 @@ class VitesscePlotAccessor:
                         'imageChannel': CL([
                             {
                                 **channel_dict,
-                                # TODO: limit this to the coordination types that are applicable to imageChannel objects
-                                **dict(zip(ct_names, ct_scopes))
                             }
                             for channel_dict in layer_dict['imageChannel']
                         ])
                     })
                 }
-                for layer_dict in self.image_layer_coordination
+                for (_, layer_dict) in self.image_layers
             ]),
         }, meta=True, scope_prefix=get_initial_coordination_scope_prefix(dataset_uid, "image"))
+
+        # Collect per-obsType coordination types and scopes.
+        obs_coordination_by_key = {}
+        for obs_coord in obs_coordination:
+            coordination_key = obs_coord["obsType"] # TODO: is this the best key to use?
+
+            # Create coordination scope objects.
+            ct_names = []
+            ct_vals = []
+            for ct_name, ct_val in obs_coord.items():
+                ct_names.append(ct_name)
+                ct_vals.append(ct_val)
+            
+            ct_scopes = self.vc.add_coordination(*ct_names)
+            for i, ct_scope in enumerate(ct_scopes):
+                ct_scope.set_value(ct_vals[i])
+            obs_coordination_by_key[coordination_key] = dict(zip(ct_names, ct_scopes))
+        
+        feature_coordination_by_key = {}
+        for feature_coord in feature_coordination:
+            coordination_key = feature_coord["featureType"] # TODO: is this the best key to use?
+
+            # Create coordination scope objects.
+            ct_names = []
+            ct_vals = []
+            for ct_name, ct_val in feature_coord.items():
+                ct_names.append(ct_name)
+                ct_vals.append(ct_val)
+            
+            ct_scopes = self.vc.add_coordination(*ct_names)
+            for i, ct_scope in enumerate(ct_scopes):
+                ct_scope.set_value(ct_vals[i])
+            feature_coordination_by_key[coordination_key] = dict(zip(ct_names, ct_scopes))
+        
         self.vc.link_views_by_dict(spatial_views, {
             "segmentationLayer": CL([
                 {
@@ -574,24 +726,50 @@ class VitesscePlotAccessor:
                     'segmentationChannel': CL([
                         {
                             **channel_dict,
-                            # TODO: limit this to the coordination types that are applicable to segmentationChannel objects
-                            **dict(zip(ct_names, ct_scopes))
+                            **obs_coordination_by_key.get(channel_dict.get("obsType"), {}),
+                            **feature_coordination_by_key.get(channel_dict.get("featureType"), {}),
                         }
                         for channel_dict in layer_dict.get('segmentationChannel', [{}])
                     ])
                 }
-                for layer_dict in self.segmentation_layer_coordination
+                for (_, layer_dict, _, _) in self.segmentation_layers
             ]),
         }, meta=True, scope_prefix=get_initial_coordination_scope_prefix(dataset_uid, "obsSegmentations"))
+
         self.vc.link_views_by_dict(spatial_views, {
-            "spotLayer": CL(self.spot_layer_coordination),
+            "spotLayer": CL([
+                # TODO: should this be restricted to a single dict (not array), since Vitessce supports only a single spot layer?
+                {
+                    **layer_dict,
+                    **obs_coordination_by_key.get(layer_dict.get("obsType"), {}),
+                    **feature_coordination_by_key.get(layer_dict.get("featureType"), {}),
+                }
+                for (_, layer_dict, _, _) in self.spot_layers
+            ]),
         }, meta=True, scope_prefix=get_initial_coordination_scope_prefix(dataset_uid, "obsSpots"))
+
+        # TODO: update the point layer coordination logic.
         self.vc.link_views_by_dict(spatial_views, {
-            "pointLayer": CL(self.point_layer_coordination),
+            "pointLayer": CL([
+                {
+                    **layer_dict,
+                    **obs_coordination_by_key.get(layer_dict.get("obsType"), {}),
+                    **feature_coordination_by_key.get(layer_dict.get("featureType"), {}),
+                }
+                for (_, layer_dict) in self.point_layers
+            ]),
         }, meta=True, scope_prefix=get_initial_coordination_scope_prefix(dataset_uid, "obsPoints"))
+
+        # Set up coordination for control views.
+        for key, obs_set_view in obs_set_views_by_key.items():
+            self.vc.link_views_by_dict([obs_set_view], obs_coordination_by_key.get(key, {}), meta=False)
+
+        for key, feature_list_view in feature_list_views_by_key.items():
+            self.vc.link_views_by_dict([feature_list_view], feature_coordination_by_key.get(key, {}), meta=False)
+        
         
         # Layout the views
-        self.vc.layout(spatial | (feature_obs_list / layer_controller))
+        self.vc.layout(hconcat(spatial, vconcat(*control_views), split=[2, 1]))
         
         vw = _to_widget(self.vc)
 
