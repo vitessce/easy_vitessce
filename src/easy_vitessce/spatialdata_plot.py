@@ -28,8 +28,9 @@ from spatialdata import get_element_annotators
 from easy_vitessce.widget import _to_widget, config
 from easy_vitessce.colors import to_uint8_rgb
 
-def shared_render_shapes_and_labels(
-        sdata, element, table_name, table_layer, color, cmap, norm, groups, palette, obs_type, feature_type, is_spots,
+# Internal function for shared logic between render_shapes and render_labels.
+def _shared_render_shapes_and_labels(
+        sdata, element, table_name, table_layer, color, cmap, norm, groups, palette, obs_type, feature_type, is_spots, fill_alpha, outline_alpha, outline_width, outline_color,
         # Note: These dict params are modified by this function.
         wrapper_args, obs_type_to_num_rows, feature_type_to_num_rows,
     ):
@@ -150,6 +151,36 @@ def shared_render_shapes_and_labels(
         if color is not None:
             extra_layer_coordination["spatialChannelColor" if not is_spots else "spatialLayerColor"] = to_uint8_rgb(color)
     
+    # Handling of alpha/fill settings.
+    # We can only support these things partially.
+    # - Case 1: fill_alpha == outline_alpha
+    # - Case 2: fill_alpha != outline_alpha but fill_alpha is 0.0 (effectively stroked)
+    # - Case 3: fill_alpha != outline_alpha and both > 0.0 (requires both fill and stroke colors with different alphas)
+    # Case 3 is not currently supported by Vitessce unless we create two separate layers (one for fill, one for outline).
+    if fill_alpha == 0.0:
+        # Stroked.
+        if is_spots:
+            extra_layer_coordination["spatialSpotFilled"] = False
+        else:
+            extra_layer_coordination["spatialSegmentationFilled"] = False
+    
+    if outline_width is not None:
+        if is_spots:
+            extra_layer_coordination["spatialSpotStrokeWidth"] = outline_width
+        else:
+            extra_layer_coordination["spatialSegmentationStrokeWidth"] = outline_width
+
+    layer_alpha = None
+    if outline_alpha is not None and (fill_alpha == outline_alpha or fill_alpha == 0.0):
+        layer_alpha = outline_alpha
+    elif fill_alpha is not None:
+        layer_alpha = fill_alpha
+
+    if layer_alpha is not None:
+        if is_spots:
+            extra_layer_coordination["spatialLayerOpacity"] = layer_alpha
+        else:
+            extra_layer_coordination["spatialChannelOpacity"] = layer_alpha
 
     return (extra_layer_coordination, obs_coordination, feature_coordination)
 
@@ -242,7 +273,19 @@ class VitesscePlotAccessor:
         """
         Renders image.
 
-        :param str element: location of image data inside "images" folder.
+        :param str element: Name of the image element.
+        :param channel: To select specific channels to plot.
+        :type channel: list[str] or list[int] or str or int or None
+        :param cmap: Colormap name such as "viridis".
+        :type cmap: str or None
+        :param norm: Normalization or list of normalizations for continuous annotations.
+        :type norm: list[matplotlib.colors.Normalize] or matplotlib.colors.Normalize or None
+        :param na_color: Color that should be rendered as transparent.
+        :type na_color: str or None
+        :param palette: Palette to color images. If list, the number of colors should be equal to the number of channels.
+        :type palette: list[str] or str or None
+        :param alpha: Alpha value for the images, between 0.0 and 1.0. By default, 1.0.
+        :type alpha: float or int
         :returns: Self, allows for chaining.
         """
         if not VitesscePlotAccessor._is_enabled:
@@ -379,9 +422,27 @@ class VitesscePlotAccessor:
         """
         Renders shapes, e.g. "cells".
 
-        :param str element: location of shape data inside "shapes" folder.
-        :param str color: gene.
-        :param str cmap: color map (viridis, plasma, jet).
+        :param str element: Name of the shapes element.
+        :param color: Name of an obs column, var index value, or color-like string.
+        :type color: str or None
+        :param fill_alpha: Alpha value for filling shapes, between 0.0 and 1.0.
+        :type fill_alpha: float or int or None
+        :param groups: List of obs group names to select.
+        :type groups: list[str] or str or None
+        :param palette: Palette to color shapes. If list, the number of colors should be equal to the number of groups.
+        :type palette: list[str] or str or None
+        :param outline_width: Width of the shape outlines.
+        :type outline_width: float or int or None
+        :param outline_alpha: Alpha value for shape outlines, between 0.0 and 1.0.
+        :type outline_alpha: float or int or None
+        :param cmap: Quantitative colormap name, such as "viridis".
+        :type cmap: str or None
+        :param norm: Normalization for quantitative colormap.
+        :type norm: matplotlib.colors.Normalize or None
+        :param table_name: Name of an annotating table to use for coloring.
+        :type table_name: str or None
+        :param table_layer: Name of the layer in the annotating table to use for coloring.
+        :type table_layer: str or None
         :returns: Self, allows for chaining.
         """
         if not VitesscePlotAccessor._is_enabled:
@@ -448,8 +509,8 @@ class VitesscePlotAccessor:
             }
 
         # Shared coloring logic for polygons, spots, and labels.
-        (extra_layer_coordination, obs_coordination, feature_coordination) = shared_render_shapes_and_labels(
-            self.sdata, element, table_name, table_layer, color, cmap, norm, groups, palette, obs_type, feature_type, is_spots,
+        (extra_layer_coordination, obs_coordination, feature_coordination) = _shared_render_shapes_and_labels(
+            self.sdata, element, table_name, table_layer, color, cmap, norm, groups, palette, obs_type, feature_type, is_spots, fill_alpha, outline_alpha, outline_width, outline_color,
             wrapper_args, self.obs_type_to_num_rows, self.feature_type_to_num_rows,
         )
         
@@ -485,7 +546,25 @@ class VitesscePlotAccessor:
         """
         Renders label data.
 
-        :param str element: location of label data in "labels" folder.
+        :param str element: Name of the labels element.
+        :param color: Name of an obs column, var index value, or color-like string.
+        :type color: str or None
+        :param groups: List of obs group names to select.
+        :type groups: list[str] or str or None
+        :param palette: Palette to color labels. If list, the number of colors should be equal to the number of groups.
+        :type palette: list[str] or str or None
+        :param cmap: Quantitative colormap name, such as "viridis".
+        :type cmap: str or None
+        :param norm: Normalization for quantitative colormap.
+        :type norm: matplotlib.colors.Normalize or None
+        :param outline_alpha: Alpha value for label outlines, between 0.0 and 1.0.
+        :type outline_alpha: float or int or None
+        :param fill_alpha: Alpha value for filling labels, between 0.0 and 1.0.
+        :type fill_alpha: float or int or None
+        :param table_name: Name of an annotating table to use for coloring.
+        :type table_name: str or None
+        :param table_layer: Name of the layer in the annotating table to use for coloring.
+        :type table_layer: str or None
         :returns: Self, allows for chaining.
         """
         if not VitesscePlotAccessor._is_enabled:
@@ -536,10 +615,12 @@ class VitesscePlotAccessor:
         }
 
         is_spots = False
+        outline_width = None # Not supported for labels in spatialdata-plot.
+        outline_color = None # Not supported for labels in spatialdata-plot.
 
         # Shared coloring logic for polygons, spots, and labels.
-        (extra_layer_coordination, obs_coordination, feature_coordination) = shared_render_shapes_and_labels(
-            self.sdata, element, table_name, table_layer, color, cmap, norm, groups, palette, obs_type, feature_type, is_spots,
+        (extra_layer_coordination, obs_coordination, feature_coordination) = _shared_render_shapes_and_labels(
+            self.sdata, element, table_name, table_layer, color, cmap, norm, groups, palette, obs_type, feature_type, is_spots, fill_alpha, outline_alpha, outline_width, outline_color,
             wrapper_args, self.obs_type_to_num_rows, self.feature_type_to_num_rows,
         )
 
@@ -554,17 +635,21 @@ class VitesscePlotAccessor:
     # References:
     # - https://spatialdata.scverse.org/projects/plot/en/latest/plotting.html#spatialdata_plot.pl.basic.PlotAccessor.render_points
     # - https://github.com/scverse/spatialdata-plot/blob/c9bae235c0521499fb4d1098b15c79619654e5dc/src/spatialdata_plot/pl/basic.py#L338
-    def render_points(self, element="", **kwargs):
+    def render_points(self, element=None, **kwargs):
         """
         Renders points.
 
-        :param str element: location of point data in "points" folder.
+        :param str element: Name of points element.
         :returns: Self, allows for chaining.
         """
         if not VitesscePlotAccessor._is_enabled:
             return self._pl.render_points(element=element, **kwargs)
         
         self._maybe_init()
+
+        if element is None:
+            # TODO: what does spatialdata-plot do in this case? use first points element? error if >1 points?
+            raise ValueError("The 'element' parameter must be provided to render points.")
 
         file_uid = f"points_{element}"
         obs_type = "point"
