@@ -1,8 +1,5 @@
 # Based on https://scanpy.readthedocs.io/en/stable/api/plotting.html as of October 13, 2025
 # Scanpy version 1.11.4
-scatter:
-  function:
-    implemented: false # TODO
 heatmap:
   function:
     implemented: true
@@ -432,9 +429,12 @@ embedding:
     save: N/A
     ax: N/A
     return_fig: N/A
+scatter:
+  function:
+    implemented: false # TODO
 embedding_density:
   function:
-    implemented: false
+    implemented: false # TODO
 dpt_groups_pseudotime:
   function:
     implemented: false

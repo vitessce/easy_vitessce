@@ -29,10 +29,12 @@ from easy_vitessce.widget import _to_widget, config
 from easy_vitessce.colors import to_uint8_rgb
 
 def shared_render_shapes_and_labels(
-        sdata, element, table_name, table_layer, color, cmap, norm, groups, palette, obs_type, feature_type,
+        sdata, element, table_name, table_layer, color, cmap, norm, groups, palette, obs_type, feature_type, is_spots,
         # Note: These dict params are modified by this function.
         wrapper_args, obs_type_to_num_rows, feature_type_to_num_rows,
     ):
+
+    extra_layer_coordination = {}
 
     if table_name is None:
         annotating_tables = list(get_element_annotators(sdata, element))
@@ -65,27 +67,31 @@ def shared_render_shapes_and_labels(
         # rather than only when the "color" parameter is set to a categorical obs column (down below).
     else:
         # No annotating table exists, but if shapes, we can use the Parquet table to check the obs count.
+        # Update: commented out since it causes issues as obs_type is always "cell" but the element is different.
+        """
         if element in sdata.shapes:
             obs_num_rows = sdata.shapes[element].shape[0]
             if obs_type not in obs_type_to_num_rows:
                 obs_type_to_num_rows[obs_type] = obs_num_rows
             elif obs_type_to_num_rows[obs_type] != obs_num_rows:
                 raise ValueError(f"Multiple tables with different numbers of observations ({obs_type_to_num_rows[obs_type]} vs. {obs_num_rows}) are being used for obsType '{obs_type}'.")
+        """
+        pass
 
     obs_coordination = None
     feature_coordination = None
+    is_maybe_static_color = False
     if color is not None:
         if table_name is None:
             # color param must be a static color like "red" or "#FF0000"
-            # TODO
-            pass
+            is_maybe_static_color = True
         else:
             if color in sdata.tables[table_name].var.index: # gene
+                extra_layer_coordination["obsColorEncoding"] = "geneSelection"
                 feature_coordination = {
                     "obsType": obs_type,
                     "featureType": feature_type,
                     "featureSelection": [color],
-                    "obsColorEncoding": "geneSelection",
                 }
 
                 if cmap is not None and cmap in ["viridis", "plasma", "jet", "greys"]:
@@ -104,9 +110,9 @@ def shared_render_shapes_and_labels(
                 wrapper_args["obs_set_paths"] = [f"tables/{table_name}/obs/{color}"]
                 wrapper_args["obs_set_names"] = [group_name]
 
+                extra_layer_coordination["obsColorEncoding"] = "cellSetSelection"
                 obs_coordination = {
                     "obsType": obs_type,
-                    "obsColorEncoding": "cellSetSelection",
                     "obsSetExpansion": [[group_name]],
                 }
 
@@ -135,10 +141,17 @@ def shared_render_shapes_and_labels(
                     obs_coordination["obsSetSelection"] = None
             else:
                 # color param must be a static color like "red" or "#FF0000"
-                # TODO
-                pass
+                is_maybe_static_color = True
+    else:
+        is_maybe_static_color = True
+    
+    if is_maybe_static_color:
+        extra_layer_coordination["obsColorEncoding"] = "spatialChannelColor" if not is_spots else "spatialLayerColor"
+        if color is not None:
+            extra_layer_coordination["spatialChannelColor" if not is_spots else "spatialLayerColor"] = to_uint8_rgb(color)
+    
 
-    return (obs_coordination, feature_coordination)
+    return (extra_layer_coordination, obs_coordination, feature_coordination)
 
 
 # This class is analogous to PlotAccessor from spatialdata-plot.
@@ -163,18 +176,32 @@ class VitesscePlotAccessor:
         :param SpatialData sdata: The SpatialData object to use for plotting.
         """
         self.sdata = sdata
-        if sdata.is_backed() and sdata.is_self_contained():
-            self.sdata_filepath = sdata.path
-        else:
-            self.sdata_filepath = join(config.get('data.out_dir'), "sdata.zarr")
-            sdata.write(self.sdata_filepath, overwrite=config.get('data.overwrite'))
-        
-        self._init_params()
 
         # This is the static PlotAccessor instance that will be used when monkeypatching is not enabled.
         self._pl = PlotAccessor(sdata)
+
+        self.did_init = False
+        self._maybe_init()
     
+    def _maybe_init(self):
+        # We cannot assume that __init__ has been called as expected,
+        # for instance if ev.enable_plots is called after creating the SpatialData object.
+        # Instead, we call _maybe_init at the start of each public method.
+
+        if not self.did_init:
+            sdata = self.sdata
+            if sdata.is_backed() and sdata.is_self_contained():
+                self.sdata_filepath = sdata.path
+            else:
+                self.sdata_filepath = join(config.get('data.out_dir'), "sdata.zarr")
+                sdata.write(self.sdata_filepath, overwrite=config.get('data.overwrite'))
+            
+            self._init_params()
+            self.did_init = True
+
     def _init_params(self):
+        # Initialize or re-initialize plotting state.
+        # Called in constructor (to initialize) and after .pl.show() (to clean up state prior to next .pl.render_something).
         self.shared_wrapper_args = {
             "sdata_path": self.sdata_filepath,
         }
@@ -229,6 +256,8 @@ class VitesscePlotAccessor:
                 alpha=alpha,
                 **kwargs,
             )
+        
+        self._maybe_init()
 
         # channel (list[str] | list[int] | str | int | None)
         #   To select specific channels to plot.
@@ -372,11 +401,14 @@ class VitesscePlotAccessor:
                 **kwargs
             )
         
+        self._maybe_init()
+        
         if element is None:
             # TODO: what does spatialdata-plot do in this case? use first shapes element? error if >1 shapes?
             raise ValueError("The 'element' parameter is required.")
         
         is_polygons = self.sdata.shapes[element]["geometry"].geom_type.iloc[0] == 'Polygon'
+        is_spots = not is_polygons
 
         file_uid = f"shapes_{element}"
         obs_type = "cell" if is_polygons else "spot"
@@ -416,21 +448,21 @@ class VitesscePlotAccessor:
             }
 
         # Shared coloring logic for polygons, spots, and labels.
-        (obs_coordination, feature_coordination) = shared_render_shapes_and_labels(
-            self.sdata, element, table_name, table_layer, color, cmap, norm, groups, palette, obs_type, feature_type,
+        (extra_layer_coordination, obs_coordination, feature_coordination) = shared_render_shapes_and_labels(
+            self.sdata, element, table_name, table_layer, color, cmap, norm, groups, palette, obs_type, feature_type, is_spots,
             wrapper_args, self.obs_type_to_num_rows, self.feature_type_to_num_rows,
         )
         
         if is_polygons:
+            layer_coordination["segmentationChannel"][0].update(extra_layer_coordination)
             self.segmentation_layers.append(
                 (wrapper_args, layer_coordination, obs_coordination, feature_coordination)
             )
         else:
+            layer_coordination.update(extra_layer_coordination)
             self.spot_layers.append(
                 (wrapper_args, layer_coordination, obs_coordination, feature_coordination)
             )
-            if len(self.spot_layers) > 1:
-                raise NotImplementedError("Multiple spot layers are not yet supported.")
         
         return self.sdata
 
@@ -470,6 +502,8 @@ class VitesscePlotAccessor:
                 table_layer=table_layer,
                 **kwargs
             )
+        
+        self._maybe_init()
 
         if element is None:
             # TODO: what does spatialdata-plot do in this case? use first labels element? error if >1 labels?
@@ -501,11 +535,15 @@ class VitesscePlotAccessor:
             }],
         }
 
+        is_spots = False
+
         # Shared coloring logic for polygons, spots, and labels.
-        (obs_coordination, feature_coordination) = shared_render_shapes_and_labels(
-            self.sdata, element, table_name, table_layer, color, cmap, norm, groups, palette, obs_type, feature_type,
+        (extra_layer_coordination, obs_coordination, feature_coordination) = shared_render_shapes_and_labels(
+            self.sdata, element, table_name, table_layer, color, cmap, norm, groups, palette, obs_type, feature_type, is_spots,
             wrapper_args, self.obs_type_to_num_rows, self.feature_type_to_num_rows,
         )
+
+        layer_coordination["segmentationChannel"][0].update(extra_layer_coordination)
         
         self.segmentation_layers.append(
             (wrapper_args, layer_coordination, obs_coordination, feature_coordination)
@@ -525,6 +563,8 @@ class VitesscePlotAccessor:
         """
         if not VitesscePlotAccessor._is_enabled:
             return self._pl.render_points(element=element, **kwargs)
+        
+        self._maybe_init()
 
         file_uid = f"points_{element}"
         obs_type = "point"
@@ -641,22 +681,23 @@ class VitesscePlotAccessor:
         all_views = [spatial, *control_views]
 
         # Coordinate views.
-        self.vc.link_views_by_dict(spatial_views, {
-            "imageLayer": CL([
-                {
-                    **layer_dict,
-                    **({} if "imageChannel" not in layer_dict else {
-                        'imageChannel': CL([
-                            {
-                                **channel_dict,
-                            }
-                            for channel_dict in layer_dict['imageChannel']
-                        ])
-                    })
-                }
-                for (_, layer_dict) in self.image_layers
-            ]),
-        }, meta=True, scope_prefix=get_initial_coordination_scope_prefix(dataset_uid, "image"))
+        if len(self.image_layers) > 0:
+            self.vc.link_views_by_dict(spatial_views, {
+                "imageLayer": CL([
+                    {
+                        **layer_dict,
+                        **({} if "imageChannel" not in layer_dict else {
+                            'imageChannel': CL([
+                                {
+                                    **channel_dict,
+                                }
+                                for channel_dict in layer_dict['imageChannel']
+                            ])
+                        })
+                    }
+                    for (_, layer_dict) in self.image_layers
+                ]),
+            }, meta=True, scope_prefix=get_initial_coordination_scope_prefix(dataset_uid, "image"))
 
         # Collect per-obsType coordination types and scopes.
         obs_coordination_by_key = {}
@@ -691,45 +732,47 @@ class VitesscePlotAccessor:
                 ct_scope.set_value(ct_vals[i])
             feature_coordination_by_key[coordination_key] = dict(zip(ct_names, ct_scopes))
         
-        self.vc.link_views_by_dict(spatial_views, {
-            "segmentationLayer": CL([
-                {
-                    **layer_dict,
-                    'segmentationChannel': CL([
-                        {
-                            **channel_dict,
-                            **obs_coordination_by_key.get(channel_dict.get("obsType"), {}),
-                            **feature_coordination_by_key.get(channel_dict.get("featureType"), {}),
-                        }
-                        for channel_dict in layer_dict.get('segmentationChannel', [{}])
-                    ])
-                }
-                for (_, layer_dict, _, _) in self.segmentation_layers
-            ]),
-        }, meta=True, scope_prefix=get_initial_coordination_scope_prefix(dataset_uid, "obsSegmentations"))
+        if len(self.segmentation_layers) > 0:
+            self.vc.link_views_by_dict(spatial_views, {
+                "segmentationLayer": CL([
+                    {
+                        **layer_dict,
+                        'segmentationChannel': CL([
+                            {
+                                **feature_coordination_by_key.get(channel_dict.get("featureType"), {}),
+                                **obs_coordination_by_key.get(channel_dict.get("obsType"), {}),
+                                **channel_dict,
+                            }
+                            for channel_dict in layer_dict.get('segmentationChannel', [{}])
+                        ])
+                    }
+                    for (_, layer_dict, _, _) in self.segmentation_layers
+                ]),
+            }, meta=True, scope_prefix=get_initial_coordination_scope_prefix(dataset_uid, "obsSegmentations"))
 
-        self.vc.link_views_by_dict(spatial_views, {
-            "spotLayer": CL([
-                # TODO: should this be restricted to a single dict (not array), since Vitessce supports only a single spot layer?
-                {
-                    **layer_dict,
-                    **obs_coordination_by_key.get(layer_dict.get("obsType"), {}),
-                    **feature_coordination_by_key.get(layer_dict.get("featureType"), {}),
-                }
-                for (_, layer_dict, _, _) in self.spot_layers
-            ]),
-        }, meta=True, scope_prefix=get_initial_coordination_scope_prefix(dataset_uid, "obsSpots"))
+        if len(self.spot_layers) > 0:
+            self.vc.link_views_by_dict(spatial_views, {
+                "spotLayer": CL([
+                    {
+                        **feature_coordination_by_key.get(layer_dict.get("featureType"), {}),
+                        **obs_coordination_by_key.get(layer_dict.get("obsType"), {}),
+                        **layer_dict,
+                    }
+                    for (_, layer_dict, _, _) in self.spot_layers
+                ]),
+            }, meta=True, scope_prefix=get_initial_coordination_scope_prefix(dataset_uid, "obsSpots"))
 
-        self.vc.link_views_by_dict(spatial_views, {
-            "pointLayer": CL([
-                {
-                    **layer_dict,
-                    **obs_coordination_by_key.get(layer_dict.get("obsType"), {}),
-                    **feature_coordination_by_key.get(layer_dict.get("featureType"), {}),
-                }
-                for (_, layer_dict) in self.point_layers
-            ]),
-        }, meta=True, scope_prefix=get_initial_coordination_scope_prefix(dataset_uid, "obsPoints"))
+        if len(self.point_layers) > 0:
+            self.vc.link_views_by_dict(spatial_views, {
+                "pointLayer": CL([
+                    {
+                        **feature_coordination_by_key.get(layer_dict.get("featureType"), {}),
+                        **obs_coordination_by_key.get(layer_dict.get("obsType"), {}),
+                        **layer_dict,
+                    }
+                    for (_, layer_dict) in self.point_layers
+                ]),
+            }, meta=True, scope_prefix=get_initial_coordination_scope_prefix(dataset_uid, "obsPoints"))
 
         # Set up coordination for control views.
         for key, obs_set_view in obs_set_views_by_key.items():
