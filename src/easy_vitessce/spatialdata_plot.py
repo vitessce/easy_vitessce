@@ -29,7 +29,7 @@ from easy_vitessce.widget import _to_widget, config
 from easy_vitessce.colors import to_uint8_rgb
 
 def shared_render_shapes_and_labels(
-        sdata, element, table_name, table_layer, color, cmap, norm, groups, palette, obs_type, feature_type, is_spots,
+        sdata, element, table_name, table_layer, color, cmap, norm, groups, palette, obs_type, feature_type, is_spots, fill_alpha, outline_alpha, outline_width, outline_color,
         # Note: These dict params are modified by this function.
         wrapper_args, obs_type_to_num_rows, feature_type_to_num_rows,
     ):
@@ -150,6 +150,36 @@ def shared_render_shapes_and_labels(
         if color is not None:
             extra_layer_coordination["spatialChannelColor" if not is_spots else "spatialLayerColor"] = to_uint8_rgb(color)
     
+    # Handling of alpha/fill settings.
+    # We can only support these things partially.
+    # - Case 1: fill_alpha == outline_alpha
+    # - Case 2: fill_alpha != outline_alpha but fill_alpha is 0.0 (effectively stroked)
+    # - Case 3: fill_alpha != outline_alpha and both > 0.0 (requires both fill and stroke colors with different alphas)
+    # Case 3 is not currently supported by Vitessce unless we create two separate layers (one for fill, one for outline).
+    if fill_alpha == 0.0:
+        # Stroked.
+        if is_spots:
+            extra_layer_coordination["spatialSpotFilled"] = False
+        else:
+            extra_layer_coordination["spatialSegmentationFilled"] = False
+    
+    if outline_width is not None:
+        if is_spots:
+            extra_layer_coordination["spatialSpotStrokeWidth"] = outline_width
+        else:
+            extra_layer_coordination["spatialSegmentationStrokeWidth"] = outline_width
+
+    layer_alpha = None
+    if outline_alpha is not None and (fill_alpha == outline_alpha or fill_alpha == 0.0):
+        layer_alpha = outline_alpha
+    elif fill_alpha is not None:
+        layer_alpha = fill_alpha
+
+    if layer_alpha is not None:
+        if is_spots:
+            extra_layer_coordination["spatialLayerOpacity"] = layer_alpha
+        else:
+            extra_layer_coordination["spatialChannelOpacity"] = layer_alpha
 
     return (extra_layer_coordination, obs_coordination, feature_coordination)
 
@@ -449,7 +479,7 @@ class VitesscePlotAccessor:
 
         # Shared coloring logic for polygons, spots, and labels.
         (extra_layer_coordination, obs_coordination, feature_coordination) = shared_render_shapes_and_labels(
-            self.sdata, element, table_name, table_layer, color, cmap, norm, groups, palette, obs_type, feature_type, is_spots,
+            self.sdata, element, table_name, table_layer, color, cmap, norm, groups, palette, obs_type, feature_type, is_spots, fill_alpha, outline_alpha, outline_width, outline_color,
             wrapper_args, self.obs_type_to_num_rows, self.feature_type_to_num_rows,
         )
         
@@ -536,10 +566,12 @@ class VitesscePlotAccessor:
         }
 
         is_spots = False
+        outline_width = None # Not supported for labels in spatialdata-plot.
+        outline_color = None # Not supported for labels in spatialdata-plot.
 
         # Shared coloring logic for polygons, spots, and labels.
         (extra_layer_coordination, obs_coordination, feature_coordination) = shared_render_shapes_and_labels(
-            self.sdata, element, table_name, table_layer, color, cmap, norm, groups, palette, obs_type, feature_type, is_spots,
+            self.sdata, element, table_name, table_layer, color, cmap, norm, groups, palette, obs_type, feature_type, is_spots, fill_alpha, outline_alpha, outline_width, outline_color,
             wrapper_args, self.obs_type_to_num_rows, self.feature_type_to_num_rows,
         )
 

@@ -24,8 +24,8 @@ render_labels:
     cmap: supported
     norm: supported
     na_color: not currently supported
-    outline_alpha: not currently supported # TODO
-    fill_alpha: not currently supported # TODO
+    outline_alpha: partially supported
+    fill_alpha: partially supported
     scale: N/A # for multiresolution labels, the scale is dynamic / determined by viewport
     table_name: supported
     table_layer: supported
@@ -35,13 +35,13 @@ render_shapes:
   parameters:
     element: supported
     color: supported
-    fill_alpha: not currently supported # TODO
+    fill_alpha: partially supported
     groups: supported
     palette: supported
     na_color: not currently supported
-    outline_width: not currently supported # TODO
-    outline_color: not currently supported # TODO
-    outline_alpha: not currently supported # TODO
+    outline_width: partially supported
+    outline_color: not currently supported
+    outline_alpha: partially supported
     cmap: supported
     norm: supported
     scale: not currently supported
