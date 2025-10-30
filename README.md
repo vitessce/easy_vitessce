@@ -75,7 +75,7 @@ uv run pytest
 ```sh
 uv run make html # on mac/linux
 # uv run make.bat html # on windows
-open _build/html/index.html
+open docs/_build/html/index.html
 ```
 
 ### Launch Jupyter notebook or lab

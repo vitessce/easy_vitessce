@@ -39,7 +39,8 @@ dependencies = [
 docs = [
   'sphinx',
   'sphinx-book-theme',
-  'sphinx-copybutton'
+  'sphinx-copybutton',
+  'myst-parser',
 ]
 dev = [
   'pytest>= 8.4.1',
