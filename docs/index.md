@@ -158,6 +158,7 @@ sc.pl.heatmap(adata, groupby="bulk_labels", var_names=['C1QA', 'PSAP', 'CD79A', 
 
 easy_vitessce
 customization
+vitessce_python
 View on GitHub <https://github.com/vitessce/easy_vitessce>
 ```
 
