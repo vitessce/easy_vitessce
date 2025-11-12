@@ -152,7 +152,7 @@ def _get_sdata_filepath(sdata):
 
     # Check if the SpatialData object is already backed and self-contained.
     if sdata.is_backed() and sdata.is_self_contained():
-        return sdata.path
+        return str(sdata.path)
 
     # If not, create a new filepath and write the SpatialData object to disk.
     # TODO: support Zipped zarr stores?
