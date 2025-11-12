@@ -27,6 +27,7 @@ from spatialdata import get_element_annotators
 
 from easy_vitessce.widget import _to_widget, config
 from easy_vitessce.colors import to_uint8_rgb
+from easy_vitessce.data import _get_sdata_wrapper_params
 
 # Internal function for shared logic between render_shapes and render_labels.
 def _shared_render_shapes_and_labels(
@@ -220,22 +221,13 @@ class VitesscePlotAccessor:
         # Instead, we call _maybe_init at the start of each public method.
 
         if not self.did_init:
-            sdata = self.sdata
-            if sdata.is_backed() and sdata.is_self_contained():
-                self.sdata_filepath = sdata.path
-            else:
-                self.sdata_filepath = join(config.get('data.out_dir'), "sdata.zarr")
-                sdata.write(self.sdata_filepath, overwrite=config.get('data.overwrite'))
-            
             self._init_params()
             self.did_init = True
 
     def _init_params(self):
         # Initialize or re-initialize plotting state.
         # Called in constructor (to initialize) and after .pl.show() (to clean up state prior to next .pl.render_something).
-        self.shared_wrapper_args = {
-            "sdata_path": self.sdata_filepath,
-        }
+        self.shared_wrapper_args = _get_sdata_wrapper_params(self.sdata)
 
         # TODO: Support same channel coordination across multiple layers, to render multiple image layers with linked channel settings?
         self.image_layers = [
