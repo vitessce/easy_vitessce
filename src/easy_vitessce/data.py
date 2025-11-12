@@ -9,20 +9,21 @@ from vitessce.data_utils import VAR_CHUNK_SIZE, generate_h5ad_ref_spec
 
 from .widget import config
 
-ADATA_TO_PATH = {}
+OBJECT_TO_PATH = {}
 
-def register_data_path(adata, adata_path):
+def register_data_path(obj, obj_path):
     """
-    Register an AnnData object with its corresponding file path.
+    Register an AnnData or SpatialData object with its corresponding file path.
     This allows to avoid writing a large AnnData to disk if it has already been written.
     
-    :param AnnData adata: AnnData object.
-    :param str adata_path: File path where the AnnData object is stored.
+    :param obj: AnnData object.
+    :type obj: AnnData or SpatialData
+    :param str obj_path: File path where the object is stored.
     """
     # AnnData objects are not hashable,
     # so we use the id() function to get a unique identifier for the object.
     # Reference: https://github.com/scverse/anndata/issues/742
-    ADATA_TO_PATH[id(adata)] = adata_path
+    OBJECT_TO_PATH[id(obj)] = obj_path
 
 
 def _get_adata_h5ad_ref_json_filepath(h5ad_path):
@@ -57,15 +58,16 @@ def _get_adata_filepath(adata):
     :returns: Zarr filepath.
     """
     # Check if the AnnData object has already been written to disk, by checking if it exists in the dictionary.
-    if id(adata) in ADATA_TO_PATH:
+    if id(adata) in OBJECT_TO_PATH:
         # TODO: do a basic check to determine whether the data on-disk is stale compared to the AnnData object in-memory.
-        return ADATA_TO_PATH[id(adata)]
+        return OBJECT_TO_PATH[id(adata)]
     
     is_url = config.get('data.wrapper_param_suffix') == '_url'
     if is_url:
         raise ValueError("Using AnnData with adata_url requires using register_data_path to register the AnnData object with its corresponding URL.")
         
     # If not, create a new filepath and write the AnnData object to disk.
+    # TODO: support Zipped zarr stores?
     is_zarr = config.get('data.anndata_format') == 'zarr'
 
     file_ext = ".adata.zarr" if is_zarr else ".h5ad"
@@ -127,4 +129,74 @@ def _get_adata_wrapper_params(adata):
             result['adata_path'] = adata_path
             result['ref_path'] = json_path
     
+    return result
+
+
+# SpatialData analogs of above functions.
+
+def _get_sdata_filepath(sdata):
+    """
+    Creates Zarr filepath for AnnData object. Prevents creating multiple files with the same name.
+
+    :param AnnData adata: AnnData object.
+    :returns: Zarr filepath.
+    """
+    # Check if the AnnData object has already been written to disk, by checking if it exists in the dictionary.
+    if id(sdata) in OBJECT_TO_PATH:
+        # TODO: do a basic check to determine whether the data on-disk is stale compared to the AnnData object in-memory.
+        return OBJECT_TO_PATH[id(sdata)]
+    
+    is_url = config.get('data.wrapper_param_suffix') == '_url'
+    if is_url:
+        raise ValueError("Using SpatialData with sdata_url requires using register_data_path to register the SpatialData object with its corresponding URL.")
+
+    # Check if the SpatialData object is already backed and self-contained.
+    if sdata.is_backed() and sdata.is_self_contained():
+        return sdata.path
+
+    # If not, create a new filepath and write the SpatialData object to disk.
+    # TODO: support Zipped zarr stores?
+    file_ext = ".sdata.zarr"
+    file_name = f"{str(uuid4())}{file_ext}"
+    out_filepath = join(config.get('data.out_dir'), file_name)
+
+    # Add the new SpatialData object and its filepath to the weakref dictionary.
+    register_data_path(sdata, out_filepath)
+
+    # Check if the file/folder already exists.
+    if exists(out_filepath) and isdir(out_filepath):
+        if config.get('data.overwrite') is True:
+            shutil.rmtree(out_filepath)
+        else:
+            warnings.warn(f"File {out_filepath} already exists. To overwrite, set data.overwrite to True in the easy_vitessce configuration. By not overwriting, there is a risk of using stale data.")
+            # Return early, as the user does not want to overwrite.
+            return out_filepath
+
+    os.makedirs(config.get('data.out_dir'), exist_ok=True)
+    
+    sdata.write(out_filepath, overwrite=config.get('data.overwrite'))
+
+    return out_filepath
+
+def _get_sdata_wrapper_params(sdata):
+    """
+    Get a partial set of parameters for SpatialDataWrapper based on the SpatialData object and the current configuration.
+
+    :param SpatialData sdata: SpatialData object.
+    :returns: Dictionary of data-related parameters for SpatialDataWrapper.
+    """
+    result = {}
+
+    sdata_path = _get_sdata_filepath(sdata)
+    is_url = sdata_path.startswith('http://') or sdata_path.startswith('https://')
+
+    is_store = config.get('data.wrapper_param_suffix') == '_store'
+    if is_url:
+        assert sdata_path.startswith(('http://', 'https://')), "Expected a valid URL."
+        result['sdata_url'] = sdata_path
+    elif is_store:
+        result['sdata_store'] = sdata_path
+    else:
+        result['sdata_path'] = sdata_path
+
     return result
