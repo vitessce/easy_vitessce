@@ -31,7 +31,7 @@ dependencies = [
   "xarray>=2024.10.0",
   'spatialdata-plot>=0.2.7',
   'dask[dataframe]>=2025.2.0',
-  'distributed<=2025.2.0',
+  'distributed>=2025.2.0',
   'donfig>=0.3.1',
 ]
 
