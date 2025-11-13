@@ -54,6 +54,9 @@ dev = [
 packages = ["easy_vitessce"]
 package-dir = {"" = "src"}
 
+[tool.hatch.metadata]
+allow-direct-references = true
+
 [project.urls]
 repository = "https://github.com/vitessce/easy_vitessce"
 
