@@ -59,9 +59,9 @@ SpatialData object, with associated Zarr store:
 ```
 
 <p>
-    <img alt="static_sd" src="_images/static_sd_spatial.png" style="width: 30%" />
-    <img alt="right_arrow1" src="_images/right_arrow_transparent.png" style="width: 8%" />
-    <img alt="vitessce_sd" src="_images/spatial_documentation.gif" style="width: 60%" />
+    <img alt="static_sd" src="_static/static_sd_spatial.png" style="width: 30%" />
+    <img alt="right_arrow1" src="_static/right_arrow_transparent.png" style="width: 8%" />
+    <img alt="vitessce_sd" src="_static/spatial_documentation.gif" style="width: 60%" />
 </p>
 
 ### Spatial Plot (Scanpy version)
@@ -75,9 +75,9 @@ sc.pl.spatial(adata, color = "log1p_n_genes_by_counts")
 ```
 
 <p>
-    <img alt="static_sc_spatial" src="_images/static_sc_spatial.png" style="width: 25%" />
-    <img alt="right_arrow2" src="_images/right_arrow_transparent.png" style="width: 10%" />
-    <img alt="sc_spatial_documentation" src="_images/sc_spatial_documentation.gif" style="width: 60%" />
+    <img alt="static_sc_spatial" src="_static/static_sc_spatial.png" style="width: 25%" />
+    <img alt="right_arrow2" src="_static/right_arrow_transparent.png" style="width: 10%" />
+    <img alt="sc_spatial_documentation" src="_static/sc_spatial_documentation.gif" style="width: 60%" />
 </p>
 
 ### Scatterplots
@@ -99,9 +99,9 @@ sc.pl.tsne(adata, color="CD79A")
 ```
 
 <p>
-    <img alt="static_umap" src="_images/static_umap.png" style="width: 37%" />
-    <img alt="right_arrow3" src="_images/right_arrow_transparent.png" style="width: 6%" />
-    <img alt="vitessce_umap" src="_images/updated_umap.gif" style="width: 55%" />
+    <img alt="static_umap" src="_static/static_umap.png" style="width: 37%" />
+    <img alt="right_arrow3" src="_static/right_arrow_transparent.png" style="width: 6%" />
+    <img alt="vitessce_umap" src="_static/updated_umap.gif" style="width: 55%" />
 </p>
 
 
@@ -116,9 +116,9 @@ sc.pl.dotplot(adata, var_names=["C1QA", "PSAP", "CD79A", "CD79B", "CST3", "LYZ"]
 ```
 
 <p>
-    <img alt="static_dotplot" src="_images/static_dotplot.png" style="width: 37%" />
-    <img alt="right_arrow4" src="_images/right_arrow_transparent.png" style="width: 6%" />
-    <img alt="vitessce_dotplot" src="_images/dotplot_example.gif" style="width: 55%" />
+    <img alt="static_dotplot" src="_static/static_dotplot.png" style="width: 37%" />
+    <img alt="right_arrow4" src="_static/right_arrow_transparent.png" style="width: 6%" />
+    <img alt="vitessce_dotplot" src="_static/dotplot_example.gif" style="width: 55%" />
 </p>
 
 ### Violin Plot
@@ -130,9 +130,9 @@ sc.pl.violin(adata, keys="AP2S1", groupby="bulk_labels")
 ```
 
 <p>
-    <img alt="static_violin" src="_images/static_violin.png" style="width: 37%" />
-    <img alt="right_arrow5" src="_images/right_arrow_transparent.png" style="width: 6%" />
-    <img alt="vitessce_violin" src="_images/updated_violin.gif" style="width: 55%" />
+    <img alt="static_violin" src="_static/static_violin.png" style="width: 37%" />
+    <img alt="right_arrow5" src="_static/right_arrow_transparent.png" style="width: 6%" />
+    <img alt="vitessce_violin" src="_static/updated_violin.gif" style="width: 55%" />
 </p>
 
 ### Heatmap
@@ -144,9 +144,9 @@ sc.pl.heatmap(adata, groupby="bulk_labels", var_names=['C1QA', 'PSAP', 'CD79A', 
 ```
 
 <p>
-    <img alt="static_heatmap" src="_images/static_heatmap.png" style="width: 37%" />
-    <img alt="right_arrow6" src="_images/right_arrow_transparent.png" style="width: 6%" />
-    <img alt="vitessce_heatmap" src="_images/heatmap.gif" style="width: 55%" />
+    <img alt="static_heatmap" src="_static/static_heatmap.png" style="width: 37%" />
+    <img alt="right_arrow6" src="_static/right_arrow_transparent.png" style="width: 6%" />
+    <img alt="vitessce_heatmap" src="_static/heatmap.gif" style="width: 55%" />
 </p>
 
 <!-- Reference: https://myst-parser.readthedocs.io/en/latest/develop/background.html#the-relationship-between-myst-restructuredtext-and-sphinx -->
