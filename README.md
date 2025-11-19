@@ -20,7 +20,7 @@ Turn your static [Scanpy](https://github.com/scverse/scanpy) and [SpatialData](h
 - `sc.pl.heatmap`
 - `sdata.pl` (`.render_images`, `.render_labels`, and `.render_shapes`)
 
-See the [example notebooks](./examples) and the [documentation](https://vitessce.github.io/easy_vitessce/) for further details.
+See the [example notebooks](./docs/notebooks) and the [documentation](https://vitessce.github.io/easy_vitessce/) for further details.
 
 
 ## Installation
