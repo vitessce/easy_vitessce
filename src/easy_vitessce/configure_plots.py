@@ -37,9 +37,18 @@ def umap(adata, **kwargs):
   Creates interactive UMAP plot.
 
   :param AnnData adata: AnnData object.
-  :param str color: Gene or category group.
-  :param str color_map: Color map (viridis, plasma, jet).
-  :param float or int size: Size of dots.
+  :param str basis: Name of embedding basis to use (e.g., umap, pca, or tsne). Will look up coordinates in adata.obsm["X_{basis}"].
+  :param str color: Gene ID from adata.var.index or categorical label from adata.obs.columns.
+  :param str gene_symbols: Key in adata.var to use for gene symbols, if different from adata.var.index.
+  :param str layer: Layer in AnnData to use for expression values. Defaults to None, which uses adata.X.
+  :param str color_map: Color map (viridis, plasma, jet). Defaults to viridis.
+  :param size: Size of dots.
+  :type size: float or int
+  :param float vmin: Minimum value for color map scaling.
+  :param float vmax: Maximum value for color map scaling.
+  :param title: Title of the plot.
+  :type title: str or list[str]
+  :param int ncols: Number of columns to use when laying out multiple scatterplots (when multiple colors are specified). Defaults to 4.
   :returns: Vitessce widget. Documentation can be found `here. <https://python-docs.vitessce.io/api_config.html#vitessce-widget>`_ 
   """
   return embedding(adata, basis="umap", **kwargs)
@@ -49,9 +58,18 @@ def tsne(adata, **kwargs):
   Creates interactive t-SNE plot.
 
   :param AnnData adata: AnnData object.
-  :param str color: Gene or category group.
-  :param str color_map: Color map (viridis, plasma, jet).
-  :param (float or int) size: Size of dots.
+  :param str basis: Name of embedding basis to use (e.g., umap, pca, or tsne). Will look up coordinates in adata.obsm["X_{basis}"].
+  :param str color: Gene ID from adata.var.index or categorical label from adata.obs.columns.
+  :param str gene_symbols: Key in adata.var to use for gene symbols, if different from adata.var.index.
+  :param str layer: Layer in AnnData to use for expression values. Defaults to None, which uses adata.X.
+  :param str color_map: Color map (viridis, plasma, jet). Defaults to viridis.
+  :param size: Size of dots.
+  :type size: float or int
+  :param float vmin: Minimum value for color map scaling.
+  :param float vmax: Maximum value for color map scaling.
+  :param title: Title of the plot.
+  :type title: str or list[str]
+  :param int ncols: Number of columns to use when laying out multiple scatterplots (when multiple colors are specified). Defaults to 4.
   :returns: Vitessce widget. Documentation can be found `here. <https://python-docs.vitessce.io/api_config.html#vitessce-widget>`_ 
   """
   return embedding(adata, basis="tsne", **kwargs)
@@ -61,9 +79,18 @@ def pca(adata, **kwargs):
   Creates interactive PCA plot.
 
   :param AnnData adata: AnnData object.
-  :param str color: Gene or category group.
-  :param str color_map: Color map (viridis, plasma, jet).
-  :param (float or int) size: Size of dots.
+  :param str basis: Name of embedding basis to use (e.g., umap, pca, or tsne). Will look up coordinates in adata.obsm["X_{basis}"].
+  :param str color: Gene ID from adata.var.index or categorical label from adata.obs.columns.
+  :param str gene_symbols: Key in adata.var to use for gene symbols, if different from adata.var.index.
+  :param str layer: Layer in AnnData to use for expression values. Defaults to None, which uses adata.X.
+  :param str color_map: Color map (viridis, plasma, jet). Defaults to viridis.
+  :param size: Size of dots.
+  :type size: float or int
+  :param float vmin: Minimum value for color map scaling.
+  :param float vmax: Maximum value for color map scaling.
+  :param title: Title of the plot.
+  :type title: str or list[str]
+  :param int ncols: Number of columns to use when laying out multiple scatterplots (when multiple colors are specified). Defaults to 4.
   :returns: Vitessce widget. Documentation can be found `here. <https://python-docs.vitessce.io/api_config.html#vitessce-widget>`_ 
   """
   return embedding(adata, basis="pca", **kwargs)
@@ -73,9 +100,18 @@ def diffmap(adata, **kwargs):
   Creates interactive Diffusion Map plot.
 
   :param AnnData adata: AnnData object.
-  :param str color: Gene or category group.
-  :param str color_map: Color map (viridis, plasma, jet).
-  :param (float or int) size: Size of dots.
+  :param str basis: Name of embedding basis to use (e.g., umap, pca, or tsne). Will look up coordinates in adata.obsm["X_{basis}"].
+  :param str color: Gene ID from adata.var.index or categorical label from adata.obs.columns.
+  :param str gene_symbols: Key in adata.var to use for gene symbols, if different from adata.var.index.
+  :param str layer: Layer in AnnData to use for expression values. Defaults to None, which uses adata.X.
+  :param str color_map: Color map (viridis, plasma, jet). Defaults to viridis.
+  :param size: Size of dots.
+  :type size: float or int
+  :param float vmin: Minimum value for color map scaling.
+  :param float vmax: Maximum value for color map scaling.
+  :param title: Title of the plot.
+  :type title: str or list[str]
+  :param int ncols: Number of columns to use when laying out multiple scatterplots (when multiple colors are specified). Defaults to 4.
   :returns: Vitessce widget. Documentation can be found `here. <https://python-docs.vitessce.io/api_config.html#vitessce-widget>`_ 
   """
   return embedding(adata, basis="diffmap", **kwargs)
@@ -102,12 +138,19 @@ def embedding(
     Creates interactive versions of UMAP, PCA, t-SNE plots.
 
     :param AnnData adata: AnnData object.
-    :param str basis: Name of plot (umap, pca, or tsne).
-    :param str color: Gene or categorical label.
+    :param str basis: Name of embedding basis to use (e.g., umap, pca, or tsne). Will look up coordinates in adata.obsm["X_{basis}"].
+    :param str color: Gene ID from adata.var.index or categorical label from adata.obs.columns.
+    :param str gene_symbols: Key in adata.var to use for gene symbols, if different from adata.var.index.
+    :param str layer: Layer in AnnData to use for expression values. Defaults to None, which uses adata.X.
     :param str color_map: Color map (viridis, plasma, jet). Defaults to viridis.
-    :param (float or int) size: Size of dots.
+    :param size: Size of dots.
+    :type size: float or int
+    :param float vmin: Minimum value for color map scaling.
+    :param float vmax: Maximum value for color map scaling.
+    :param title: Title of the plot.
+    :type title: str or list[str]
+    :param int ncols: Number of columns to use when laying out multiple scatterplots (when multiple colors are specified). Defaults to 4.
     :returns: Vitessce widget. Documentation can be found `here. <https://python-docs.vitessce.io/api_config.html#vitessce-widget>`_ 
-
     """
     basis_name = "t-SNE" if basis == "tsne" else basis.upper()
     basis_obsm_key = f"X_{basis}"
@@ -539,8 +582,13 @@ def heatmap(
     Creates interactive heatmap.
 
     :param AnnData adata: AnnData object.
-    :param str groupby: Category group.
     :param list[str] var_names: List of genes.
+    :param str groupby: Category group, a column in adata.obs.
+    :param str gene_symbols: Key in adata.var to use for gene symbols, if different from adata.var.index.
+    :param str layer: Layer in AnnData to use for expression values. Defaults to None, which uses adata.X.
+    :param bool swap_axes: If True, transpose the heatmap. Defaults to False.
+    :param float vmin: Minimum value for color map scaling.
+    :param float vmax: Maximum value for color map scaling.
     :param str color_map: Color map (viridis, plasma, jet). Defaults to viridis.
     :returns: Vitessce widget. Documentation can be found `here. <https://python-docs.vitessce.io/api_config.html#vitessce-widget>`_ 
     """
@@ -631,8 +679,13 @@ def violin(
     Creates interactive violin plot.
 
     :param Anndata adata: AnnData object.
-    :param str groupby: Category group.
-    :param list[str] keys: Genes.
+    :param list[str] keys: Gene IDs from adata.var.index.
+    :param str groupby: Category group, a column in adata.obs.
+    :param bool log: If True, apply log1p transformation to expression values before plotting. Defaults to False.
+    :param bool stripplot: If True, add a strip plot alongside the violin plot. Defaults to True.
+    :param bool jitter: If True, add jitter to the strip plot. Defaults to True.
+    :param str layer: Layer in AnnData to use for expression values. Defaults to None, which uses adata.X.
+    :param list[str] order: Order of categories in groupby.
     :returns: Vitessce widget. Documentation can be found `here. <https://python-docs.vitessce.io/api_config.html#vitessce-widget>`_ 
     """
     vc =  VitessceConfig(schema_version="1.0.18", name='sc.pl.violin')
@@ -746,7 +799,7 @@ def dotplot(
         title=None,
         gene_symbols=None,
         layer=None,
-        cmap=False,
+        cmap=None,
         swap_axes=False,
         **kwargs,
     ):
@@ -754,8 +807,14 @@ def dotplot(
     Creates interactive dotplot.
 
     :param AnnData adata: AnnData object.
-    :param str groupby: Category group.
-    :param list[str] var_names: List of genes.
+    :param list[str] var_names: List of gene IDs from adata.var.index.
+    :param str groupby: Category group, a column in adata.obs.
+    :param float expression_cutoff: Expression cutoff for dot display.
+    :param str title: Title of the plot.
+    :param str gene_symbols: Key in adata.var to use for gene symbols, if different from adata.var.index.
+    :param str layer: Layer in AnnData to use for expression values. Defaults to None, which uses adata.X.
+    :param str cmap: Color map (viridis, plasma, jet). Defaults to viridis.
+    :param bool swap_axes: If True, transpose the dotplot. Defaults to False.
     :returns: Vitessce widget. Documentation can be found `here. <https://python-docs.vitessce.io/api_config.html#vitessce-widget>`_ 
     """
 
