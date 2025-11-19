@@ -157,8 +157,10 @@ sc.pl.heatmap(adata, groupby="bulk_labels", var_names=['C1QA', 'PSAP', 'CD79A', 
 :caption: Contents
 
 easy_vitessce
+examples
 customization
 advanced
+Example notebooks <https://github.com/vitessce/easy_vitessce/tree/main/docs/notebooks>
 View on GitHub <https://github.com/vitessce/easy_vitessce>
 ```
 

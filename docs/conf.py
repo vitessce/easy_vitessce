@@ -23,10 +23,10 @@ author = 'HIDIVE Lab'
 # -- General configuration ---------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#general-configuration
 
-extensions = ["sphinx.ext.todo", "sphinx.ext.viewcode", "sphinx.ext.autodoc", 'sphinx_copybutton', 'sphinx.ext.githubpages', 'myst_parser']
+extensions = ["sphinx.ext.todo", "sphinx.ext.viewcode", "sphinx.ext.autodoc", 'sphinx_copybutton', 'sphinx.ext.githubpages', 'myst_parser', 'nbsphinx']
 
 templates_path = ['_templates']
-exclude_patterns = ['_build', 'Thumbs.db', '.DS_Store']
+exclude_patterns = ['_build', 'Thumbs.db', '.DS_Store', 'notebooks/data/**']
 
 source_suffix = {
   '.rst': 'restructuredtext',
@@ -43,3 +43,7 @@ html_theme_options = {
   "max_navbar_depth": 2
 }
 
+# -- Options for nbsphinx -------------------------------------------------
+
+nbsphinx_execute = 'never'
+#nbsphinx_allow_errors = True

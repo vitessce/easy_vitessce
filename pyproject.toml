@@ -41,6 +41,7 @@ docs = [
   'sphinx-book-theme',
   'sphinx-copybutton',
   'myst-parser',
+  'nbsphinx',
 ]
 dev = [
   'pytest>= 8.4.1',
