@@ -13,12 +13,12 @@ Turn your static [Scanpy](https://github.com/scverse/scanpy) and [SpatialData](h
 - `sc.pl.umap`
 - `sc.pl.tsne`
 - `sc.pl.pca`
+- `sc.pl.diffmap`
 - `sc.pl.embedding`
-- `sc.pl.spatial`
 - `sc.pl.violin`
 - `sc.pl.dotplot`
 - `sc.pl.heatmap`
-- `sdata.pl` (`.render_images`, `.render_labels`, and `.render_shapes`)
+- `sdata.pl` (`.render_images`, `.render_labels`, `.render_shapes`, `.render_points`)
 
 See the [example notebooks](./docs/notebooks) and the [documentation](https://vitessce.github.io/easy_vitessce/) for further details.
 
@@ -44,14 +44,22 @@ import easy_vitessce as ev
 #### Deactivating Interactive Plots:
 
 ```py
-ev.configure_plots(disable_plots = ["embedding", "violin", "spatialdata-plot"])
+ev.disable_plots(["embedding", "violin", "spatialdata-plot"])
+# or, to disable all interactive plots and return to static plotting mode
+ev.disable_plots()
 ```
 
 #### Reactivating Interactive Plots:
 
 ```py
-ev.configure_plots(enable_plots = ["spatialdata-plot"])
+ev.enable_plots(["spatialdata-plot"])
+# or, to enable all interactive plots
+ev.enable_plots()
 ```
+
+## Troubleshooting
+
+See the [Troubleshooting](https://github.com/vitessce/vitessce-python?tab=readme-ov-file#troubleshooting) section of the `vitessce-python` repository for tips.
 
 ## Development
 
