@@ -341,7 +341,11 @@ class VitesscePlotAccessor:
         # RGB vs. non-RGB logic in spatialdata-plot:
         # Reference: https://github.com/scverse/spatialdata-plot/blob/010560f7eebdd245693a8c55eede0f895a636f5c/src/spatialdata_plot/pl/render.py#L865
         img = self.sdata.images[element]
-        all_channels = img.coords["c"].values.tolist()
+        try:
+            all_channels = img.coords["c"].values.tolist()
+        except KeyError:
+            # TODO: use a better way than try/except of determining whether this is a multi-resolution image.
+            all_channels = img.scale0.coords["c"].values.tolist()
         img_dtype = img.dtype
         img_dtype_is_uint8 = img_dtype.kind == 'u' and img_dtype.itemsize == 1
 
