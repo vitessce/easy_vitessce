@@ -20,14 +20,14 @@ from vitessce import (
     vconcat,
 )
 
-from os.path import join
-
 from spatialdata_plot.pl.basic import PlotAccessor
 from spatialdata import get_element_annotators
 
-from easy_vitessce.widget import _to_widget, config
+from easy_vitessce.widget import _to_widget
 from easy_vitessce.colors import to_uint8_rgb
 from easy_vitessce.data import _get_sdata_wrapper_params
+
+from matplotlib.colors import is_color_like
 
 # Internal function for shared logic between render_shapes and render_labels.
 def _shared_render_shapes_and_labels(
@@ -341,12 +341,16 @@ class VitesscePlotAccessor:
         # RGB vs. non-RGB logic in spatialdata-plot:
         # Reference: https://github.com/scverse/spatialdata-plot/blob/010560f7eebdd245693a8c55eede0f895a636f5c/src/spatialdata_plot/pl/render.py#L865
         img = self.sdata.images[element]
-        try:
-            all_channels = img.coords["c"].values.tolist()
-        except KeyError:
-            # TODO: use a better way than try/except of determining whether this is a multi-resolution image.
-            all_channels = img.scale0.coords["c"].values.tolist()
-        img_dtype = img.dtype
+        if hasattr(img, "dtype"):
+            img_arr = img
+        else:
+            # Assume multi-scale (DataTree).
+            # We use the highest resolution scale, 'scale0'.
+            # The image data is typically in the 'image' variable of the dataset.
+            img_arr = img["scale0"]["image"]
+
+        all_channels = img_arr.coords["c"].values.tolist()
+        img_dtype = img_arr.dtype
         img_dtype_is_uint8 = img_dtype.kind == 'u' and img_dtype.itemsize == 1
 
         # Not ideal logic. Should ideally only use the OME-NGFF color model metadata. But this is what spatialdata-plot does.
@@ -631,7 +635,17 @@ class VitesscePlotAccessor:
     # References:
     # - https://spatialdata.scverse.org/projects/plot/en/latest/plotting.html#spatialdata_plot.pl.basic.PlotAccessor.render_points
     # - https://github.com/scverse/spatialdata-plot/blob/c9bae235c0521499fb4d1098b15c79619654e5dc/src/spatialdata_plot/pl/basic.py#L338
-    def render_points(self, element=None, **kwargs):
+    def render_points(self,
+            element=None,
+            color=None,
+            alpha=None,
+            groups=None,
+            palette=None,
+            # TODO: size
+            table_name=None,
+            table_layer=None,
+            **kwargs
+        ):
         """
         Renders points.
 
@@ -639,7 +653,17 @@ class VitesscePlotAccessor:
         :returns: Self, allows for chaining.
         """
         if not VitesscePlotAccessor._is_enabled:
-            return self._pl.render_points(element=element, **kwargs)
+            return self._pl.render_points(
+                element=element,
+                color=color,
+                alpha=alpha,
+                groups=groups,
+                palette=palette,
+                # TODO: size
+                table_name=table_name,
+                table_layer=table_layer,
+                **kwargs
+            )
         
         self._maybe_init()
 
@@ -664,10 +688,83 @@ class VitesscePlotAccessor:
             "obsType": obs_type,
             "obsHighlight": None,
             "fileUid": file_uid,
+            # TODO: featureSelection: None or list[str]
+            # TODO: featureFilterMode: None or 'featureSelection'
+            # TODO: obsColorEncoding: 'geneSelection' or 'spatialLayerColor' or 'randomByFeature' or 'random'
+            # TODO: featureColor: None or [ { name: str, color: [R, G, B] } ]
+            # TODO: spatialLayerColor: [R, G, B]
+            # TODO: spatialLayerOpacity: number
         }
+
+        # Coloring cases
+        # color param can be:
+        # - None (default color)
+        # - static color like "red" or "#FF0000"
+        # - name of the "feature_name" column of sdata.points table
         
+        # alpha param can be:
+        # - None (default opacity) 1.0
+        # - float between 0.0 and 1.0
+
+        # groups param:
+        # - None (all points)
+        # - str: a single gene name (when `color` param is the name of the column containing gene names)
+        # - list[str]: list of gene names (when `color` param is the name of the column containing gene names)
+
+        # palette param:
+        # - None (default color)
+        # - str: a single color (when `groups` param is a single gene name)
+        # - list[str]: list of colors (when `groups` param is a list of gene names) (the length must match the length of `groups`)
+
+        ddf = self.sdata.points[element]
+
+        obs_coordination = None
+        feature_coordination = None
+
+        if color is not None:
+            if is_color_like(color):
+                # static color
+                layer_coordination["spatialLayerColor"] = to_uint8_rgb(color)
+            elif color in ddf.columns:
+                # feature_name column
+                layer_coordination["obsColorEncoding"] = "randomByFeature"
+
+                if groups is not None:
+                    if type(groups) is str:
+                        groups = [groups]
+                    if palette is not None:
+                        if type(palette) is str:
+                            # Broadcast single color to all groups.
+                            palette = [palette for _ in groups]
+                        elif type(palette) is list and len(groups) != len(palette):
+                            raise ValueError("The length of 'groups' and 'palette' lists must be equal.")
+                        
+                        feature_color_val = [
+                            {
+                                "name": groups[i],
+                                "color": to_uint8_rgb(palette[i]),
+                            } for i in range(len(groups))
+                        ]
+
+                        layer_coordination["featureColor"] = feature_color_val
+                        layer_coordination["obsColorEncoding"] = "geneSelection"
+                    layer_coordination["featureSelection"] = groups
+                    layer_coordination["featureFilterMode"] = "featureSelection"
+            
+                feature_coordination = {
+                    "obsType": obs_type,
+                    "featureType": feature_type,
+                    "featureSelection": groups if groups is not None else None,
+                }
+
+        if alpha is not None:
+            layer_coordination["spatialLayerOpacity"] = alpha
+        
+        # TODO: perform the necessary operations on the points dataframe (sorting by morton code).
+        # Perhaps the user will need to opt-in via the global configuration.
+
         self.point_layers.append(
-            (wrapper_args, layer_coordination)
+            (wrapper_args, layer_coordination, obs_coordination, feature_coordination)
         )
 
         return self.sdata
@@ -714,7 +811,7 @@ class VitesscePlotAccessor:
             })
             dataset = dataset.add_object(spot_wrapper)
         
-        for (layer_wrapper_args, _) in self.point_layers:
+        for (layer_wrapper_args, _, _, _) in self.point_layers:
             points_wrapper = SpatialDataWrapper(**{
                 **self.shared_wrapper_args,
                 **({ "coordinate_system": coordinate_systems } if coordinate_systems is not None else {}),
@@ -742,6 +839,11 @@ class VitesscePlotAccessor:
             if feature_coord is not None:
                 feature_coordination.append(feature_coord)
         for (_, _, obs_coord, feature_coord) in self.spot_layers:
+            if obs_coord is not None:
+                obs_coordination.append(obs_coord)
+            if feature_coord is not None:
+                feature_coordination.append(feature_coord)
+        for (_, _, obs_coord, feature_coord) in self.point_layers:
             if obs_coord is not None:
                 obs_coordination.append(obs_coord)
             if feature_coord is not None:
