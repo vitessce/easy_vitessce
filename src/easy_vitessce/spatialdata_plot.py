@@ -29,15 +29,10 @@ from easy_vitessce.data import _get_sdata_wrapper_params
 
 from matplotlib.colors import is_color_like
 
-# Internal function for shared logic between render_shapes and render_labels.
-def _shared_render_shapes_and_labels(
-        sdata, element, table_name, table_layer, color, cmap, norm, groups, palette, obs_type, feature_type, is_spots, fill_alpha, outline_alpha, outline_width, outline_color,
+def _shared_table_handling(sdata, element, table_name, table_layer, obs_type, feature_type,
         # Note: These dict params are modified by this function.
         wrapper_args, obs_type_to_num_rows, feature_type_to_num_rows,
     ):
-
-    extra_layer_coordination = {}
-
     if table_name is None:
         annotating_tables = list(get_element_annotators(sdata, element))
         if len(annotating_tables) > 0:
@@ -79,6 +74,19 @@ def _shared_render_shapes_and_labels(
                 raise ValueError(f"Multiple tables with different numbers of observations ({obs_type_to_num_rows[obs_type]} vs. {obs_num_rows}) are being used for obsType '{obs_type}'.")
         """
         pass
+
+# Internal function for shared logic between render_shapes and render_labels.
+def _shared_render_shapes_and_labels(
+        sdata, element, table_name, table_layer, color, cmap, norm, groups, palette, obs_type, feature_type, is_spots, fill_alpha, outline_alpha, outline_width, outline_color,
+        # Note: These dict params are modified by this function.
+        wrapper_args, obs_type_to_num_rows, feature_type_to_num_rows,
+    ):
+
+    extra_layer_coordination = {}
+
+    _shared_table_handling(sdata, element, table_name, table_layer, obs_type, feature_type,
+        wrapper_args, obs_type_to_num_rows, feature_type_to_num_rows,
+    )
 
     obs_coordination = None
     feature_coordination = None
@@ -240,7 +248,7 @@ class VitesscePlotAccessor:
             # Tuples of (wrapper_args, spot_layer_coordination, obs_coordination, feature_coordination)
         ]
         self.point_layers = [
-            # Tuples of (wrapper_args, point_layer_coordination)
+            # Tuples of (wrapper_args, point_layer_coordination, obs_coordination, feature_coordination)
         ]
 
         # For ensuring that counts of obs/var match if used for multiple layers.
@@ -684,6 +692,10 @@ class VitesscePlotAccessor:
             }
         }
 
+        _shared_table_handling(self.sdata, element, table_name, table_layer, obs_type, feature_type,
+            wrapper_args, self.obs_type_to_num_rows, self.feature_type_to_num_rows,
+        )
+
         layer_coordination = {
             "obsType": obs_type,
             "obsHighlight": None,
@@ -953,7 +965,7 @@ class VitesscePlotAccessor:
                         **obs_coordination_by_key.get(layer_dict.get("obsType"), {}),
                         **layer_dict,
                     }
-                    for (_, layer_dict) in self.point_layers
+                    for (_, layer_dict, _, _) in self.point_layers
                 ]),
             }, meta=True, scope_prefix=get_initial_coordination_scope_prefix(dataset_uid, "obsPoints"))
 
