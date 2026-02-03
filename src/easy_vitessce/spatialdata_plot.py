@@ -729,6 +729,18 @@ class VitesscePlotAccessor:
         # - list[str]: list of colors (when `groups` param is a list of gene names) (the length must match the length of `groups`)
 
         ddf = self.sdata.points[element]
+        
+        try:
+            # Check if the dataframe contains a _codes column.
+            # Reference: https://github.com/vitessce/vitessce-python/blob/adb066c088307b658a45ca9cf2ab2d63effaa5ef/src/vitessce/data_utils/spatialdata_points_zorder.py#L458
+            feature_key_col = ddf.attrs["spatialdata_attrs"]["feature_key"]
+            # Note: this should be the default behavior on the JS side, so this may be unnecessary to do here.
+            # Reference: https://github.com/vitessce/vitessce/blob/0ff9f3b43ca28ef9858d3db0ce06417f6dd174a9/packages/file-types/spatial-zarr/src/spatialdata-loaders/SpatialDataObsPointsLoader.js#L126
+            codes_col = f"{feature_key_col}_codes"
+            if codes_col in ddf.columns:
+                wrapper_args["obs_points_feature_index_column"] = codes_col
+        except KeyError:
+            pass
 
         obs_coordination = None
         feature_coordination = None
@@ -740,6 +752,12 @@ class VitesscePlotAccessor:
             elif color in ddf.columns:
                 # feature_name column
                 layer_coordination["obsColorEncoding"] = "randomByFeature"
+
+                # In case the value of `color` does not match spatialdata_attrs.feature_key
+                codes_col = f"{color}_codes"
+                if codes_col in ddf.columns:
+                    # Note: this overwrites any existing feature index column value in the dict.
+                    wrapper_args["obs_points_feature_index_column"] = codes_col
 
                 if groups is not None:
                     if type(groups) is str:

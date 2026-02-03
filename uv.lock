@@ -1023,7 +1023,7 @@ wheels = [
 
 [[package]]
 name = "easy-vitessce"
-version = "0.0.8"
+version = "0.0.10"
 source = { editable = "." }
 dependencies = [
     { name = "anndata", version = "0.11.4", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version < '3.11'" },
@@ -1085,7 +1085,7 @@ requires-dist = [
     { name = "sphinx", marker = "extra == 'docs'" },
     { name = "sphinx-book-theme", marker = "extra == 'docs'" },
     { name = "sphinx-copybutton", marker = "extra == 'docs'" },
-    { name = "vitessce", extras = ["all"], specifier = ">=3.7.9" },
+    { name = "vitessce", extras = ["all"], specifier = ">=3.8.0" },
     { name = "xarray", specifier = ">=2024.10.0,<=2025.3.0" },
     { name = "zarr", specifier = ">=2.5.0,<3" },
 ]
@@ -4904,7 +4904,7 @@ wheels = [
 
 [[package]]
 name = "vitessce"
-version = "3.7.9"
+version = "3.8.0"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "black" },
@@ -4918,7 +4918,7 @@ dependencies = [
     { name = "zarr", version = "2.18.7", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version >= '3.11'" },
 ]
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/b6/79/ef9dcc1dc0ead62e143194606b65a00761f43dbc22df3bca248c1c78115d/vitessce-3.7.9-py3-none-any.whl", hash = "sha256:b54cc4a73991d07b1ccf2617062705ae708508a18fde338790b7fea381ee30ba", size = 79840 },
+    { url = "https://files.pythonhosted.org/packages/d3/60/b5c82868f136eff8c2d3a8cae675c63b4e9e65b10f6c36861d49aade32ce/vitessce-3.8.0-py3-none-any.whl", hash = "sha256:763f9b8f411d103cd577789acba2baa16b938969826d6ead10dde46f916dda4a", size = 79843 },
 ]
 
 [package.optional-dependencies]
