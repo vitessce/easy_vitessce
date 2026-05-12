@@ -1085,7 +1085,7 @@ requires-dist = [
     { name = "sphinx", marker = "extra == 'docs'" },
     { name = "sphinx-book-theme", marker = "extra == 'docs'" },
     { name = "sphinx-copybutton", marker = "extra == 'docs'" },
-    { name = "vitessce", extras = ["all"], specifier = ">=3.8.1" },
+    { name = "vitessce", extras = ["all"], specifier = ">=3.8.2" },
     { name = "xarray", specifier = ">=2024.10.0,<=2025.3.0" },
     { name = "zarr", specifier = ">=2.5.0,<3" },
 ]
@@ -4904,7 +4904,7 @@ wheels = [
 
 [[package]]
 name = "vitessce"
-version = "3.8.1"
+version = "3.8.2"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "black" },
@@ -4917,9 +4917,9 @@ dependencies = [
     { name = "zarr", version = "2.18.3", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version < '3.11'" },
     { name = "zarr", version = "2.18.7", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version >= '3.11'" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/4a/c8/f5a7928e5521611e1d128d37d336078c9324198929e261524eda15a6559a/vitessce-3.8.1.tar.gz", hash = "sha256:293b99a0b66721368b0500c328f9d7879f6ab08bdce949b749c4a23271d8f397", size = 332200 }
+sdist = { url = "https://files.pythonhosted.org/packages/7e/89/191c28513ed8b20f0a0f1ef4e52a8e0777baaef2b4d9bc556e1f635364d0/vitessce-3.8.2.tar.gz", hash = "sha256:88e027e28d0dbe752c9e4850b91a62c884b169ccc12d0cf9b401b843d0f9a06c", size = 332303 }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/d0/8d/cfd9eb3fdc3d37ae12ad3aa4e3b01ea7d886e2941adf212d1be1a7085552/vitessce-3.8.1-py3-none-any.whl", hash = "sha256:7a98683da82d5ffa5b1d7aea3f4a687e7a45090fabded8250895c7912230fbfc", size = 80024 },
+    { url = "https://files.pythonhosted.org/packages/1e/32/8c6a681775d6fe456128aa20c0153ebcb030d6475643dc2870c7ecc99006/vitessce-3.8.2-py3-none-any.whl", hash = "sha256:b39eada4e7bd86d0026951210eef9d33791638bf1a608736f56d9066b4d55ea0", size = 80166 },
 ]
 
 [package.optional-dependencies]

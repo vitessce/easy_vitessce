@@ -17,6 +17,16 @@ config = Config('easy_vitessce', defaults=[{
     # Per-plot configurations that are Vitessce-specific?
     # For example, for `embedding`, whether to include a featureList view when `color` is a cell set. Or whether to include an obsSets view when `color` is a gene.
 
+    # Controls how obsType and featureType values are derived for SpatialData plots.
+    # Options (string form):
+    #   'default'      - hardcoded values ('cell', 'spot', 'point', 'gene')
+    #   'element_name' - element name + '_obs' / '_var' suffix (e.g. 'cells_obs', 'cells_var')
+    #   'table_name'   - annotating table name + '_obs' / '_var' suffix
+    #   'column_name'  - obs/var index column names from the annotating AnnData table
+    # Dict form: {'mode': <one of the above>, 'rename': {'derived_name': 'custom_name', ...}}
+    #   e.g. {'mode': 'table_name', 'rename': {'my_table_obs': 'cell', 'my_table_var': 'protein'}}
+    'entity_type_source': 'default',
+
 }])
 
 def _to_widget(vc):
