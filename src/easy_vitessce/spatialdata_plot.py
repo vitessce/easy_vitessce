@@ -20,8 +20,6 @@ from vitessce import (
     vconcat,
 )
 
-from os.path import join
-
 from spatialdata_plot.pl.basic import PlotAccessor
 from spatialdata import get_element_annotators
 
@@ -29,15 +27,67 @@ from easy_vitessce.widget import _to_widget, config
 from easy_vitessce.colors import to_uint8_rgb
 from easy_vitessce.data import _get_sdata_wrapper_params
 
-# Internal function for shared logic between render_shapes and render_labels.
-def _shared_render_shapes_and_labels(
-        sdata, element, table_name, table_layer, color, cmap, norm, groups, palette, obs_type, feature_type, is_spots, fill_alpha, outline_alpha, outline_width, outline_color,
+from matplotlib.colors import is_color_like
+
+def _derive_obs_feature_types(sdata, element, table_name, obs_type_default, feature_type_default, source):
+    """Derive obsType and featureType values based on the configured source strategy.
+
+    :param source: One of ``'default'``, ``'element_name'``, ``'table_name'``, ``'column_name'``,
+        or a dict with keys ``mode`` (one of the above strings) and ``rename`` (a mapping from
+        derived type names to custom replacement names,
+        e.g. ``{'my_table_obs': 'cell', 'my_table_var': 'protein'}``).
+    :type source: str or dict
+    """
+    rename = {}
+    if isinstance(source, dict):
+        rename = source.get('rename', {})
+        source = source.get('mode', 'default')
+
+    if source is None or source == "default":
+        obs_type, feature_type = obs_type_default, feature_type_default
+
+    elif source == "element_name":
+        obs_type, feature_type = element + "_obs", element + "_var"
+
+    elif source == "table_name":
+        resolved = table_name
+        if resolved is None:
+            tables = list(get_element_annotators(sdata, element))
+            if tables:
+                resolved = tables[0]
+        if resolved is not None:
+            obs_type, feature_type = resolved + "_obs", resolved + "_var"
+        else:
+            # Fall back to element name when no annotating table exists.
+            obs_type, feature_type = element + "_obs", element + "_var"
+
+    elif source == "column_name":
+        resolved = table_name
+        if resolved is None:
+            tables = list(get_element_annotators(sdata, element))
+            if tables:
+                resolved = tables[0]
+        if resolved is not None:
+            table = sdata.tables[resolved]
+            obs_index_name = table.obs.index.name
+            var_index_name = table.var.index.name
+            obs_type = obs_index_name if obs_index_name else obs_type_default
+            feature_type = var_index_name if var_index_name else feature_type_default
+        else:
+            obs_type, feature_type = obs_type_default, feature_type_default
+
+    else:
+        raise ValueError(
+            f"entity_type_source mode must be one of 'default', 'element_name', 'table_name', 'column_name', got: {source!r}"
+        )
+
+    return rename.get(obs_type, obs_type), rename.get(feature_type, feature_type)
+
+
+def _shared_table_handling(sdata, element, table_name, table_layer, obs_type, feature_type,
         # Note: These dict params are modified by this function.
         wrapper_args, obs_type_to_num_rows, feature_type_to_num_rows,
     ):
-
-    extra_layer_coordination = {}
-
     if table_name is None:
         annotating_tables = list(get_element_annotators(sdata, element))
         if len(annotating_tables) > 0:
@@ -55,15 +105,18 @@ def _shared_render_shapes_and_labels(
         if obs_type not in obs_type_to_num_rows:
             obs_type_to_num_rows[obs_type] = obs_num_rows
         elif obs_type_to_num_rows[obs_type] != obs_num_rows:
-            # TODO: support automatically by using the element name as obsType?
-            # Maybe force the user to configure something like ev.config.set({ "sdata_pl_use_element_name_for_entity_types": True })?
-            raise ValueError(f"Multiple tables with different numbers of observations ({obs_type_to_num_rows[obs_type]} vs. {obs_num_rows}) are being used for obsType '{obs_type}'.")
+            raise ValueError(
+                f"Multiple tables with different numbers of observations ({obs_type_to_num_rows[obs_type]} vs. {obs_num_rows}) are being used for obsType '{obs_type}'. "
+                "Consider setting config['entity_type_source'] to 'element_name', 'table_name', or 'column_name' to derive unique obsType values per element."
+            )
 
         if feature_type not in feature_type_to_num_rows:
             feature_type_to_num_rows[feature_type] = var_num_rows
         elif feature_type_to_num_rows[feature_type] != var_num_rows:
-            # TODO: same as above TODO.
-            raise ValueError(f"Multiple tables with different numbers of variables ({feature_type_to_num_rows[feature_type]} vs. {var_num_rows}) are being used for featureType '{feature_type}'.")
+            raise ValueError(
+                f"Multiple tables with different numbers of variables ({feature_type_to_num_rows[feature_type]} vs. {var_num_rows}) are being used for featureType '{feature_type}'. "
+                "Consider setting config['entity_type_source'] to 'element_name', 'table_name', or 'column_name' to derive unique featureType values per element."
+            )
 
         # TODO: configure all obsSets in the table here, to allow the user to select them regardless of the "color" parameter value,
         # rather than only when the "color" parameter is set to a categorical obs column (down below).
@@ -79,6 +132,19 @@ def _shared_render_shapes_and_labels(
                 raise ValueError(f"Multiple tables with different numbers of observations ({obs_type_to_num_rows[obs_type]} vs. {obs_num_rows}) are being used for obsType '{obs_type}'.")
         """
         pass
+
+# Internal function for shared logic between render_shapes and render_labels.
+def _shared_render_shapes_and_labels(
+        sdata, element, table_name, table_layer, color, cmap, norm, groups, palette, obs_type, feature_type, is_spots, fill_alpha, outline_alpha, outline_width, outline_color,
+        # Note: These dict params are modified by this function.
+        wrapper_args, obs_type_to_num_rows, feature_type_to_num_rows,
+    ):
+
+    extra_layer_coordination = {}
+
+    _shared_table_handling(sdata, element, table_name, table_layer, obs_type, feature_type,
+        wrapper_args, obs_type_to_num_rows, feature_type_to_num_rows,
+    )
 
     obs_coordination = None
     feature_coordination = None
@@ -100,10 +166,10 @@ def _shared_render_shapes_and_labels(
                     feature_coordination["featureValueColormap"] = cmap
                 elif cmap is None:
                     feature_coordination["featureValueColormap"] = "viridis"
-                
+
                 if norm is not None:
                     feature_coordination["featureValueColormapRange"] = [norm.vmin, norm.vmax]
-            
+
             elif color in sdata.tables[table_name].obs.columns: # categorical?
                 group_name = color.capitalize()
 
@@ -131,7 +197,7 @@ def _shared_render_shapes_and_labels(
                             palette = [palette for _ in groups]
                         elif type(palette) is list and len(groups) != len(palette):
                             raise ValueError("The length of 'groups' and 'palette' lists must be equal.")
-                        
+
                         obs_coordination["obsSetColor"] = [
                             {
                                 "path": [group_name, groups[i]],
@@ -146,12 +212,12 @@ def _shared_render_shapes_and_labels(
                 is_maybe_static_color = True
     else:
         is_maybe_static_color = True
-    
+
     if is_maybe_static_color:
         extra_layer_coordination["obsColorEncoding"] = "spatialChannelColor" if not is_spots else "spatialLayerColor"
         if color is not None:
             extra_layer_coordination["spatialChannelColor" if not is_spots else "spatialLayerColor"] = to_uint8_rgb(color)
-    
+
     # Handling of alpha/fill settings.
     # We can only support these things partially.
     # - Case 1: fill_alpha == outline_alpha
@@ -164,7 +230,7 @@ def _shared_render_shapes_and_labels(
             extra_layer_coordination["spatialSpotFilled"] = False
         else:
             extra_layer_coordination["spatialSegmentationFilled"] = False
-    
+
     if outline_width is not None:
         if is_spots:
             extra_layer_coordination["spatialSpotStrokeWidth"] = outline_width
@@ -214,7 +280,7 @@ class VitesscePlotAccessor:
 
         self.did_init = False
         self._maybe_init()
-    
+
     def _maybe_init(self):
         # We cannot assume that __init__ has been called as expected,
         # for instance if ev.enable_plots is called after creating the SpatialData object.
@@ -240,14 +306,14 @@ class VitesscePlotAccessor:
             # Tuples of (wrapper_args, spot_layer_coordination, obs_coordination, feature_coordination)
         ]
         self.point_layers = [
-            # Tuples of (wrapper_args, point_layer_coordination)
+            # Tuples of (wrapper_args, point_layer_coordination, obs_coordination, feature_coordination)
         ]
 
         # For ensuring that counts of obs/var match if used for multiple layers.
         self.obs_type_to_num_rows = {}
         self.feature_type_to_num_rows = {}
 
-    
+
     # References:
     # - https://spatialdata.scverse.org/projects/plot/en/latest/plotting.html#spatialdata_plot.pl.basic.PlotAccessor.render_images
     # - https://github.com/scverse/spatialdata-plot/blob/c9bae235c0521499fb4d1098b15c79619654e5dc/src/spatialdata_plot/pl/basic.py#L482
@@ -291,7 +357,7 @@ class VitesscePlotAccessor:
                 alpha=alpha,
                 **kwargs,
             )
-        
+
         self._maybe_init()
 
         # channel (list[str] | list[int] | str | int | None)
@@ -302,7 +368,7 @@ class VitesscePlotAccessor:
         # cmap (list[Colormap | str] | Colormap | str | None)
         #   Colormap or list of colormaps for continuous annotations, see matplotlib.colors.Colormap.
         #   Each colormap applies to a corresponding channel.
- 
+
         # palette (list[str] | str | None)
         #   Palette to color images.
         #   The number of palettes should be equal to the number of channels.
@@ -322,7 +388,7 @@ class VitesscePlotAccessor:
             if type(norm) is list:
                 if len(channel) != len(norm):
                     raise ValueError("The length of 'channel' and 'norm' lists must be equal.")
-            
+
         if element is None:
             # TODO: what does spatialdata-plot do in this case? use first image element? error if >1 images?
             raise ValueError("The 'element' parameter must be provided to render an image.")
@@ -341,12 +407,16 @@ class VitesscePlotAccessor:
         # RGB vs. non-RGB logic in spatialdata-plot:
         # Reference: https://github.com/scverse/spatialdata-plot/blob/010560f7eebdd245693a8c55eede0f895a636f5c/src/spatialdata_plot/pl/render.py#L865
         img = self.sdata.images[element]
-        try:
-            all_channels = img.coords["c"].values.tolist()
-        except KeyError:
-            # TODO: use a better way than try/except of determining whether this is a multi-resolution image.
-            all_channels = img.scale0.coords["c"].values.tolist()
-        img_dtype = img.dtype
+        if hasattr(img, "dtype"):
+            img_arr = img
+        else:
+            # Assume multi-scale (DataTree).
+            # We use the highest resolution scale, 'scale0'.
+            # The image data is typically in the 'image' variable of the dataset.
+            img_arr = img["scale0"]["image"]
+
+        all_channels = img_arr.coords["c"].values.tolist()
+        img_dtype = img_arr.dtype
         img_dtype_is_uint8 = img_dtype.kind == 'u' and img_dtype.itemsize == 1
 
         # Not ideal logic. Should ideally only use the OME-NGFF color model metadata. But this is what spatialdata-plot does.
@@ -362,7 +432,7 @@ class VitesscePlotAccessor:
                 palette = [palette for _ in channel]
             if norm is not None and type(norm) is not list:
                 norm = [norm for _ in channel]
-            
+
             image_channel_coordination = [
                 {
                     "spatialTargetC": ch,
@@ -372,7 +442,7 @@ class VitesscePlotAccessor:
                 }
                 for ch_i, ch in enumerate(channel)
             ]
-        
+
         # Configure image layer coordination.
         image_layer_coordination = {
             "fileUid": file_uid,
@@ -396,7 +466,7 @@ class VitesscePlotAccessor:
         )
 
         return self.sdata
-    
+
     # References:
     # - https://spatialdata.scverse.org/projects/plot/en/latest/plotting.html#spatialdata_plot.pl.basic.PlotAccessor.render_shapes
     # - https://github.com/scverse/spatialdata-plot/blob/c9bae235c0521499fb4d1098b15c79619654e5dc/src/spatialdata_plot/pl/basic.py#L156
@@ -457,19 +527,22 @@ class VitesscePlotAccessor:
                 table_layer=table_layer,
                 **kwargs
             )
-        
+
         self._maybe_init()
-        
+
         if element is None:
             # TODO: what does spatialdata-plot do in this case? use first shapes element? error if >1 shapes?
             raise ValueError("The 'element' parameter is required.")
-        
+
         is_polygons = self.sdata.shapes[element]["geometry"].geom_type.iloc[0] == 'Polygon'
         is_spots = not is_polygons
 
         file_uid = f"shapes_{element}"
-        obs_type = "cell" if is_polygons else "spot"
-        feature_type = "gene" # TODO: how to determine feature type? use heuristic based on num rows in table.var?
+        obs_type_default = "cell" if is_polygons else "spot"
+        obs_type, feature_type = _derive_obs_feature_types(
+            self.sdata, element, table_name, obs_type_default, "gene",
+            config.get('entity_type_source'),
+        )
 
         wrapper_args = {
             "coordination_values": {
@@ -509,7 +582,7 @@ class VitesscePlotAccessor:
             self.sdata, element, table_name, table_layer, color, cmap, norm, groups, palette, obs_type, feature_type, is_spots, fill_alpha, outline_alpha, outline_width, outline_color,
             wrapper_args, self.obs_type_to_num_rows, self.feature_type_to_num_rows,
         )
-        
+
         if is_polygons:
             layer_coordination["segmentationChannel"][0].update(extra_layer_coordination)
             self.segmentation_layers.append(
@@ -520,7 +593,7 @@ class VitesscePlotAccessor:
             self.spot_layers.append(
                 (wrapper_args, layer_coordination, obs_coordination, feature_coordination)
             )
-        
+
         return self.sdata
 
     # References:
@@ -577,16 +650,18 @@ class VitesscePlotAccessor:
                 table_layer=table_layer,
                 **kwargs
             )
-        
+
         self._maybe_init()
 
         if element is None:
             # TODO: what does spatialdata-plot do in this case? use first labels element? error if >1 labels?
             raise ValueError("The 'element' parameter must be provided to render labels.")
-        
+
         file_uid = f"labels_{element}"
-        obs_type = "cell"
-        feature_type = "gene" # TODO: how to determine feature type? use heuristic based on num rows in table.var?
+        obs_type, feature_type = _derive_obs_feature_types(
+            self.sdata, element, table_name, "cell", "gene",
+            config.get('entity_type_source'),
+        )
 
         wrapper_args = {
             "obs_segmentations_path": f"labels/{element}",
@@ -621,17 +696,27 @@ class VitesscePlotAccessor:
         )
 
         layer_coordination["segmentationChannel"][0].update(extra_layer_coordination)
-        
+
         self.segmentation_layers.append(
             (wrapper_args, layer_coordination, obs_coordination, feature_coordination)
         )
-        
+
         return self.sdata
 
     # References:
     # - https://spatialdata.scverse.org/projects/plot/en/latest/plotting.html#spatialdata_plot.pl.basic.PlotAccessor.render_points
     # - https://github.com/scverse/spatialdata-plot/blob/c9bae235c0521499fb4d1098b15c79619654e5dc/src/spatialdata_plot/pl/basic.py#L338
-    def render_points(self, element=None, **kwargs):
+    def render_points(self,
+            element=None,
+            color=None,
+            alpha=None,
+            groups=None,
+            palette=None,
+            # TODO: size
+            table_name=None,
+            table_layer=None,
+            **kwargs
+        ):
         """
         Renders points.
 
@@ -639,8 +724,18 @@ class VitesscePlotAccessor:
         :returns: Self, allows for chaining.
         """
         if not VitesscePlotAccessor._is_enabled:
-            return self._pl.render_points(element=element, **kwargs)
-        
+            return self._pl.render_points(
+                element=element,
+                color=color,
+                alpha=alpha,
+                groups=groups,
+                palette=palette,
+                # TODO: size
+                table_name=table_name,
+                table_layer=table_layer,
+                **kwargs
+            )
+
         self._maybe_init()
 
         if element is None:
@@ -648,8 +743,10 @@ class VitesscePlotAccessor:
             raise ValueError("The 'element' parameter must be provided to render points.")
 
         file_uid = f"points_{element}"
-        obs_type = "point"
-        feature_type = "gene" # TODO: how to determine feature type? use heuristic based on num rows in table.var?
+        obs_type, feature_type = _derive_obs_feature_types(
+            self.sdata, element, table_name, "point", "gene",
+            config.get('entity_type_source'),
+        )
 
         wrapper_args = {
             "obs_points_path": f"points/{element}",
@@ -660,27 +757,123 @@ class VitesscePlotAccessor:
             }
         }
 
+        _shared_table_handling(self.sdata, element, table_name, table_layer, obs_type, feature_type,
+            wrapper_args, self.obs_type_to_num_rows, self.feature_type_to_num_rows,
+        )
+
         layer_coordination = {
             "obsType": obs_type,
+            "featureType": feature_type,
             "obsHighlight": None,
             "fileUid": file_uid,
+            # TODO: featureSelection: None or list[str]
+            # TODO: featureFilterMode: None or 'featureSelection'
+            # TODO: obsColorEncoding: 'geneSelection' or 'spatialLayerColor' or 'randomByFeature' or 'random'
+            # TODO: featureColor: None or [ { name: str, color: [R, G, B] } ]
+            # TODO: spatialLayerColor: [R, G, B]
+            # TODO: spatialLayerOpacity: number
         }
-        
+
+        # Coloring cases
+        # color param can be:
+        # - None (default color)
+        # - static color like "red" or "#FF0000"
+        # - name of the "feature_name" column of sdata.points table
+
+        # alpha param can be:
+        # - None (default opacity) 1.0
+        # - float between 0.0 and 1.0
+
+        # groups param:
+        # - None (all points)
+        # - str: a single gene name (when `color` param is the name of the column containing gene names)
+        # - list[str]: list of gene names (when `color` param is the name of the column containing gene names)
+
+        # palette param:
+        # - None (default color)
+        # - str: a single color (when `groups` param is a single gene name)
+        # - list[str]: list of colors (when `groups` param is a list of gene names) (the length must match the length of `groups`)
+
+        ddf = self.sdata.points[element]
+
+        try:
+            # Check if the dataframe contains a _codes column.
+            # Reference: https://github.com/vitessce/vitessce-python/blob/adb066c088307b658a45ca9cf2ab2d63effaa5ef/src/vitessce/data_utils/spatialdata_points_zorder.py#L458
+            feature_key_col = ddf.attrs["spatialdata_attrs"]["feature_key"]
+            # Note: this should be the default behavior on the JS side, so this may be unnecessary to do here.
+            # Reference: https://github.com/vitessce/vitessce/blob/0ff9f3b43ca28ef9858d3db0ce06417f6dd174a9/packages/file-types/spatial-zarr/src/spatialdata-loaders/SpatialDataObsPointsLoader.js#L126
+            codes_col = f"{feature_key_col}_codes"
+            if codes_col in ddf.columns:
+                wrapper_args["obs_points_feature_index_column"] = codes_col
+        except KeyError:
+            pass
+
+        obs_coordination = None
+        feature_coordination = None
+
+        if color is not None:
+            if is_color_like(color):
+                # static color
+                layer_coordination["spatialLayerColor"] = to_uint8_rgb(color)
+            elif color in ddf.columns:
+                # feature_name column
+                layer_coordination["obsColorEncoding"] = "randomByFeature"
+
+                # In case the value of `color` does not match spatialdata_attrs.feature_key
+                codes_col = f"{color}_codes"
+                if codes_col in ddf.columns:
+                    # Note: this overwrites any existing feature index column value in the dict.
+                    wrapper_args["obs_points_feature_index_column"] = codes_col
+
+                if groups is not None:
+                    if type(groups) is str:
+                        groups = [groups]
+                    if palette is not None:
+                        if type(palette) is str:
+                            # Broadcast single color to all groups.
+                            palette = [palette for _ in groups]
+                        elif type(palette) is list and len(groups) != len(palette):
+                            raise ValueError("The length of 'groups' and 'palette' lists must be equal.")
+
+                        feature_color_val = [
+                            {
+                                "name": groups[i],
+                                "color": to_uint8_rgb(palette[i]),
+                            } for i in range(len(groups))
+                        ]
+
+                        layer_coordination["featureColor"] = feature_color_val
+                        layer_coordination["obsColorEncoding"] = "geneSelection"
+                    # layer_coordination["featureSelection"] = groups
+                    layer_coordination["featureFilterMode"] = "featureSelection"
+
+                feature_coordination = {
+                    "obsType": obs_type,
+                    "featureType": feature_type,
+                    "featureSelection": groups if groups is not None else None,
+                }
+
+        if alpha is not None:
+            layer_coordination["spatialLayerOpacity"] = alpha
+
+        # TODO: perform the necessary operations on the points dataframe (sorting by morton code).
+        # Perhaps the user will need to opt-in via the global configuration.
+
         self.point_layers.append(
-            (wrapper_args, layer_coordination)
+            (wrapper_args, layer_coordination, obs_coordination, feature_coordination)
         )
 
         return self.sdata
-    
+
     def show(self, coordinate_systems=None, **kwargs):
         """
         Displays spatial plot.
-        
+
         :returns: Vitessce widget. Learn more at the vitessce-python `docs <https://python-docs.vitessce.io/api_config.html#vitessce-widget>`_ .
         """
         if not VitesscePlotAccessor._is_enabled:
             return self._pl.show(coordinate_systems=coordinate_systems, **kwargs)
-            
+
         self.vc = VitessceConfig(schema_version="1.0.18", name='SpatialData Plot')
 
         if not (coordinate_systems is None or isinstance(coordinate_systems, str)):
@@ -697,7 +890,7 @@ class VitesscePlotAccessor:
                 **layer_wrapper_args,
             })
             dataset = dataset.add_object(img_wrapper)
-        
+
         for (layer_wrapper_args, _, _, _) in self.segmentation_layers:
             seg_wrapper = SpatialDataWrapper(**{
                 **self.shared_wrapper_args,
@@ -705,7 +898,7 @@ class VitesscePlotAccessor:
                 **layer_wrapper_args,
             })
             dataset = dataset.add_object(seg_wrapper)
-        
+
         for (layer_wrapper_args, _, _, _) in self.spot_layers:
             spot_wrapper = SpatialDataWrapper(**{
                 **self.shared_wrapper_args,
@@ -713,8 +906,8 @@ class VitesscePlotAccessor:
                 **layer_wrapper_args,
             })
             dataset = dataset.add_object(spot_wrapper)
-        
-        for (layer_wrapper_args, _) in self.point_layers:
+
+        for (layer_wrapper_args, _, _, _) in self.point_layers:
             points_wrapper = SpatialDataWrapper(**{
                 **self.shared_wrapper_args,
                 **({ "coordinate_system": coordinate_systems } if coordinate_systems is not None else {}),
@@ -746,6 +939,11 @@ class VitesscePlotAccessor:
                 obs_coordination.append(obs_coord)
             if feature_coord is not None:
                 feature_coordination.append(feature_coord)
+        for (_, _, obs_coord, feature_coord) in self.point_layers:
+            if obs_coord is not None:
+                obs_coordination.append(obs_coord)
+            if feature_coord is not None:
+                feature_coordination.append(feature_coord)
 
         # Add obsSet and featureList views.
         for obs_coord in obs_coordination:
@@ -753,7 +951,7 @@ class VitesscePlotAccessor:
             obs_set_views.append(obs_set_view)
             obs_set_views_by_key[obs_coord["obsType"]] = obs_set_view
         for feature_coord in feature_coordination:
-            feature_list_view = self.vc.add_view("featureList", dataset=dataset)
+            feature_list_view = self.vc.add_view("featureList", dataset=dataset).set_props(enableMultiSelect=True)
             feature_list_views.append(feature_list_view)
             feature_list_views_by_key[feature_coord["featureType"]] = feature_list_view
 
@@ -791,12 +989,12 @@ class VitesscePlotAccessor:
             for ct_name, ct_val in obs_coord.items():
                 ct_names.append(ct_name)
                 ct_vals.append(ct_val)
-            
+
             ct_scopes = self.vc.add_coordination(*ct_names)
             for i, ct_scope in enumerate(ct_scopes):
                 ct_scope.set_value(ct_vals[i])
             obs_coordination_by_key[coordination_key] = dict(zip(ct_names, ct_scopes))
-        
+
         feature_coordination_by_key = {}
         for feature_coord in feature_coordination:
             coordination_key = feature_coord["featureType"] # TODO: is this the best key to use?
@@ -807,12 +1005,12 @@ class VitesscePlotAccessor:
             for ct_name, ct_val in feature_coord.items():
                 ct_names.append(ct_name)
                 ct_vals.append(ct_val)
-            
+
             ct_scopes = self.vc.add_coordination(*ct_names)
             for i, ct_scope in enumerate(ct_scopes):
                 ct_scope.set_value(ct_vals[i])
             feature_coordination_by_key[coordination_key] = dict(zip(ct_names, ct_scopes))
-        
+
         if len(self.segmentation_layers) > 0:
             self.vc.link_views_by_dict(spatial_views, {
                 "segmentationLayer": CL([
@@ -851,7 +1049,7 @@ class VitesscePlotAccessor:
                         **obs_coordination_by_key.get(layer_dict.get("obsType"), {}),
                         **layer_dict,
                     }
-                    for (_, layer_dict) in self.point_layers
+                    for (_, layer_dict, _, _) in self.point_layers
                 ]),
             }, meta=True, scope_prefix=get_initial_coordination_scope_prefix(dataset_uid, "obsPoints"))
 
@@ -861,11 +1059,11 @@ class VitesscePlotAccessor:
 
         for key, feature_list_view in feature_list_views_by_key.items():
             self.vc.link_views_by_dict([feature_list_view], feature_coordination_by_key.get(key, {}), meta=False)
-        
-        
+
+
         # Layout the views
         self.vc.layout(hconcat(spatial, vconcat(*control_views), split=[2, 1]))
-        
+
         vw = _to_widget(self.vc)
 
         # Cleanup
