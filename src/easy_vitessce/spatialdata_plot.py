@@ -93,7 +93,6 @@ def _shared_table_handling(sdata, element, table_name, table_layer, obs_type, fe
         if len(annotating_tables) > 0:
             # Use the first annotating table if no specific table is provided.
             table_name = annotating_tables[0]
-        
         # TODO: if table_name is still None by this point, use the first available table? Or only if there is one table?
 
     if table_name is not None:
@@ -412,9 +411,8 @@ class VitesscePlotAccessor:
         # RGB vs. non-RGB logic in spatialdata-plot:
         # Reference: https://github.com/scverse/spatialdata-plot/blob/010560f7eebdd245693a8c55eede0f895a636f5c/src/spatialdata_plot/pl/render.py#L865
         img = self.sdata.images[element]
-        if hasattr(img, "dtype"):
-            img_arr = img
-        else:
+        img_arr = img
+        if not hasattr(img, "dtype"):
             # Assume multi-scale (DataTree).
             # We use the highest resolution scale, 'scale0'.
             # The image data is typically in the 'image' variable of the dataset.

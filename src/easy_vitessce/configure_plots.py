@@ -894,6 +894,34 @@ def _undo_monkeypatch(cls, func_name):
         orig_func = getattr(cls, orig_func_name)
         setattr(cls, func_name, orig_func)
 
+class _VitessceAccessorDescriptor:
+    """Descriptor that replaces any stale cached PlotAccessor with VitesscePlotAccessor.
+
+    _CachedAccessor stores the accessor in obj._cache[name], so instances that accessed
+    sdata.pl before monkeypatching have a stale PlotAccessor in their cache. This descriptor
+    detects and evicts those stale entries so all instances get VitesscePlotAccessor.
+    """
+
+    def __get__(self, obj, cls):
+        if obj is None:
+            return VitesscePlotAccessor
+        cache = getattr(obj, '_cache', None)
+        if cache is not None and 'pl' in cache and not isinstance(cache['pl'], VitesscePlotAccessor):
+            del cache['pl']
+        try:
+            return obj._cache['pl']
+        except (AttributeError, KeyError):
+            pass
+        try:
+            accessor = VitesscePlotAccessor(obj)
+        except AttributeError as err:
+            raise RuntimeError("error initializing 'pl' accessor.") from err
+        if not hasattr(obj, '_cache'):
+            obj._cache = {}
+        obj._cache['pl'] = accessor
+        return accessor
+
+
 def _monkeypatch_spatialdata():
     """
     Replaces behavior of SpatialData.pl class with VitesscePlotAccessor.
@@ -905,7 +933,7 @@ def _monkeypatch_spatialdata():
     if not hasattr(SpatialData, '_orig_pl'):
         # Not yet monkeypatched.
         setattr(SpatialData, '_orig_pl', _CachedAccessor('_orig_pl', SpatialData.pl))
-        setattr(SpatialData, 'pl', _CachedAccessor('pl', VitesscePlotAccessor))
+        setattr(SpatialData, 'pl', _VitessceAccessorDescriptor())
     else:
         print("Warning: SpatialData.pl has already been monkeypatched.")
     

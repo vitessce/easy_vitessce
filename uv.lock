@@ -745,7 +745,7 @@ docs = [
 
 [package.metadata]
 requires-dist = [
-    { name = "anndata", specifier = ">=0.12.0" },
+    { name = "anndata", specifier = ">=0.12.10" },
     { name = "black", specifier = ">=21.11b1" },
     { name = "donfig", specifier = ">=0.3.1" },
     { name = "jupyter", marker = "extra == 'dev'" },
@@ -763,7 +763,7 @@ requires-dist = [
     { name = "sphinx", marker = "extra == 'docs'" },
     { name = "sphinx-book-theme", marker = "extra == 'docs'" },
     { name = "sphinx-copybutton", marker = "extra == 'docs'" },
-    { name = "vitessce", extras = ["all"], specifier = ">=3.9.0" },
+    { name = "vitessce", extras = ["all"], specifier = ">=3.9.1" },
     { name = "zarr", specifier = ">=3" },
 ]
 
@@ -3821,7 +3821,7 @@ wheels = [
 
 [[package]]
 name = "vitessce"
-version = "3.9.0"
+version = "3.9.1"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "black" },
@@ -3830,9 +3830,9 @@ dependencies = [
     { name = "scipy" },
     { name = "zarr" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/b2/4d/448f26fee036fb887df6e307e3b1bf821b75642d0ae8b78d881409ec9e6b/vitessce-3.9.0.tar.gz", hash = "sha256:df605970363b939bea68410fbdd6e291f5355104fe34d671aa8a6585141e7a45", size = 260626 }
+sdist = { url = "https://files.pythonhosted.org/packages/f5/51/c303205617123cc7061207151a38ddb3be2441d5942189ec58a2dcb50634/vitessce-3.9.1.tar.gz", hash = "sha256:5e5c8643788d24ea19e7d3a5223c2de47f011860bc7e9994c1a42ad13cb55dc2", size = 260790 }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/01/40/3e980c1922bc6fc0bc9b9790c9f4788983df8b950c6e57d7fa3fa70f8042/vitessce-3.9.0-py3-none-any.whl", hash = "sha256:bc19f0bd28e05a7949e6708d50935beccb37df55eef3257fb846e8b301a9d477", size = 84721 },
+    { url = "https://files.pythonhosted.org/packages/f3/d7/2f6d84b8c30967d34693750131f441eabb18fb90aa872e98aceb2fd98fc3/vitessce-3.9.1-py3-none-any.whl", hash = "sha256:dbaeab2066677c39ae923edecd13e798895f70e03958d2561c2166103c6cca72", size = 84805 },
 ]
 
 [package.optional-dependencies]
