@@ -93,6 +93,7 @@ def _shared_table_handling(sdata, element, table_name, table_layer, obs_type, fe
         if len(annotating_tables) > 0:
             # Use the first annotating table if no specific table is provided.
             table_name = annotating_tables[0]
+        # TODO: if table_name is still None by this point, use the first available table? Or only if there is one table?
 
     if table_name is not None:
         # have user specify which matrix to use?
@@ -133,6 +134,8 @@ def _shared_table_handling(sdata, element, table_name, table_layer, obs_type, fe
         """
         pass
 
+    return table_name
+
 # Internal function for shared logic between render_shapes and render_labels.
 def _shared_render_shapes_and_labels(
         sdata, element, table_name, table_layer, color, cmap, norm, groups, palette, obs_type, feature_type, is_spots, fill_alpha, outline_alpha, outline_width, outline_color,
@@ -142,7 +145,7 @@ def _shared_render_shapes_and_labels(
 
     extra_layer_coordination = {}
 
-    _shared_table_handling(sdata, element, table_name, table_layer, obs_type, feature_type,
+    table_name = _shared_table_handling(sdata, element, table_name, table_layer, obs_type, feature_type,
         wrapper_args, obs_type_to_num_rows, feature_type_to_num_rows,
     )
 
@@ -338,7 +341,7 @@ class VitesscePlotAccessor:
         :type cmap: str or None
         :param norm: Normalization or list of normalizations for continuous annotations.
         :type norm: list[matplotlib.colors.Normalize] or matplotlib.colors.Normalize or None
-        :param na_color: Color that should be rendered as transparent.
+        :param na_color: Color that should be rendered as transparent. Removed from spatialdata-plot.
         :type na_color: str or None
         :param palette: Palette to color images. If list, the number of colors should be equal to the number of channels.
         :type palette: list[str] or str or None
@@ -352,9 +355,10 @@ class VitesscePlotAccessor:
                 channel=channel,
                 cmap=cmap,
                 norm=norm,
-                na_color=na_color,
+                #na_color=na_color, # No longer a supported parameter in spatialdata-plot.
                 palette=palette,
                 alpha=alpha,
+                # TODO: scale, grayscale, transfunc, colorbar, colorbar_params, channels_as_legend
                 **kwargs,
             )
 
@@ -407,9 +411,8 @@ class VitesscePlotAccessor:
         # RGB vs. non-RGB logic in spatialdata-plot:
         # Reference: https://github.com/scverse/spatialdata-plot/blob/010560f7eebdd245693a8c55eede0f895a636f5c/src/spatialdata_plot/pl/render.py#L865
         img = self.sdata.images[element]
-        if hasattr(img, "dtype"):
-            img_arr = img
-        else:
+        img_arr = img
+        if not hasattr(img, "dtype"):
             # Assume multi-scale (DataTree).
             # We use the highest resolution scale, 'scale0'.
             # The image data is typically in the 'image' variable of the dataset.
@@ -525,6 +528,7 @@ class VitesscePlotAccessor:
                 norm=norm,
                 table_name=table_name,
                 table_layer=table_layer,
+                # TODO: gene_symbols, shape, colorbar, colorbar_params
                 **kwargs
             )
 
@@ -648,6 +652,7 @@ class VitesscePlotAccessor:
                 fill_alpha=fill_alpha,
                 table_name=table_name,
                 table_layer=table_layer,
+                # TODO: contour_px, na_color, scale, colorbar, colorbar_params, gene_symbols, transfunc
                 **kwargs
             )
 
@@ -730,9 +735,9 @@ class VitesscePlotAccessor:
                 alpha=alpha,
                 groups=groups,
                 palette=palette,
-                # TODO: size
                 table_name=table_name,
                 table_layer=table_layer,
+                # TODO: cmap, norm, size, gene_symbols, colorbar, colorbar_params, density, density_how, transfunc
                 **kwargs
             )
 

@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "easy_vitessce"
-version = "0.0.10"
+version = "0.0.11"
 authors = [
   {name="HIDIVE Lab"},
   {name="Selena Luo"}
@@ -12,7 +12,7 @@ authors = [
 description = "A package to easily use Vitessce to create interactive plots for single-cell data"
 readme = "README.md"
 license = {file = "LICENSE"}
-requires-python = ">=3.10"
+requires-python = ">=3.12"
 classifiers = [
   "Programming Language :: Python :: 3",
   "Operating System :: OS Independent",
@@ -22,16 +22,13 @@ dependencies = [
   'pandas>=1.1.2',
   'black>=21.11b1',
   'numpy>=1.21.2',
-  'zarr>=2.5.0,<3',
-  'numcodecs>=0.5.7,<0.16.0',
-  'vitessce[all]>=3.8.2',
+  'zarr>=3',
+  'vitessce[all]>=3.9.1',
   'scanpy>=1.11.3',
-  'anndata>=0.11.4',
-  'spatialdata>=0.3.0',
-  "xarray>=2024.10.0,<=2025.3.0",
-  'spatialdata-plot>=0.2.7',
-  'dask[dataframe]==2024.11.1',
-  'distributed<=2024.11.2',
+  'anndata>=0.12.10',
+  'spatialdata>=0.7.3',
+  'spatialdata-plot>=0.4.0',
+  'xarray>=2024.10.0',
   'donfig>=0.3.1',
 ]
 
