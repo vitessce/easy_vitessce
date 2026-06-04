@@ -1,7 +1,7 @@
 # Easy Vitessce
 
 [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/vitessce/easy_vitessce/blob/main/docs/notebooks/scanpy_pbmc68k.ipynb)
-
+[![Open in molab](https://marimo.io/molab-shield.svg)](https://molab.marimo.io/github/vitessce/easy_vitessce/blob/main/docs/notebooks/scanpy_pbmc68k.ipynb)
 
  🪄 *Configure Vitessce with a single line of code!*
  
