@@ -24,6 +24,7 @@ Turn your static [Scanpy](https://github.com/scverse/scanpy) and [SpatialData](h
 - `sdata.pl` (`.render_images`, `.render_labels`, `.render_shapes`, `.render_points`)
 
 See the [example notebooks](./docs/notebooks) and the [documentation](https://vitessce.github.io/easy_vitessce/) for further details.
+The tutorials at [vitessce-python-tutorial-2026](https://github.com/vitessce/vitessce-python-tutorial-2026) cover both Vitessce-Python and EasyVitessce.
 
 
 ## Installation
