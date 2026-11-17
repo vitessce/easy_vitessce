@@ -29,6 +29,13 @@ jobs:
         run: uv run pytest
       - name: Build a binary wheel and a source tarball
         run: uv build --sdist --wheel
+      - name: Cache example datasets for executed notebooks
+        uses: actions/cache@v4
+        with:
+          path: docs/notebooks/data/*.zip
+          key: notebook-data-${{ hashFiles('docs/notebooks/*_remote.ipynb') }}
+          restore-keys: |
+            notebook-data-
       - name: Build docs
         run: |
           uv run make html

@@ -160,8 +160,17 @@ easy_vitessce
 examples
 customization
 advanced
-Example notebooks <https://github.com/vitessce/easy_vitessce/tree/main/docs/notebooks>
 View on GitHub <https://github.com/vitessce/easy_vitessce>
+```
+
+```{toctree}
+:maxdepth: 1
+:hidden:
+:glob:
+:caption: Example notebooks
+
+notebooks/*_remote
+More on GitHub <https://github.com/vitessce/easy_vitessce/tree/main/docs/notebooks>
 ```
 
 ## Citation
