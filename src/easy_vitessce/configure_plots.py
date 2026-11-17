@@ -600,7 +600,7 @@ def heatmap(
     # We need to make a copy since we will be modifying adata.
     # TODO: this will mean the object will always be re-written to disk
     # (and redundantly if the function is called multiple times),
-    # and breaking the functionality of register_data_path() if the user had specified an existing on-disk location.
+    # and breaking the functionality of register_data_params() if the user had specified an existing on-disk location.
     # Workarounds for future work (TODO: create github issues):
     # - Create a new AnnData object (or CSV file) to store var/__ev_initial_feature_filter__ column only.
     # - In JS, implement a way to specify a list of features directly rather than via a path in the AnnData object.
